@@ -87,7 +87,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
 
   if (isSuccess) {
     return (
-      <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-[24px] shadow-sm border border-white/50 p-8 md:p-12 flex flex-col items-center text-center">
+      <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-sm  border border-zinc-400/20 p-8 md:p-12 flex flex-col items-center text-center">
         <div className="flex items-center gap-2 mb-8">
           <Image
             src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
@@ -125,7 +125,7 @@ export const AuthForm = ({ type }: AuthFormProps) => {
   }
 
   return (
-    <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-[24px] shadow-sm border border-white/50 p-8 md:p-12 flex flex-col items-center">
+    <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-md  border border-zinc-400/20 p-8 md:p-12 flex flex-col items-center">
       {/* Logo Section */}
       <div className="flex items-center gap-2 mb-8">
         <Image
@@ -135,12 +135,13 @@ export const AuthForm = ({ type }: AuthFormProps) => {
           height={40}
           className="rounded-full shadow-md"
         />
-        <span className="text-[24px] font-bold text-[#1B2559]">LearningDeck</span>
+        {source === 'desktop' ? <span className="text-[24px] font-bold text-[#1B2559]">Connect desktop app</span> : <span className="text-[24px] font-bold text-[#1B2559]">LearningDeck</span>}
       </div>
 
-      <h1 className="text-[24px] font-bold text-[#1B2559] mb-2">
+      {source !== 'desktop' && <h1 className="text-[24px] font-bold text-[#1B2559] mb-2">
         {type === 'login' ? 'Sign In' : 'Create Account'}
-      </h1>
+
+      </h1>}
       <p className="text-[14px] text-[#A3AED0] mb-8">
         {type === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
         <Link
