@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authApi } from '@/lib/api/auth';
@@ -16,9 +16,13 @@ interface AuthFormProps {
 
 export const AuthForm = ({ type }: AuthFormProps) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (type === 'signup') {
@@ -60,6 +64,16 @@ export const AuthForm = ({ type }: AuthFormProps) => {
         if (response.data?.user) {
           localStorage.setItem('user', JSON.stringify(response.data.user));
         }
+
+        if (source === 'desktop' && response.data?.token) {
+          const token = response.data.token;
+          setAuthToken(token);
+          setIsSuccess(true);
+          alert('Login successful! Opening LearningDeck Desktop...');
+          window.location.href = `learningdeck://auth?token=${token}`;
+          return;
+        }
+
         router.push('/dashboard');
       } else {
         setError(response.message || 'Authentication failed');
@@ -70,6 +84,45 @@ export const AuthForm = ({ type }: AuthFormProps) => {
       setIsLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-[24px] shadow-sm border border-white/50 p-8 md:p-12 flex flex-col items-center text-center">
+        <div className="flex items-center gap-2 mb-8">
+          <Image 
+            src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" 
+            alt="LearningDeck Logo" 
+            width={40} 
+            height={40} 
+            className="rounded-full shadow-md"
+          />
+          <span className="text-[24px] font-bold text-[#1B2559]">LearningDeck</span>
+        </div>
+
+        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+          <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        
+        <h1 className="text-[24px] font-bold text-[#1B2559] mb-2">Authenticated!</h1>
+        <p className="text-[14px] text-[#A3AED0] mb-8">
+          You have successfully logged in. You can now return to the desktop application to continue.
+        </p>
+        
+        <Button 
+          onClick={() => window.location.href = `learningdeck://auth?token=${authToken}`}
+          className="w-full"
+        >
+          Open Desktop App
+        </Button>
+        
+        <p className="mt-6 text-[12px] text-[#A3AED0]">
+          Didn't see a prompt? <button onClick={() => window.location.href = `learningdeck://auth?token=${authToken}`} className="text-blue-500 hover:underline font-medium">Click here to try again</button>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[480px] bg-[#F4F7FF] rounded-[24px] shadow-sm border border-white/50 p-8 md:p-12 flex flex-col items-center">
