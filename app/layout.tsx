@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google"; // Updated import
 import "./globals.css";
 
-// Configure DM Sans with the weights used in the UI
-const dmSans = DM_Sans({
+// Configure Inter with preferred weights and CSS variable
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <body className="font-sans min-h-full flex flex-col bg-[#E9EDF7]">
         {children}

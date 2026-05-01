@@ -1,111 +1,153 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRight, BookOpen, ShieldCheck, BarChart3, Users } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import {
+  ChevronRight,
+  BookOpen,
+  ShieldCheck,
+  Server,
+  Activity,
+  Layers,
+  Cpu,
+  LayoutDashboard
+} from 'lucide-react';
 
-const LandingPage = () => {
+const LandingPageContent = () => {
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  }, [source]);
+
   return (
-    <div className="min-h-screen bg-[#E9EDF7] font-sans text-[#1B2559] selection:bg-blue-100">
+    <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-100">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-[#E0E5F2] px-6 py-4">
+      <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-200 px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Image
               src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
               alt="LearningDeck Logo"
-              width={32}
-              height={32}
-              className="rounded-full"
+              width={28}
+              height={28}
+              className="rounded-md"
             />
-            <span className="text-[20px] font-bold tracking-tight">LearningDeck</span>
+            <span className="text-[16px] tracking-tight text-gray-800 font-medium">LearningDeck</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-[#A3AED0]">
-            <Link href="#features" className="hover:text-[#1B2559] transition-colors">Features</Link>
-            <Link href="#solutions" className="hover:text-[#1B2559] transition-colors">Solutions</Link>
-            <Link href="#enterprise" className="hover:text-[#1B2559] transition-colors">Enterprise</Link>
+          <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-gray-500">
+            <Link href="#features" className="hover:text-gray-900 transition-colors">Features</Link>
+            <Link href="#solutions" className="hover:text-gray-900 transition-colors">Solutions</Link>
+            <Link href="#enterprise" className="hover:text-gray-900 transition-colors">Enterprise</Link>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-[14px] font-bold px-4 py-2 hover:opacity-70 transition-opacity">
-              Log In
-            </Link>
-            <Link href="/signup" className="bg-[#1B2559] text-white text-[14px] font-bold px-5 py-2.5 rounded-[10px]  shadow-blue-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              Get Started
-            </Link>
+            {!isLoading && (
+              isAuthenticated ? (
+                <Link href="/dashboard" className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1">
+                  Go to Dashboard <ChevronRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <>
+                  <Link href={`/login${source ? `?source=${source}` : ''}`} className="text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                    Log In
+                  </Link>
+                  <Link href={`/signup${source ? `?source=${source}` : ''}`} className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1">
+                    Get Started <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </>
+              )
+            )}
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <header className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-[#E0E5F2] mb-6 ">
-            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            <span className="text-[12px] font-bold uppercase tracking-wider text-[#A3AED0]">Version 2.0 Now Live</span>
+      <header className="pt-32 pb-16 px-6 bg-gradient-to-b from-white via-sky-50 to-sky-200">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-gray-200 mb-6 shadow-sm">
+            <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
+            <span className="text-[12px] text-gray-600"></span>
           </div>
-          <h1 className="text-[48px] md:text-[72px] font-extrabold leading-[1.1] tracking-tight mb-6">
+          <h1 className="text-[40px] md:text-[56px] font-medium leading-[1.2] tracking-tight mb-6 text-gray-900">
             The intelligent deck for <br />
-            <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">modern education.</span>
+            <span className="text-blue-600">modern education.</span>
           </h1>
-          <p className="text-[18px] text-[#A3AED0] max-w-[600px] mx-auto mb-10 leading-relaxed">
+          <p className="text-[16px] text-gray-500 max-w-[600px] mx-auto mb-10 leading-relaxed">
             A unified platform for seamless e-learning delivery and professional-grade exam management. Built for students, perfected for educators.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="w-full sm:w-auto h-[56px] px-8 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-[14px] shadow-xl shadow-blue-500/25 flex items-center justify-center gap-2 group">
-              Start Free Trial <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="w-full sm:w-auto h-[56px] px-8 bg-white text-[#1B2559] border border-[#E0E5F2] font-bold rounded-[14px] hover:bg-gray-50 transition-colors">
-              Contact Sales
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            {!isLoading && isAuthenticated ? (
+              <Link href="/dashboard" className="w-full sm:w-auto h-[44px] px-8 bg-blue-600 text-white text-[14px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                Continue to Dashboard <ChevronRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <Link href={`/signup${source ? `?source=${source}` : ''}`} className="w-full sm:w-auto h-[44px] px-6 bg-blue-600 text-white text-[14px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                  Start Free Trial
+                </Link>
+                <button className="w-full sm:w-auto h-[44px] px-6 bg-white text-gray-700 border border-gray-300 text-[14px] font-medium rounded-md hover:bg-gray-50 transition-colors">
+                  Contact Sales
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* PLACEHOLDER: Animated Desktop Exam Manager UI (Start Server/Status) */}
+          <div className="h-full w-full border border-zinc-400/20 rounded ">
+            <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
           </div>
         </div>
       </header>
 
-      {/* Dashboard Preview Section (Based on your mention of the screenshot) */}
-      <section className="px-6 pb-24">
-        <div className="max-w-6xl mx-auto relative">
-        </div>
-      </section>
-
       {/* Dual Solutions Section */}
-      <section id="solutions" className="py-24 px-6 bg-white">
+      <section id="solutions" className="py-24 px-6 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* E-Learning Card */}
-            <div className="p-10 bg-[#F4F7FF] rounded-[32px] border border-[#E0E5F2] hover:shadow-xl transition-all group">
-              <div className="w-14 h-14 bg-white rounded-[16px] flex items-center justify-center mb-6  group-hover:scale-110 transition-transform">
-                <BookOpen className="w-7 h-7 text-blue-600" />
+            <div className="p-8 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group">
+              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 border border-blue-100">
+                <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-[24px] font-bold mb-4">E-Learning Experience</h3>
-              <p className="text-[#A3AED0] mb-8 leading-relaxed">
+              <h3 className="text-[20px] mb-3 text-gray-900">E-Learning Experience</h3>
+              <p className="text-gray-500 mb-6 leading-relaxed text-[15px]">
                 Provide students with a rich, interactive learning environment. Support for multimedia content, real-time discussions, and progress tracking.
               </p>
-              <ul className="space-y-3 mb-10 text-[14px] font-medium">
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full" /> Dynamic Course Content</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full" /> Interactive Quizzes</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full" /> Student Achievement Badges</li>
+              <ul className="space-y-3 mb-8 text-[14px] text-gray-600">
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Dynamic Course Content</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Interactive Quizzes</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Student Achievement Badges</li>
               </ul>
-              <button className="text-blue-600 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
+              <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
                 Explore LearningDeck <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
             {/* Exam Manager Card */}
-            <div className="p-10 bg-[#1B2559] text-white rounded-[32px] border border-white/10 hover:shadow-2xl transition-all group">
-              <div className="w-14 h-14 bg-white/10 rounded-[16px] flex items-center justify-center mb-6  group-hover:scale-110 transition-transform">
-                <ShieldCheck className="w-7 h-7 text-blue-400" />
+            <div className="p-8 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group">
+              <div className="w-12 h-12 bg-[#F8F9FA] rounded-lg flex items-center justify-center mb-6 border border-gray-200">
+                <ShieldCheck className="w-6 h-6 text-gray-700" />
               </div>
-              <h3 className="text-[24px] font-bold mb-4 text-white">Exam Manager Pro</h3>
-              <p className="text-[#A3AED0] mb-8 leading-relaxed">
+              <h3 className="text-[20px] mb-3 text-gray-900">Hybrid Exam Manager</h3>
+              <p className="text-gray-500 mb-6 leading-relaxed text-[15px]">
                 Secure, robust, and scalable examination infrastructure. From auto-grading to proctoring, manage it all from one dashboard.
               </p>
-              <ul className="space-y-3 mb-10 text-[14px] font-medium text-white/80">
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full" /> Automated Result Processing</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full" /> AI-Powered Proctoring</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full" /> Custom Certificate Generation</li>
+              <ul className="space-y-3 mb-8 text-[14px] text-gray-600">
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Automated Result Processing</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> AI-Powered Proctoring</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Custom Certificate Generation</li>
               </ul>
-              <button className="text-blue-400 font-bold flex items-center gap-2 group-hover:gap-3 transition-all">
+              <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
                 View Admin Suite <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -113,51 +155,118 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Dashboard Feature Section */}
+      <section className="py-24 px-6 bg-[#F8F9FA] border-y border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2">
+              <h2 className="text-[32px] leading-tight mb-6 text-gray-900">
+                Centralized control for <br /> institution-wide management.
+              </h2>
+              <div className="space-y-8">
+                <div className="flex gap-4">
+                  <div className="mt-1"><Activity className="w-5 h-5 text-blue-600" /></div>
+                  <div>
+                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Real-time Analytics</h4>
+                    <p className="text-[14px] text-gray-500 leading-relaxed">Monitor student engagement and exam performance as it happens with live telemetry.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="mt-1"><Layers className="w-5 h-5 text-blue-600" /></div>
+                  <div>
+                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Resource Library</h4>
+                    <p className="text-[14px] text-gray-500 leading-relaxed">Organize assets, question banks, and media in a structured, searchable cloud repository.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PLACEHOLDER: Animated Dashboard UI */}
+            <div className="lg:w-1/2 w-full border border-zinc-400/20 rounded ">
+              <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats/Social Proof */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="text-[32px] text-gray-900 mb-1">99.9%</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Uptime SLA</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[32px] text-gray-900 mb-1">500k+</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Active Students</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[32px] text-gray-900 mb-1">120+</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Institutions</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[32px] text-gray-900 mb-1">Secure</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">AES-256 Encryption</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="py-20 px-6 border-t border-[#E0E5F2]">
+      <footer className="py-12 px-6 border-t border-gray-200 bg-[#F8F9FA]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-6">
-              <Image src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" alt="LearningDeck Logo" width={32} height={32} className="rounded-full" />
-              <span className="text-[20px] font-bold">LearningDeck</span>
+            <div className="flex items-center gap-2 mb-4">
+              <Image src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" alt="LearningDeck Logo" width={24} height={24} className="rounded-md grayscale opacity-80" />
+              <span className="text-[16px] text-gray-700">LearningDeck</span>
             </div>
-            <p className="text-[#A3AED0] text-[14px] leading-relaxed">
+            <p className="text-gray-500 text-[14px] leading-relaxed">
               Standardizing the future of digital education and examination management across the globe.
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-[14px]">
-            <div className="space-y-4">
-              <p className="font-bold uppercase tracking-widest text-[#1B2559]">Product</p>
-              <ul className="space-y-2 text-[#A3AED0]">
-                <li><Link href="#">Features</Link></li>
-                <li><Link href="#">Integrations</Link></li>
-                <li><Link href="#">Enterprise</Link></li>
+            <div className="space-y-3">
+              <p className="text-gray-900 font-medium">Product</p>
+              <ul className="space-y-2 text-gray-500">
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Features</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Integrations</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Enterprise</Link></li>
               </ul>
             </div>
-            <div className="space-y-4">
-              <p className="font-bold uppercase tracking-widest text-[#1B2559]">Support</p>
-              <ul className="space-y-2 text-[#A3AED0]">
-                <li><Link href="#">Help Center</Link></li>
-                <li><Link href="#">API Docs</Link></li>
-                <li><Link href="#">Status</Link></li>
+            <div className="space-y-3">
+              <p className="text-gray-900 font-medium">Support</p>
+              <ul className="space-y-2 text-gray-500">
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Help Center</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">API Docs</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Status</Link></li>
               </ul>
             </div>
-            <div className="space-y-4">
-              <p className="font-bold uppercase tracking-widest text-[#1B2559]">Company</p>
-              <ul className="space-y-2 text-[#A3AED0]">
-                <li><Link href="#">About Us</Link></li>
-                <li><Link href="#">Privacy</Link></li>
-                <li><Link href="#">Terms</Link></li>
+            <div className="space-y-3">
+              <p className="text-gray-900 font-medium">Company</p>
+              <ul className="space-y-2 text-gray-500">
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">About Us</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Privacy</Link></li>
+                <li><Link href="#" className="hover:text-blue-600 transition-colors">Terms</Link></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-[#E0E5F2] text-center text-[12px] font-bold text-[#A3AED0] uppercase tracking-[2px]">
-          © 2026 LearningDeck Technologies. All rights reserved.
+        <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-200 flex items-center justify-between text-[13px] text-gray-500">
+          <span>© 2026 LearningDeck Technologies. All rights reserved.</span>
         </div>
       </footer>
     </div>
+  );
+};
+
+const LandingPage = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>}>
+      <LandingPageContent />
+    </Suspense>
   );
 };
 

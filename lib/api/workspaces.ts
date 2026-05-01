@@ -28,5 +28,13 @@ export const workspaceApi = {
     return apiFetch<any>(`/workspaces/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  async setup(data: { workspace_name: string; admin_name: string; admin_email: string; admin_password: string }): Promise<ApiResponse<any>> {
+    return apiFetch<any>('/workspaces/setup', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 };
+
