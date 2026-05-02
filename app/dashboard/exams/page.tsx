@@ -71,7 +71,7 @@ export default function ExamsPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-center mr-8 px-8 border-x border-[#F4F7FF]">
+                  <div className="flex flex-col items-center mr-8 px-8 border-x border-zinc-400/20">
                     <span className="text-[12px] font-bold text-[#A3AED0] uppercase tracking-widest">Progress</span>
                     <span className="text-[18px] font-black text-blue-500">Draft</span>
                   </div>

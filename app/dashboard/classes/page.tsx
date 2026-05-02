@@ -28,8 +28,8 @@ export default function ClassesPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <DashboardHeader 
-        title="Class Management" 
+      <DashboardHeader
+        title="Class Management"
         description="Manage your student groups and academic year structures."
       >
         <Button className="flex items-center gap-2">
@@ -54,8 +54,8 @@ export default function ClassesPage() {
                     <p className="text-[13px] text-[#A3AED0]">Class ID: {cls.id}</p>
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#F4F7FF]">
+
+                <div className="flex items-center justify-between mt-8 pt-6 border-t border-zinc-400/20">
                   <div className="flex items-center gap-3 text-[14px] font-bold text-[#A3AED0]">
                     <Users size={16} /> Enrolled: --
                   </div>
@@ -68,7 +68,7 @@ export default function ClassesPage() {
           ))
         ) : (
           <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-[#E0E5F2]">
-             <p className="text-[#A3AED0] font-bold">No classes defined yet.</p>
+            <p className="text-[#A3AED0] font-bold">No classes defined yet.</p>
           </div>
         )}
       </div>

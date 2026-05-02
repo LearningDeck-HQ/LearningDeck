@@ -14,10 +14,10 @@ export const Button = ({
   isLoading,
   ...props
 }: ButtonProps) => {
-  const baseStyles = 'inline-flex items-center justify-center font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none rounded-[12px]';
-  
+  const baseStyles = 'inline-flex items-center justify-center  transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none rounded';
+
   const variants = {
-    primary: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30',
+    primary: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white  shadow-blue-500/20 hover:shadow-blue-500/30',
     secondary: 'bg-[#1B2559] text-white hover:bg-[#1B2559]/90',
     outline: 'bg-transparent border border-[#E0E5F2] text-[#1B2559] hover:bg-gray-50',
     ghost: 'bg-transparent text-[#A3AED0] hover:text-[#1B2559] hover:bg-[#F4F7FF]',

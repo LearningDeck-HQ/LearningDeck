@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { 
-  Users as UsersIcon, Plus, Mail, Shield, UserCheck, 
-  Search, MoreVertical, Trash2, Edit3, Filter, Download 
+import {
+  Users as UsersIcon, Plus, Mail, Shield, UserCheck,
+  Search, MoreVertical, Trash2, Edit3, Filter, Download
 } from 'lucide-react';
 import { userApi } from '@/lib/api/users';
 import { authApi } from '@/lib/api/auth';
@@ -82,18 +82,18 @@ export default function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.user_name.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredUsers = users.filter(u =>
+    u.user_name.toLowerCase().includes(search.toLowerCase()) ||
     u.user_email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      <DashboardHeader 
-        title="User Management" 
+      <DashboardHeader
+        title="User Management"
         description="Monitor staff and students across all educational environments."
       >
-        <Button 
+        <Button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] shadow-xl shadow-[#1B2559]/20 h-[48px] px-6 rounded-2xl"
         >
@@ -102,10 +102,10 @@ export default function UsersPage() {
         </Button>
       </DashboardHeader>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[24px] shadow-sm border border-[#F4F7FF]">
+      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[24px] shadow-sm border border-zinc-400/20">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0]" size={18} />
-          <input 
+          <input
             type="text"
             placeholder="Search users by name, email or role..."
             className="w-full pl-12 pr-4 h-[48px] rounded-2xl bg-[#F4F7FF] border-none text-[15px] font-medium focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder:text-[#A3AED0]"
@@ -114,12 +114,12 @@ export default function UsersPage() {
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
-              <Filter size={18} /> Filter
-            </Button>
-            <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
-              <Download size={18} /> Export
-            </Button>
+          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
+            <Filter size={18} /> Filter
+          </Button>
+          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
+            <Download size={18} /> Export
+          </Button>
         </div>
       </div>
 
@@ -127,7 +127,7 @@ export default function UsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#F4F7FF]">
+              <tr className="border-b border-zinc-400/20">
                 <th className="px-8 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">User Details</th>
                 <th className="px-6 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">Role & Access</th>
                 <th className="px-6 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">Status</th>
@@ -148,7 +148,7 @@ export default function UsersPage() {
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center text-white font-black text-[18px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform overflow-hidden">
-                           {user.img ? <img src={user.img} className="w-full h-full object-cover" /> : user.user_name.charAt(0)}
+                          {user.img ? <img src={user.img} className="w-full h-full object-cover" /> : user.user_name.charAt(0)}
                         </div>
                         <div>
                           <p className="text-[16px] font-extrabold text-[#1B2559]">{user.user_name}</p>
@@ -157,12 +157,11 @@ export default function UsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-6">
-                      <span className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${
-                        user.role === 'ADMIN' ? 'bg-purple-100/50 text-purple-600' : 
-                        user.role === 'TEACHER' ? 'bg-blue-100/50 text-blue-600' : 
-                        'bg-orange-100/50 text-orange-600'
-                      }`}>
-                         <Shield size={12} /> {user.role}
+                      <span className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${user.role === 'ADMIN' ? 'bg-purple-100/50 text-purple-600' :
+                          user.role === 'TEACHER' ? 'bg-blue-100/50 text-blue-600' :
+                            'bg-orange-100/50 text-orange-600'
+                        }`}>
+                        <Shield size={12} /> {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-6">
@@ -194,8 +193,8 @@ export default function UsersPage() {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-8 py-20 text-center">
-                     <UsersIcon size={48} className="mx-auto text-[#F4F7FF] mb-4" />
-                     <p className="text-[#A3AED0] font-bold">No users found in this workspace.</p>
+                    <UsersIcon size={48} className="mx-auto text-[#F4F7FF] mb-4" />
+                    <p className="text-[#A3AED0] font-bold">No users found in this workspace.</p>
                   </td>
                 </tr>
               )}
@@ -204,31 +203,31 @@ export default function UsersPage() {
         </div>
       </Card>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         title="Add New User"
       >
         <form onSubmit={handleAddUser} className="space-y-6">
-          <Input 
-            name="name" 
-            label="Full Name" 
-            placeholder="e.g. John Doe" 
-            required 
+          <Input
+            name="name"
+            label="Full Name"
+            placeholder="e.g. John Doe"
+            required
           />
-          <Input 
-            name="email" 
-            label="Email Address" 
-            type="email" 
-            placeholder="john@example.com" 
-            required 
+          <Input
+            name="email"
+            label="Email Address"
+            type="email"
+            placeholder="john@example.com"
+            required
           />
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[14px] font-bold text-[#1B2559] ml-1">Role</label>
-              <select 
-                name="role" 
+              <select
+                name="role"
                 className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
                 required
               >
@@ -239,8 +238,8 @@ export default function UsersPage() {
             </div>
             <div className="space-y-2">
               <label className="text-[14px] font-bold text-[#1B2559] ml-1">Workspace</label>
-              <select 
-                name="workspaceId" 
+              <select
+                name="workspaceId"
                 className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
                 required
               >
@@ -253,8 +252,8 @@ export default function UsersPage() {
 
           <div className="space-y-2">
             <label className="text-[14px] font-bold text-[#1B2559] ml-1">Class (Optional)</label>
-            <select 
-              name="classId" 
+            <select
+              name="classId"
               className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
             >
               <option value="">No Class</option>
@@ -269,16 +268,16 @@ export default function UsersPage() {
           </p>
 
           <div className="flex gap-4 pt-4">
-            <Button 
-              type="button" 
-              variant="ghost" 
+            <Button
+              type="button"
+              variant="ghost"
               className="flex-1 h-[52px] rounded-2xl font-black text-[#A3AED0]"
               onClick={() => setIsModalOpen(false)}
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 h-[52px] rounded-2xl bg-[#1B2559] font-black"
               isLoading={isSubmitting}
             >
