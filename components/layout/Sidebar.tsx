@@ -4,31 +4,39 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { BiBookOpen, BiSolidShapes, BiUser } from 'react-icons/bi';
-import { BsPersonWorkspace } from 'react-icons/bs';
-import { GiTeacher } from 'react-icons/gi';
-import { MdReport, MdQuiz, MdBarChart, MdCreditCard, MdSettings, MdLogout } from 'react-icons/md';
-import { SiGoogleclassroom } from 'react-icons/si';
-import { FiChevronDown } from 'react-icons/fi';
+import {
+  BookOpen,
+  Briefcase,
+  Users,
+  GraduationCap,
+  BarChart3,
+  CreditCard,
+  Settings,
+  LogOut,
+  ChevronDown,
+  FileText,
+  LayoutDashboard,
+  User
+} from 'lucide-react';
 import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 
 const navItems = [
  
-  { label: 'Plan', href: '/dashboard/plan', icon: MdCreditCard },
-  { label: 'Settings', href: '/dashboard/settings', icon: MdSettings },
+  { label: 'Plan', href: '/dashboard/plan', icon: CreditCard },
+  { label: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 const workspaceSubItems = [
-   { label: 'Analytics', href: '/dashboard', icon: MdBarChart },
-  { label: 'Exams', href: '/dashboard/exams', icon: BiBookOpen },
-  { label: 'Questions', href: '/dashboard/questions', icon: MdQuiz },
-  { label: 'Subjects', href: '/dashboard/subjects', icon: BiSolidShapes },
-  { label: 'Classes', href: '/dashboard/classes', icon: SiGoogleclassroom },
-  { label: 'Teachers', href: '/dashboard/teachers', icon: GiTeacher },
-  { label: 'Students', href: '/dashboard/students', icon: BiUser },
-  { label: 'Results', href: '/dashboard/results', icon: MdReport },
+   { label: 'Analytics', href: '/dashboard', icon: BarChart3 },
+  { label: 'Exams', href: '/dashboard/exams', icon: BookOpen },
+  { label: 'Questions', href: '/dashboard/questions', icon: FileText },
+  { label: 'Subjects', href: '/dashboard/subjects', icon: LayoutDashboard },
+  { label: 'Classes', href: '/dashboard/classes', icon: GraduationCap },
+  { label: 'Teachers', href: '/dashboard/teachers', icon: User },
+  { label: 'Students', href: '/dashboard/students', icon: Users },
+  { label: 'Results', href: '/dashboard/results', icon: BarChart3 },
 ];
 
 const Sidebar = () => {
@@ -100,10 +108,10 @@ const Sidebar = () => {
             className={`${getLinkStyles(pathname.startsWith('/dashboard/workspaces'))} flex justify-between items-center w-full`}
           >
             <div className="flex items-center">
-              <BsPersonWorkspace className="inline-block mr-2" />
+              <Briefcase className="inline-block mr-2" />
               Workspaces
             </div>
-            <FiChevronDown className={`transform transition-transform ${workspacesExpanded ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`transform transition-transform ${workspacesExpanded ? 'rotate-180' : ''}`} />
           </button>
           {workspacesExpanded && (
             <div className="ml-4">
@@ -132,7 +140,7 @@ const Sidebar = () => {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-1 text-xs text-[#6b6b6b] hover:text-red-500 hover:bg-red-50 transition-all rounded-sm group"
           >
-            <MdLogout className="group-hover:text-red-500" />
+            <LogOut className="group-hover:text-red-500" />
             <span className="font-medium">Log Out</span>
           </button>
         </div>
