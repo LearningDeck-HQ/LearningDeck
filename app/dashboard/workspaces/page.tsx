@@ -42,7 +42,9 @@ export default function WorkspacesPage() {
         {isLoading ? (
           [1, 2, 3].map(i => (
             <Card key={i} className="h-[280px] animate-pulse shadow-none">
-              <CardContent className="p-8 h-full rounded" />
+              <CardContent className="p-8 h-full rounded" >
+                <div/>
+                </CardContent>
             </Card>
           ))
         ) : workspaces.length > 0 ? (

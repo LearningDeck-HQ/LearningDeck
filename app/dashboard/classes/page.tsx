@@ -43,20 +43,20 @@ export default function ClassesPage() {
           [1, 2, 3].map(i => <div key={i} className="h-[200px] bg-gray-100 rounded-3xl animate-pulse" />)
         ) : classes.length > 0 ? (
           classes.map((cls) => (
-            <Card key={cls.id} className="group hover:shadow-xl transition-all border-none bg-white">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
+            <Card key={cls.id} className="group transition-all border border-zinc-200 bg-white rounded-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
                     <GraduationCap size={24} />
                   </div>
                   <div>
-                    <h3 className="text-[18px] font-bold text-[#1B2559]">{cls.name}</h3>
-                    <p className="text-[13px] text-[#A3AED0]">Class ID: {cls.id}</p>
+                    <h3 className="text-[17px] text-[#1B2559]">{cls.name}</h3>
+                    <p className="text-[13px] text-[#6b7280]">Class ID: {cls.id}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-zinc-400/20">
-                  <div className="flex items-center gap-3 text-[14px] font-bold text-[#A3AED0]">
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-200 text-[14px] text-[#6b7280]">
+                  <div className="flex items-center gap-3">
                     <Users size={16} /> Enrolled: --
                   </div>
                   <button className="text-blue-500 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50 transition-all">
@@ -67,8 +67,8 @@ export default function ClassesPage() {
             </Card>
           ))
         ) : (
-          <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-[#E0E5F2]">
-            <p className="text-[#A3AED0] font-bold">No classes defined yet.</p>
+          <div className="col-span-full py-20 text-center bg-white rounded-2xl border border-dashed border-[#E0E5F2]">
+            <p className="text-[#6b7280]">No classes defined yet.</p>
           </div>
         )}
       </div>

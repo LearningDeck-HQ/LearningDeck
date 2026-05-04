@@ -95,44 +95,44 @@ export default function UsersPage() {
       >
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] shadow-xl shadow-[#1B2559]/20 h-[48px] px-6 rounded-2xl"
+          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] h-[48px] px-5 rounded-xl"
         >
           <Plus size={18} />
           Add New User
         </Button>
       </DashboardHeader>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[24px] shadow-sm border border-zinc-400/20">
+      <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-xl border border-zinc-200">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0]" size={18} />
           <input
             type="text"
             placeholder="Search users by name, email or role..."
-            className="w-full pl-12 pr-4 h-[48px] rounded-2xl bg-[#F4F7FF] border-none text-[15px] font-medium focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder:text-[#A3AED0]"
+            className="w-full pl-12 pr-4 h-[48px] rounded-xl bg-[#F4F7FF] border-none text-[15px] text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder:text-[#A3AED0]"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
+          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-xl text-[#1B2559] flex items-center gap-2 hover:bg-[#F4F7FF]">
             <Filter size={18} /> Filter
           </Button>
-          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-2xl text-[#1B2559] font-black flex items-center gap-2 hover:bg-[#F4F7FF]">
+          <Button variant="ghost" className="flex-1 md:flex-none h-[48px] px-5 rounded-xl text-[#1B2559] flex items-center gap-2 hover:bg-[#F4F7FF]">
             <Download size={18} /> Export
           </Button>
         </div>
       </div>
 
-      <Card className="border-none shadow-2xl shadow-gray-200/50 bg-white/80 backdrop-blur-sm rounded-[32px] overflow-hidden">
+      <Card className="border border-zinc-200 bg-white rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-zinc-400/20">
-                <th className="px-8 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">User Details</th>
-                <th className="px-6 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">Role & Access</th>
-                <th className="px-6 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">Status</th>
-                <th className="px-6 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px]">Joined Date</th>
-                <th className="px-8 py-5 text-[12px] font-black text-[#A3AED0] uppercase tracking-[1.5px] text-right">Actions</th>
+              <tr className="border-b border-zinc-200">
+                <th className="px-8 py-5 text-[12px] text-[#6b7280]">User Details</th>
+                <th className="px-6 py-5 text-[12px] text-[#6b7280]">Role & Access</th>
+                <th className="px-6 py-5 text-[12px] text-[#6b7280]">Status</th>
+                <th className="px-6 py-5 text-[12px] text-[#6b7280]">Joined Date</th>
+                <th className="px-8 py-5 text-[12px] text-[#6b7280] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F4F7FF]">
@@ -147,17 +147,17 @@ export default function UsersPage() {
                   <tr key={user.id} className="group hover:bg-[#F4F7FF]/50 transition-all">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-2xl flex items-center justify-center text-white font-black text-[18px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform overflow-hidden">
+                        <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-xl flex items-center justify-center text-white text-[18px] transition-transform overflow-hidden">
                           {user.img ? <img src={user.img} className="w-full h-full object-cover" /> : user.user_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-[16px] font-extrabold text-[#1B2559]">{user.user_name}</p>
-                          <p className="text-[13px] font-medium text-[#A3AED0] flex items-center gap-1.5"><Mail size={12} /> {user.user_email}</p>
+                          <p className="text-[16px] text-[#1B2559]">{user.user_name}</p>
+                          <p className="text-[13px] text-[#6b7280] flex items-center gap-1.5"><Mail size={12} /> {user.user_email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-6">
-                      <span className={`px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${user.role === 'ADMIN' ? 'bg-purple-100/50 text-purple-600' :
+                      <span className={`px-3 py-1.5 rounded-xl text-[11px] text-[#1B2559] flex items-center gap-2 w-fit ${user.role === 'ADMIN' ? 'bg-purple-100/50 text-purple-600' :
                           user.role === 'TEACHER' ? 'bg-blue-100/50 text-blue-600' :
                             'bg-orange-100/50 text-orange-600'
                         }`}>
@@ -165,14 +165,12 @@ export default function UsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-6">
-                      <div className="flex items-center gap-2">
+                      <div className={"flex items-center gap-2 text-[14px] " + (user.active ? 'text-green-600' : 'text-[#A3AED0]')}>
                         <div className={`w-2.5 h-2.5 rounded-full ${user.active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                        <span className={`text-[14px] font-bold ${user.active ? 'text-green-600' : 'text-[#A3AED0]'}`}>
-                          {user.active ? 'Active' : 'Inactive'}
-                        </span>
+                        <span>{user.active ? 'Active' : 'Inactive'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-6 font-bold text-[#1B2559] text-[14px]">
+                    <td className="px-6 py-6 text-[#1B2559] text-[14px]">
                       {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-8 py-6 text-right">
@@ -194,7 +192,7 @@ export default function UsersPage() {
                 <tr>
                   <td colSpan={5} className="px-8 py-20 text-center">
                     <UsersIcon size={48} className="mx-auto text-[#F4F7FF] mb-4" />
-                    <p className="text-[#A3AED0] font-bold">No users found in this workspace.</p>
+                    <p className="text-[#6b7280]">No users found in this workspace.</p>
                   </td>
                 </tr>
               )}
@@ -225,10 +223,10 @@ export default function UsersPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[14px] font-bold text-[#1B2559] ml-1">Role</label>
+              <label className="text-[14px] text-[#1B2559] ml-1">Role</label>
               <select
                 name="role"
-                className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
+                className="w-full h-[48px] px-4 rounded-xl bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
                 required
               >
                 <option value="STUDENT">Student</option>
@@ -237,10 +235,10 @@ export default function UsersPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[14px] font-bold text-[#1B2559] ml-1">Workspace</label>
+              <label className="text-[14px] text-[#1B2559] ml-1">Workspace</label>
               <select
                 name="workspaceId"
-                className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
+                className="w-full h-[48px] px-4 rounded-xl bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
                 required
               >
                 {workspaces.map(ws => (
@@ -251,10 +249,10 @@ export default function UsersPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[14px] font-bold text-[#1B2559] ml-1">Class (Optional)</label>
+            <label className="text-[14px] text-[#1B2559] ml-1">Class (Optional)</label>
             <select
               name="classId"
-              className="w-full h-[48px] px-4 rounded-2xl bg-[#F4F7FF] border-none text-[14px] font-bold text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
+              className="w-full h-[48px] px-4 rounded-xl bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] transition-all outline-none"
             >
               <option value="">No Class</option>
               {classes.map(cls => (
@@ -263,7 +261,7 @@ export default function UsersPage() {
             </select>
           </div>
 
-          <p className="text-[12px] text-[#A3AED0] text-center p-4 bg-blue-50/50 rounded-2xl font-medium">
+          <p className="text-[12px] text-[#A3AED0] text-center p-4 bg-blue-50/50 rounded-xl">
             Note: The user will be assigned a temporary password <b>Password123!</b> and prompted to change it on their first login.
           </p>
 
@@ -271,14 +269,14 @@ export default function UsersPage() {
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 h-[52px] rounded-2xl font-black text-[#A3AED0]"
+              className="flex-1 h-[52px] rounded-xl text-[#6b7280]"
               onClick={() => setIsModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-[52px] rounded-2xl bg-[#1B2559] font-black"
+              className="flex-1 h-[52px] rounded-xl bg-[#1B2559] text-white"
               isLoading={isSubmitting}
             >
               Create Account

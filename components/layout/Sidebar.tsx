@@ -1,103 +1,144 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Briefcase,
-  GraduationCap,
-  BookOpen,
-  FileText,
-  Users,
-  BarChart3,
-  Settings,
-  LogOut
-} from 'lucide-react';
+import { BiBookOpen, BiSolidShapes, BiUser } from 'react-icons/bi';
+import { BsPersonWorkspace } from 'react-icons/bs';
+import { GiTeacher } from 'react-icons/gi';
+import { MdReport, MdQuiz, MdBarChart, MdCreditCard, MdSettings, MdLogout } from 'react-icons/md';
+import { SiGoogleclassroom } from 'react-icons/si';
+import { FiChevronDown } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
+import { workspaceApi } from '@/lib/api/workspaces';
+import { Workspace } from '@/types';
 
 const navItems = [
+ 
+  { label: 'Plan', href: '/dashboard/plan', icon: MdCreditCard },
+  { label: 'Settings', href: '/dashboard/settings', icon: MdSettings },
+];
 
-  { label: 'Workspaces', href: '/dashboard/workspaces', icon: Briefcase },
-  { label: 'Analytics', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Classes', href: '/dashboard/classes', icon: GraduationCap },
-  { label: 'Subjects', href: '/dashboard/subjects', icon: BookOpen },
-  { label: 'Exams', href: '/dashboard/exams', icon: FileText },
-  { label: 'Users', href: '/dashboard/users', icon: Users },
-  { label: 'Results', href: '/dashboard/results', icon: BarChart3 },
+const workspaceSubItems = [
+   { label: 'Analytics', href: '/dashboard', icon: MdBarChart },
+  { label: 'Exams', href: '/dashboard/exams', icon: BiBookOpen },
+  { label: 'Questions', href: '/dashboard/questions', icon: MdQuiz },
+  { label: 'Subjects', href: '/dashboard/subjects', icon: BiSolidShapes },
+  { label: 'Classes', href: '/dashboard/classes', icon: SiGoogleclassroom },
+  { label: 'Teachers', href: '/dashboard/teachers', icon: GiTeacher },
+  { label: 'Students', href: '/dashboard/students', icon: BiUser },
+  { label: 'Results', href: '/dashboard/results', icon: MdReport },
 ];
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const [workspacesExpanded, setWorkspacesExpanded] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState('Workspace 1');
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const res = await workspaceApi.list();
+          if (res.data) setWorkspaces(res.data);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          //setIsLoading(false);
+        }
+      };
+      fetchData();
+    }, []);
+  
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to log out?')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       await authApi.logout();
     }
   };
 
   const getLinkStyles = (isActive: boolean) =>
-    `group relative flex items-center gap-3 px-4 py-2 transition-all duration-200 rounded-sm  mb-1 ${isActive
-      ? ' text-blue-600 bg-blue-50/50 border border-blue-400/20'
-      : 'font-medium text-[#A3AED0] hover:text-[#1B2559] hover:bg-[#F4F7FF]'
+    `block px-3 py-1 rounded-sm text-xs ${isActive
+      ? 'bg-zinc-300/20 text-[#0e0f10]'
+      : 'hover:bg-accent-light'
     }`;
 
   return (
-    <aside className="w-72 h-full bg-white border-r border-zinc-400/20 flex flex-col p-6">
+    <aside className="w-fit h-full bg-white border-r border-zinc-400/20 flex flex-col p-4 text-[#6b6b6b]">
       {/* Branding Section */}
-      <div className="flex items-center gap-3 mb-10 px-2">
+      <div className="flex items-center gap-1 mb-3 px-2">
         <Image
           src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
           alt="LearningDeck Logo"
-          width={36}
-          height={36}
+          width={20}
+          height={20}
           className="rounded"
         />
 
-        <select className='w-full bg-transparent text-black border border-zinc-400/20 px-2 py-2 rounded  text-base focus:border-none focus:ring-none outline-none'>
-          <option>Select Workspace</option>
+        <select
+          value={currentWorkspace}
+          onChange={(e) => setCurrentWorkspace(e.target.value)}
+          className='flex w-full bg-transparent text-black border border-zinc-400/20 px-2 py-2 rounded text-xs outline-none'
+        >
+         {workspaces.map((ws) => (
+            <option key={ws.id} value={ws.name} className='truncate'>
+              {ws.name}
+            </option>
+          ))}
         </select>
       </div>
 
       <nav className="flex flex-col flex-1">
+       
 
-
-        {navItems.map((item) => {
+        <div>
+          <button
+            onClick={() => setWorkspacesExpanded(!workspacesExpanded)}
+            className={`${getLinkStyles(pathname.startsWith('/dashboard/workspaces'))} flex justify-between items-center w-full`}
+          >
+            <div className="flex items-center">
+              <BsPersonWorkspace className="inline-block mr-2" />
+              Workspaces
+            </div>
+            <FiChevronDown className={`transform transition-transform ${workspacesExpanded ? 'rotate-180' : ''}`} />
+          </button>
+          {workspacesExpanded && (
+            <div className="ml-4">
+              {workspaceSubItems.map((item) => (
+                <Link key={item.href} href={item.href} className={getLinkStyles(pathname === item.href)}>
+                  <item.icon className="inline-block mr-2" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+ {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
           const Icon = item.icon;
 
           return (
             <Link key={item.href} href={item.href} className={getLinkStyles(isActive)}>
-              <Icon size={20} className={isActive ? 'text-blue-600' : 'text-[#A3AED0] group-hover:text-[#1B2559]'} />
-              <span className="text-xs">{item.label}</span>
-
+              <Icon className="inline-block mr-2" />
+              {item.label}
             </Link>
           );
         })}
-
         <div className="mt-auto pt-6 border-t border-zinc-400/20">
-          <Link href="/dashboard/settings" className={getLinkStyles(pathname === '/dashboard/settings')}>
-            <Settings size={20} />
-            <span className="text-xs">Settings</span>
-            {pathname === '/dashboard/settings' && <ActiveIndicator />}
-          </Link>
-
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3.5 text-[#A3AED0] hover:text-red-500 hover:bg-red-50 transition-all rounded-[12px] group mt-1"
+            className="w-full flex items-center gap-3 px-3 py-1 text-xs text-[#6b6b6b] hover:text-red-500 hover:bg-red-50 transition-all rounded-sm group"
           >
-            <LogOut size={20} className="group-hover:text-red-500" />
-            <span className="text-xs font-medium">Log Out</span>
+            <MdLogout className="group-hover:text-red-500" />
+            <span className="font-medium">Log Out</span>
           </button>
         </div>
       </nav>
     </aside>
   );
 };
-
-const ActiveIndicator = () => (
-  <div className="absolute right-[-24px] top-1/2 -translate-y-1/2 w-[4px] h-[32px] bg-blue-600 rounded-l-full" />
-);
 
 export default Sidebar;
