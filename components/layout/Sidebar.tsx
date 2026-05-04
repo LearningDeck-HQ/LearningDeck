@@ -33,7 +33,7 @@ const workspaceSubItems = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const [workspacesExpanded, setWorkspacesExpanded] = useState(false);
+  const [workspacesExpanded, setWorkspacesExpanded] = useState(true);
   const [currentWorkspace, setCurrentWorkspace] = useState('Workspace 1');
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
