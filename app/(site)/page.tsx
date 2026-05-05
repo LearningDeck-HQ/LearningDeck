@@ -4,16 +4,9 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import {
-  ChevronRight,
-  BookOpen,
-  ShieldCheck,
-  Server,
-  Activity,
-  Layers,
-  Cpu,
-  LayoutDashboard
-} from 'lucide-react';
+import { ChevronRight, BookOpen, ShieldCheck, Activity, Layers } from 'lucide-react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const LandingPageContent = () => {
   const searchParams = useSearchParams();
@@ -31,47 +24,6 @@ const LandingPageContent = () => {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-100">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-white border-b border-gray-200 px-6 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image
-              src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
-              alt="LearningDeck Logo"
-              width={28}
-              height={28}
-              className="rounded-md"
-            />
-            <span className="text-[16px] tracking-tight text-gray-800 font-medium">LearningDeck</span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-gray-500">
-            <Link href="#features" className="hover:text-gray-900 transition-colors">Features</Link>
-            <Link href="#solutions" className="hover:text-gray-900 transition-colors">Solutions</Link>
-            <Link href="#enterprise" className="hover:text-gray-900 transition-colors">Enterprise</Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {!isLoading && (
-              isAuthenticated ? (
-                <Link href="/dashboard" className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1">
-                  Go to Dashboard <ChevronRight className="w-4 h-4" />
-                </Link>
-              ) : (
-                <>
-                  <Link href={`/login${source ? `?source=${source}` : ''}`} className="text-[14px] font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                    Log In
-                  </Link>
-                  <Link href={`/signup${source ? `?source=${source}` : ''}`} className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1">
-                    Get Started <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </>
-              )
-            )}
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <header className="pt-32 pb-16 px-6 bg-gradient-to-b from-white via-sky-50 to-sky-200">
         <div className="max-w-4xl mx-auto text-center">
@@ -214,50 +166,7 @@ const LandingPageContent = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-gray-200 bg-[#F8F9FA]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-4">
-              <Image src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" alt="LearningDeck Logo" width={24} height={24} className="rounded-md grayscale opacity-80" />
-              <span className="text-[16px] text-gray-700">LearningDeck</span>
-            </div>
-            <p className="text-gray-500 text-[14px] leading-relaxed">
-              Standardizing the future of digital education and examination management across the globe.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-[14px]">
-            <div className="space-y-3">
-              <p className="text-gray-900 font-medium">Product</p>
-              <ul className="space-y-2 text-gray-500">
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Features</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Integrations</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Enterprise</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-3">
-              <p className="text-gray-900 font-medium">Support</p>
-              <ul className="space-y-2 text-gray-500">
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Help Center</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">API Docs</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Status</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-3">
-              <p className="text-gray-900 font-medium">Company</p>
-              <ul className="space-y-2 text-gray-500">
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">About Us</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition-colors">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-200 flex items-center justify-between text-[13px] text-gray-500">
-          <span>© 2026 LearningDeck Technologies. All rights reserved.</span>
-        </div>
-      </footer>
+     
     </div>
   );
 };

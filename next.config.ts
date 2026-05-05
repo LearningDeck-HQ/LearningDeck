@@ -1,10 +1,21 @@
+import path from 'path';
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-   images: {
-   domains: ["avatars.githubusercontent.com", "pbs.twimg.com"],
-
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
+      },
+    ],
+  },
+  turbopack: {
+    root: path.resolve(__dirname),
   },
 };
 
