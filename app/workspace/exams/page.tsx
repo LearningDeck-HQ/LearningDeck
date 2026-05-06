@@ -31,6 +31,7 @@ import { classApi } from '@/lib/api/classes';
 import { Exam, Class } from '@/types';
 import { MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { workspaceApi } from '@/lib/api/workspaces';
+import { ScaleLoader } from 'react-spinners';
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -238,6 +239,7 @@ export default function ExamsPage() {
 
           <Button
             onClick={fetchInitialData}
+            variant={"outline"}
             className="py-2 rounded bg-zinc-100 text-[#1B2559] hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 border-none shadow-none "
           >
             Apply Criteria
@@ -246,11 +248,10 @@ export default function ExamsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse border-none  h-[120px] rounded bg-white" />
-          ))
-        ) : filteredExams.length > 0 ? (
+         {isLoading ? (
+       <div className='flex flex-col items-center justify-center w-full h-full'>
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+               </div>)  : filteredExams.length > 0 ? (
           filteredExams.map((exam) => (
             <div key={exam.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
               <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -273,10 +274,7 @@ export default function ExamsPage() {
                 </div>
 
                 <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
-                  <div className="flex flex-col items-center mr-6">
-                    <span className="workspace text-[#A3AED0] uppercase  tracking-widest mb-1">Status</span>
-                    <span className="workspace  text-emerald-500 bg-emerald-50 px-3 py-1 rounded">Active</span>
-                  </div>
+              
 
                   <div className="flex items-center gap-2 text-black">
                     <Button

@@ -30,7 +30,7 @@ const LearningdeckDashboard = () => {
               <div className="bg-[#f0f0f0] p-4 rounded-2xl rounded-tl-none max-w-[80%]">
                 <p className=" leading-relaxed">
                   Hi there! 👋 Tell me what you're working on and I'll help you get started with Learningdeck.
-                  I can help create requests, debug calls, generate tests, and more.
+                  I can help create exams, questions, generate tests, and more.
                 </p>
               </div>
             </div>
@@ -69,12 +69,12 @@ const LearningdeckDashboard = () => {
               <div className="flex items-center gap-4 p-4 border-b border-[#ededed] hover:bg-[#fcfcfc] cursor-pointer group">
                 <Layers size={16} />
                 <div className="">
-                  <span className=" text-[#1a1a1a] group-hover:text-[#ff6b3d]">New Environment</span>
+                  <span className=" text-[#1a1a1a] group-hover:text-[#ff6b3d]">Local Environment</span>
                   <span className="mx-2 opacity-50">•</span>
                   <span>My Workspace</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 hover:bg-[#fcfcfc] cursor-pointer group">
+              <div className="hidden flex items-center gap-4 p-4 hover:bg-[#fcfcfc] cursor-pointer group">
                 <Zap size={16} />
                 <div className="">
                   <span className=" text-[#1a1a1a] group-hover:text-[#ff6b3d]">Identify the IP of an Incoming Request</span>
@@ -95,8 +95,8 @@ const LearningdeckDashboard = () => {
             </div>
             <h4 className="text-[#1a1a1a]  mb-2">All caught up!</h4>
             <p className=" text-balance">
-              Requests to access, edit, and take action on resources, PRs raised by you and ones that require your review, plus other actions that need your attention will appear here.
-            </p>
+               Start managing your first workspace to manage your exams, questions, and students. LearningDeck is here to help you streamline your educational management process and make learning more engaging for everyone involved.
+             </p>
           </div>
         </div>
 

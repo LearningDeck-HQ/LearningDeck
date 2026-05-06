@@ -29,6 +29,8 @@ import { Result, Subject, Question, SubjectScore, QuestionAttempt } from '@/type
 import { resultApi } from '@/lib/api/results';
 import { questionApi } from '@/lib/api/questions';
 import { subjectApi } from '@/lib/api/subjects';
+import { BiLock } from 'react-icons/bi';
+import { ScaleLoader } from 'react-spinners';
 
 export default function ResultsPage() {
   const [results, setResults] = useState<Result[]>([]);
@@ -83,6 +85,7 @@ export default function ResultsPage() {
 
   const filteredResults = useMemo(() => {
     return results.filter(r =>
+      r.user?.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.exam?.exam_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [results, searchTerm]);
@@ -106,7 +109,7 @@ export default function ResultsPage() {
       if (typeof scores === 'string') scores = JSON.parse(scores) as Record<string, SubjectScore>;
 
       if (Object.keys(scores).length === 0) {
-        return <span className="text-[11px] text-[#A3AED0] italic">Analytical data pending</span>;
+        return <span className=" text-[#A3AED0] italic">Analytical data pending</span>;
       }
 
       if (mode === 'table') {
@@ -115,7 +118,7 @@ export default function ResultsPage() {
             {Object.entries(scores).map(([subId, stats]: [string, SubjectScore]) => {
               const subName = subjects.find(s => s.id === subId)?.name || 'General';
               return (
-                <span key={subId} className="inline-flex items-center gap-1 bg-[#F4F7FF] px-2 py-0.5 rounded-lg text-[10px] font-bold text-[#1B2559] border border-blue-100/50">
+                <span key={subId} className="inline-flex items-center gap-1 bg-[#F4F7FF] px-2 py-0.5 rounded-lg text-[10px]  text-[#1B2559] border border-blue-100/50">
                   {subName}: {stats.correct}/{stats.total}
                 </span>
               );
@@ -129,10 +132,10 @@ export default function ResultsPage() {
               const subName = subjects.find(s => s.id === subId)?.name || 'General';
               const percentage = Math.round((stats.correct / stats.total) * 100);
               return (
-                <div key={subId} className="bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm space-y-2">
+                <div key={subId} className="bg-white p-4 rounded border border-zinc-100  space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-[13px] font-bold text-[#1B2559]">{subName}</span>
-                    <span className="text-[13px] font-bold text-blue-600">{percentage}%</span>
+                    <span className="text-[13px]  text-[#1B2559]">{subName}</span>
+                    <span className="text-[13px]  text-blue-600">{percentage}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
                     <div
@@ -140,7 +143,7 @@ export default function ResultsPage() {
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <p className="text-[11px] text-[#A3AED0] font-medium">{stats.correct} correct out of {stats.total} questions</p>
+                  <p className=" text-[#A3AED0] ">{stats.correct} correct out of {stats.total} questions</p>
                 </div>
               );
             })}
@@ -148,7 +151,7 @@ export default function ResultsPage() {
         );
       }
     } catch (e) {
-      return <span className="text-[11px] text-red-400">Data parsing error</span>;
+      return <span className=" text-red-400">Data parsing error</span>;
     }
   };
 
@@ -162,13 +165,13 @@ export default function ResultsPage() {
           <Button
             variant="ghost"
             onClick={fetchData}
-            className="flex items-center gap-2 text-[#A3AED0] hover:text-blue-600 h-[48px] px-6 rounded-xl border border-transparent hover:border-blue-100"
+            className="flex items-center gap-2 text-[#A3AED0] hover:text-blue-600  px-6 rounded border border-transparent hover:border-blue-100"
           >
             <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
             Sync Data
           </Button>
-          <Button className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] h-[48px] px-6 rounded-xl shadow-lg shadow-blue-900/10">
-            <Download size={18} />
+          <Button variant='ghost' className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] px-6 rounded border border-zinc-400/20">
+           <BiLock/>
             Export Analytics
           </Button>
         </div>
@@ -205,20 +208,20 @@ export default function ResultsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {isLoading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse border-none h-[120px] rounded bg-white" />
-          ))
+         <div className='flex flex-col items-center justify-center w-full h-full'>
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+               </div>
         ) : filteredResults.length > 0 ? (
           filteredResults.map((result) => (
             <div key={result.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
               <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className="w-12 h-12 rounded-2xl bg-[#1B2559] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-900/10 shrink-0">
-                    {result.userId.toString().charAt(0)}
+                  <div className="w-12 h-12 rounded-full bg-[#1B2559] text-white flex items-center justify-center  text-lg sshrink-0">
+                    {result.user?.user_name?.charAt(0) || '?'}
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                       <span className="workspace text-[#1B2559] font-bold">Student: {result.userId.slice(0, 8)}</span>
+                       <span className="workspace text-[#1B2559] "> {result.user?.user_name || 'Unknown'}</span>
                        <div className="w-1 h-1 bg-zinc-300 rounded-full" />
                        <span className="workspace text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">ID: #{result.id.slice(0, 8)}</span>
                     </div>
@@ -230,13 +233,13 @@ export default function ResultsPage() {
 
                 <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
                   <div className="flex flex-col items-center mr-6">
-                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1">Score</span>
-                    <span className={`workspace text-[18px] font-black ${result.overallScore >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>
+                
+                    <span className={`workspace text-[18px]  ${result.overallScore >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {result.overallScore}%
                     </span>
                   </div>
 
-                  <div className={`inline-flex px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider mr-6 ${result.overallScore >= 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                  <div className={`inline-flex px-3 py-1 rounded text-[10px]  uppercase tracking-wider mr-6 ${result.overallScore >= 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
                     {result.overallScore >= 50 ? 'Passed' : 'Failed'}
                   </div>
 
@@ -280,105 +283,45 @@ export default function ResultsPage() {
         title="Comprehensive Performance Analysis"
       >
         {selectedResult && (
-          <div className="space-y-6 max-h-[75vh] overflow-y-auto px-1 pb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-gradient-to-br from-white to-[#F4F7FF] border-none shadow-sm">
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                  <p className="text-[11px] font-black text-[#A3AED0] uppercase tracking-widest mb-1">Final Outcome</p>
-                  <span className={`text-[24px] font-black ${selectedResult.overallScore >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {selectedResult.overallScore >= 50 ? 'SUCCESS' : 'CRITICAL'}
-                  </span>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-white to-[#F4F7FF] border-none shadow-sm">
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                  <p className="text-[11px] font-black text-[#A3AED0] uppercase tracking-widest mb-1">Overall Precision</p>
-                  <span className="text-[24px] font-black text-[#1B2559]">{selectedResult.overallScore}%</span>
-                </CardContent>
-              </Card>
-              <Card className="bg-gradient-to-br from-white to-[#F4F7FF] border-none shadow-sm">
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                  <p className="text-[11px] font-black text-[#A3AED0] uppercase tracking-widest mb-1">Submission Date</p>
-                  <span className="text-[16px] font-bold text-[#1B2559] mt-2">{new Date(selectedResult.date).toLocaleDateString()}</span>
-                </CardContent>
-              </Card>
-            </div>
+   <div className="flex flex-col h-full bg-white text-zinc-900 font-sans border border-zinc-200 ">
+  {/* Header: Minimal metadata bar */}
+  <div className="flex items-center gap-8 px-5 py-3 border-b border-zinc-100 bg-zinc-50/50">
+ 
+    <div>
+      <p className="text-[10px]  text-zinc-400 uppercase tracking-wider">Score</p>
+      <p className="text-xs ">{selectedResult.overallScore}%</p>
+    </div>
+    <div>
+      <p className="text-[10px]  text-zinc-400 uppercase tracking-wider">Date</p>
+      <p className="text-xs  text-zinc-600">{new Date(selectedResult.date).toLocaleDateString()}</p>
+    </div>
+  </div>
 
-            <div className="space-y-4">
-              <h4 className="text-[13px] font-black text-[#1B2559] uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-blue-500" /> Subject Mastery Breakdown
-              </h4>
-              {renderSubjectScores(selectedResult, 'modal')}
-            </div>
+  {/* Main Content Area */}
+  <div className="flex-1 overflow-y-auto p-5 space-y-8">
+    
+    {/* Subject Breakdown: Simple Grid */}
+    <section>
+      <h4 className="  text-zinc-500 uppercase mb-3 flex items-center gap-2">
+        <CheckCircle2 size={14} className="text-zinc-400" /> Mastery Breakdown
+      </h4>
+      <div className="p-4 border border-zinc-100 rounded-md bg-zinc-50/30 text-sm">
+        {renderSubjectScores(selectedResult, 'modal')}
+      </div>
+    </section>
 
-            <div className="space-y-4 border-t border-zinc-100 pt-6">
-              <h4 className="text-[13px] font-black text-[#1B2559] uppercase tracking-widest flex items-center gap-2">
-                <Database size={16} className="text-blue-500" /> Item-by-Item Review
-              </h4>
+  </div>
 
-              {isLoadingDetails ? (
-                <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-blue-500" size={32} /></div>
-              ) : (
-                <div className="space-y-4">
-                  {(() => {
-                    let attempts = selectedResult.questionAttempts || [];
-                    if (typeof attempts === 'string') attempts = JSON.parse(attempts) as QuestionAttempt[];
-
-                    return attempts.map((att: QuestionAttempt, idx: number) => {
-                      const question = resultQuestions.find(q => q.id === att.questionId);
-                      if (!question) return null;
-
-                      let isCorrect = false;
-                      let userAnswer = '';
-                      let correctAnswer = question.correct_answer;
-
-                      if (question.type === 'FILL_IN_THE_BLANK') {
-                        userAnswer = att.userTextAnswer || 'NONE';
-                        isCorrect = userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-                      } else {
-                        const options = att.options || [];
-                        userAnswer = att.userOption != null ? options[att.userOption] : 'NONE';
-                        isCorrect = att.userOption != null && options[att.userOption] === correctAnswer;
-                      }
-
-                      return (
-                        <div key={idx} className={`p-5 rounded-[28px] border ${isCorrect ? 'bg-emerald-50/20 border-emerald-100/50' : 'bg-red-50/20 border-red-100/50'}`}>
-                          <div className="flex justify-between items-start mb-3">
-                            <span className="text-[11px] font-black text-[#A3AED0]">ITEM #{idx + 1}</span>
-                            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
-                              {isCorrect ? 'Correct' : 'Incorrect'}
-                            </div>
-                          </div>
-                          <p className="text-[14px] font-bold text-[#1B2559] mb-4 leading-relaxed">{question.question}</p>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white/60 p-3 rounded-2xl border border-white">
-                              <p className="text-[10px] font-black text-[#A3AED0] uppercase mb-1">Response</p>
-                              <p className={`text-[13px] font-bold ${isCorrect ? 'text-emerald-600' : 'text-red-500'}`}>{userAnswer}</p>
-                            </div>
-                            {!isCorrect && (
-                              <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-100/50">
-                                <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Standard Answer</p>
-                                <p className="text-[13px] font-bold text-emerald-700">{correctAnswer}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <Button
-                onClick={() => setSelectedResult(null)}
-                className="w-full h-12 rounded bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
-              >
-                Close Analysis
-              </Button>
-            </div>
-          </div>
+  {/* Footer: Single utility action */}
+  <div className="px-5 py-3 border-t border-zinc-100 bg-white flex justify-end">
+    <button
+      onClick={() => setSelectedResult(null)}
+      className="px-4 py-1.5 text-xs  text-zinc-600 border border-zinc-200 rounded hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
+    >
+      Dismiss
+    </button>
+  </div>
+</div>
         )}
       </Modal>
     </div>

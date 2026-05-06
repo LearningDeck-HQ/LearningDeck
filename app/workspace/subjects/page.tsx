@@ -25,6 +25,8 @@ import {
 import { subjectApi } from '@/lib/api/subjects';
 import { classApi } from '@/lib/api/classes';
 import { Subject, Class } from '@/types';
+import { ScaleLoader } from 'react-spinners';
+import { MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -178,7 +180,7 @@ export default function SubjectsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 text-xs">
       <DashboardHeader
         title="Subjects & Curriculum"
         description="Define your learning domains, subject codes, and curriculum structure."
@@ -188,15 +190,15 @@ export default function SubjectsPage() {
                 <Button 
                     variant="ghost" 
                     onClick={handleBulkDelete}
-                    className="flex items-center gap-2 text-red-500 hover:bg-red-50 h-12 px-6 rounded-xl border border-red-100"
+                    className="flex items-center gap-2 text-red-500 hover:bg-red-50  px-6 rounded border border-red-100"
                 >
-                    <Trash2 size={18} />
+                  <MdOutlineDeleteOutline size={18} />
                     Delete ({selectedSubjects.length})
                 </Button>
             )}
             <Button 
                 onClick={() => handleOpenModal()}
-                className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] h-12 px-6 rounded-xl shadow-lg shadow-blue-900/10"
+                className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] px-6 rounded  shadow-blue-900/10"
             >
                 <Plus size={18} />
                 Create Subject
@@ -215,7 +217,7 @@ export default function SubjectsPage() {
           </div>
           <button
             onClick={() => setSearchTerm('')}
-            className="workspace text-blue-600 hover:underline text-[13px]"
+            className="workspace text-blue-600 hover:underline "
           >
             Reset Filters
           </button>
@@ -235,21 +237,18 @@ export default function SubjectsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {isLoading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse border-none h-[120px] rounded bg-white" />
-          ))
-        ) : filteredSubjects.length > 0 ? (
+       <div className='flex flex-col items-center justify-center w-full h-full'>
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+               </div>)  : filteredSubjects.length > 0 ? (
           filteredSubjects.map((subject) => (
             <div key={subject.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
-              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="px-4 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm shrink-0">
-                    <BookOpen size={24} />
-                  </div>
-                  <div className="space-y-1">
+                
+                  <div className="flex items-center gap-4">
                     <h3 className="workspace text-[#1B2559] tracking-tight">{subject.name}</h3>
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 workspace text-[#A3AED0]">
-                      <span className="flex items-center gap-2 bg-[#F4F7FF] px-3 py-1 rounded text-blue-600 uppercase text-[10px] font-black">
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2  workspace text-[#A3AED0]">
+                      <span className="flex items-center gap-2 bg-[#F4F7FF] px-3 py-1 rounded text-blue-600 uppercase text-[10px] ">
                         {subject.code || 'UNCODED'}
                       </span>
                       <span className="flex items-center gap-2">
@@ -263,7 +262,7 @@ export default function SubjectsPage() {
                   <div className="flex flex-wrap gap-2 max-w-[200px] mr-6">
                     {subject.classes && subject.classes.length > 0 ? (
                       subject.classes.map(cls => (
-                        <span key={cls.id} className="text-[10px] font-bold text-zinc-600 bg-white border border-zinc-200 px-2 py-1 rounded">
+                        <span key={cls.id} className="text-[10px]  text-zinc-600 bg-white border border-zinc-200 px-2 py-1 rounded">
                           {cls.name}
                         </span>
                       ))
@@ -272,12 +271,12 @@ export default function SubjectsPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 p-1">
                     <Button onClick={() => handleOpenModal(subject)} variant="ghost" className="text-black">
-                      <Edit3 size={16} />
+                      <MdOutlineModeEditOutline />  
                     </Button>
                     <Button onClick={() => handleDelete(subject.id)} variant="ghost" className="text-black">
-                      <Trash2 size={16} />
+                     <MdOutlineDeleteOutline />
                     </Button>
                   </div>
                 </div>
@@ -308,7 +307,7 @@ export default function SubjectsPage() {
         <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-                <label className="text-[13px] font-bold text-[#1B2559] ml-1 flex items-center gap-2">
+                <label className="  text-[#1B2559] ml-1 flex items-center gap-2">
                     <BookOpen size={14} className="text-blue-500" /> Subject Name
                 </label>
                 <Input
@@ -316,46 +315,46 @@ export default function SubjectsPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
                 required
-                className="h-13 rounded-xl bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20 text-[15px]"
+                className="h-13 rounded bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20 "
                 />
             </div>
 
             <div className="space-y-2">
-                <label className="text-[13px] font-bold text-[#1B2559] ml-1 flex items-center gap-2">
+                <label className="  text-[#1B2559] ml-1 flex items-center gap-2">
                     <Hash size={14} className="text-blue-500" /> Catalog Code
                 </label>
                 <Input
                 placeholder="e.g. PHY-202"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                className="h-13 rounded-xl bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20 text-[15px] font-mono"
+                className="h-13 rounded bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20  font-mono"
                 />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[13px] font-bold text-[#1B2559] ml-1 flex items-center gap-2">
+            <label className="  text-[#1B2559] ml-1 flex items-center gap-2">
                 <MessageSquare size={14} className="text-blue-500" /> Curriculum Overview
             </label>
             <textarea
-              className="w-full px-4 py-3 bg-[#F4F7FF] border-none rounded-xl text-[15px] text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all min-h-25 placeholder:text-[#A3AED0]"
+              className="w-full px-4 py-3 bg-[#F4F7FF] border-none rounded  text-[#1B2559] focus:ring-2 focus:ring-blue-500/20 outline-none transition-all min-h-25 placeholder:text-[#A3AED0]"
               placeholder="Outline the core learning objectives and scope..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             ></textarea>
           </div>
 
-          <div className="space-y-4 p-5 bg-[#F4F7FF]/30 rounded-3xl border border-blue-100/30">
-            <label className="text-[12px] font-black text-[#1B2559] uppercase tracking-widest block mb-4">Target Academic Units</label>
+          <div className="space-y-4 p-5 bg-[#F4F7FF]/30 rounded border border-blue-100/30">
+            <label className="  text-[#1B2559] uppercase tracking-widest block mb-4">Target Academic Units</label>
             <div className="flex flex-wrap gap-2">
                 {allClasses.map(cls => (
                     <button
                         key={cls.id}
                         type="button"
                         onClick={() => toggleClass(cls.id)}
-                        className={`px-4 py-2 rounded-xl text-[12px] font-bold transition-all border ${
+                        className={`px-4 py-2 rounded   transition-all border ${
                             formData.classIds.includes(cls.id)
-                            ? 'bg-[#1B2559] text-white border-[#1B2559] shadow-md shadow-blue-900/10'
+                            ? 'bg-[#1B2559] text-white border-[#1B2559]  shadow-blue-900/10'
                             : 'bg-white text-[#A3AED0] border-zinc-200 hover:border-blue-200 hover:text-blue-500'
                         }`}
                     >
@@ -363,8 +362,8 @@ export default function SubjectsPage() {
                     </button>
                 ))}
                 {allClasses.length === 0 && (
-                    <div className="w-full py-4 text-center border-2 border-dashed border-zinc-100 rounded-2xl bg-white/50">
-                        <p className="text-[11px] text-[#A3AED0] font-medium">No class units available for assignment.</p>
+                    <div className="w-full py-4 text-center border-2 border-dashed border-zinc-100 rounded bg-white/50">
+                        <p className="text-[11px] text-[#A3AED0] ">No class units available for assignment.</p>
                     </div>
                 )}
             </div>
@@ -374,14 +373,14 @@ export default function SubjectsPage() {
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 h-12 rounded text-[#6b7280] font-bold hover:bg-zinc-50"
+              className="flex-1 rounded text-[#6b7280]  hover:bg-zinc-50"
               onClick={() => setIsModalOpen(false)}
             >
               Discard
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-12 rounded bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
+              className="flex-1 rounded bg-[#1B2559] text-white   shadow-blue-900/20"
               isLoading={isSubmitting}
             >
               {editingSubject ? (

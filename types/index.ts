@@ -91,6 +91,8 @@ export interface Result {
   userId: string;
   examId: string;
   exam?: Exam;
+  subject?: Subject;
+  user?: User;
 }
 
 export interface ApiResponse<T> {

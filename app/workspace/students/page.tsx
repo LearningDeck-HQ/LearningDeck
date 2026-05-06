@@ -31,6 +31,8 @@ import { workspaceApi } from '@/lib/api/workspaces';
 import { classApi } from '@/lib/api/classes';
 import { subjectApi } from '@/lib/api/subjects';
 import { User, Workspace, Class, Subject } from '@/types';
+import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
+import { ScaleLoader } from 'react-spinners';
 
 export default function StudentsPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -260,15 +262,15 @@ export default function StudentsPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {isLoading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse border-none h-[100px] rounded bg-white" />
-          ))
+         <div className='flex flex-col items-center justify-center w-full h-full'>
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+               </div>
         ) : filteredUsers.length > 0 ? (
           filteredUsers.map((student) => (
             <div key={student.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
               <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-100 shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white  text-lg  shadow-purple-100 shrink-0">
                     {student.user_name.charAt(0)}
                   </div>
                   <div className="space-y-1">
@@ -283,23 +285,20 @@ export default function StudentsPage() {
 
                 <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
                   <div className="flex flex-col items-center mr-6">
-                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1">Base Class</span>
+                
                     <span className="workspace text-blue-500 bg-blue-50 px-3 py-1 rounded">
                       {classes.find(c => c.id === student.classId)?.name || 'Unassigned'}
                     </span>
                   </div>
 
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mr-6 ${student.active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-zinc-100'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${student.active ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                    {student.active ? 'Active' : 'Inactive'}
-                  </div>
+               
 
                   <div className="flex items-center gap-2">
                     <Button onClick={() => handleOpenModal(student)} variant="ghost" className="text-black">
-                      <Edit3 size={16} />
+                    <MdOutlineModeEditOutline size={16} />
                     </Button>
                     <Button onClick={() => handleDelete(student.id)} variant="ghost" className="text-black">
-                      <Trash2 size={16} />
+                      <MdOutlineDelete size={16} />
                     </Button>
                   </div>
                 </div>
@@ -329,7 +328,7 @@ export default function StudentsPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-6 max-h-[75vh] overflow-y-auto px-1">
           <div className="space-y-2">
-            <label className="text-[13px] font-bold text-[#1B2559] ml-1">Full Name</label>
+            <label className="text-[13px]  text-[#1B2559] ml-1">Full Name</label>
             <Input
               placeholder="e.g. NIKOLA TESLA"
               value={formData.user_name}
@@ -340,7 +339,7 @@ export default function StudentsPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[13px] font-bold text-[#1B2559] ml-1">Admission Email / ID</label>
+            <label className="text-[13px]  text-[#1B2559] ml-1">Admission Email / ID</label>
             <Input
               type="text"
               placeholder="student@academy.com"
@@ -353,7 +352,7 @@ export default function StudentsPage() {
 
           {!editingUser && (
             <div className="space-y-2">
-              <label className="text-[13px] font-bold text-[#1B2559] ml-1">Account Password</label>
+              <label className="text-[13px]  text-[#1B2559] ml-1">Account Password</label>
               <Input
                 type="password"
                 placeholder="Initial secure password"
@@ -366,11 +365,11 @@ export default function StudentsPage() {
           )}
 
           <div className="space-y-2">
-            <label className="text-[13px] font-bold text-[#1B2559] ml-1">Base Academic Class</label>
+            <label className="text-[13px]  text-[#1B2559] ml-1">Base Academic Class</label>
             <div className="relative">
               <select
                 required
-                className="w-full h-[52px] px-4 rounded-xl bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer font-bold"
+                className="w-full h-[52px] px-4 rounded-xl bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer "
                 value={formData.classId}
                 onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
               >
@@ -385,7 +384,7 @@ export default function StudentsPage() {
             <div className="space-y-4 p-5 bg-gradient-to-br from-indigo-50 to-white rounded-3xl border border-indigo-100/50 shadow-inner">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[12px] font-black text-[#1B2559] uppercase tracking-[0.1em]">Course Assignments</label>
-                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">Enrollment Logic</span>
+                <span className="text-[10px]  text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md">Enrollment Logic</span>
               </div>
 
               <div className="space-y-2 min-h-[60px]">
@@ -394,7 +393,7 @@ export default function StudentsPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600"><BookOpen size={14} /></div>
                       <div className="flex flex-col">
-                        <span className="text-[13px] font-bold text-[#1B2559]">{a.subject?.name}</span>
+                        <span className="text-[13px]  text-[#1B2559]">{a.subject?.name}</span>
                         <span className="text-[11px] text-[#A3AED0] flex items-center gap-1"><GraduationCap size={10} /> {a.class?.name}</span>
                       </div>
                     </div>
@@ -408,7 +407,7 @@ export default function StudentsPage() {
                   </div>
                 )) : (
                   <div className="py-4 text-center border-2 border-dashed border-indigo-100 rounded-2xl bg-white/50">
-                    <p className="text-[11px] text-[#A3AED0] font-medium italic">No specific subject enrollments detected.</p>
+                    <p className="text-[11px] text-[#A3AED0]  italic">No specific subject enrollments detected.</p>
                   </div>
                 )}
               </div>
@@ -416,7 +415,7 @@ export default function StudentsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 pt-4 border-t border-indigo-100/30">
                 <div className="relative">
                   <select
-                    className="w-full h-[44px] px-3 rounded-xl bg-white border border-zinc-200 text-[12px] text-[#1B2559] outline-none appearance-none font-bold"
+                    className="w-full h-[44px] px-3 rounded-xl bg-white border border-zinc-200 text-[12px] text-[#1B2559] outline-none appearance-none "
                     value={newAssignment.subjectId}
                     onChange={(e) => setNewAssignment({ ...newAssignment, subjectId: e.target.value })}
                   >
@@ -426,7 +425,7 @@ export default function StudentsPage() {
                 </div>
                 <div className="relative">
                   <select
-                    className="w-full h-[44px] px-3 rounded-xl bg-white border border-zinc-200 text-[12px] text-[#1B2559] outline-none appearance-none font-bold"
+                    className="w-full h-[44px] px-3 rounded-xl bg-white border border-zinc-200 text-[12px] text-[#1B2559] outline-none appearance-none "
                     value={newAssignment.classId}
                     onChange={(e) => setNewAssignment({ ...newAssignment, classId: e.target.value })}
                   >
@@ -438,7 +437,7 @@ export default function StudentsPage() {
               <Button
                 type="button"
                 onClick={handleAddAssignment}
-                className="w-full h-[48px] bg-white text-indigo-600 border border-indigo-200 rounded-2xl text-[13px] font-bold hover:bg-indigo-50 transition-all shadow-sm"
+                className="w-full h-[48px] bg-white text-indigo-600 border border-indigo-200 rounded-2xl text-[13px]  hover:bg-indigo-50 transition-all shadow-sm"
               >
                 Authorize Enrollment
               </Button>
@@ -451,7 +450,7 @@ export default function StudentsPage() {
                 <Shield size={20} />
               </div>
               <div>
-                <p className="text-[14px] font-bold text-[#1B2559]">Active Enrollment</p>
+                <p className="text-[14px]  text-[#1B2559]">Active Enrollment</p>
                 <p className="text-[11px] text-[#A3AED0]">Control student access to examinations.</p>
               </div>
             </div>
@@ -468,14 +467,14 @@ export default function StudentsPage() {
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 h-12 rounded text-[#6b7280] font-bold hover:bg-zinc-50"
+              className="flex-1 h-12 rounded text-[#6b7280]  hover:bg-zinc-50"
               onClick={() => setIsModalOpen(false)}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-12 rounded bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
+              className="flex-1 h-12 rounded bg-[#1B2559] text-white  shadow-xl shadow-blue-900/20"
               isLoading={isSubmitting}
             >
               {editingUser ? (

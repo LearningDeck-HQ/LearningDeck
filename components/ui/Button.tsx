@@ -24,10 +24,10 @@ export const Button = ({
   };
 
   const sizes = {
-    sm: 'h-9 px-4 text-[13px]',
-    md: 'h-[40px] px-6 text-[14px]',
-    lg: 'h-[50px] px-8 text-[16px]',
-    xl: 'h-[56px] px-10 text-[18px]',
+    sm: 'py-2 px-4 text-xs',
+    md: 'py-2 px-6 text-md',
+    lg: 'py-2 px-8 text-sm',
+    xl: 'py-2 px-10 text-xl',
   };
 
   return (

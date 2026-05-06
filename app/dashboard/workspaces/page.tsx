@@ -8,6 +8,7 @@ import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 import Link from 'next/link';
+import { ScaleLoader } from 'react-spinners';
 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -28,21 +29,17 @@ export default function WorkspacesPage() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full">
 
 
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 h-full">
         {isLoading ? (
-          [1, 2, 3].map(i => (
-            <Card key={i} className="h-[280px] animate-pulse shadow-none">
-              <CardContent className="p-8 h-full rounded" >
-                <div />
-              </CardContent>
-            </Card>
-          ))
+          <div  className="flex items-center justify-center h-full w-full">
+             <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+          </div>
         ) : workspaces.length > 0 ? (
           workspaces.map((ws) => (
-            <Card key={ws.id} className="group bg-white hover:border-blue-300 hover: transition-all shadow-none overflow-hidden p-0">
+            <Card key={ws.id} className="group h-fit bg-white hover:border-blue-300 hover: transition-all shadow-none overflow-hidden p-0">
               <CardContent className="p-8">
                 <div className="flex justify-between items-start mb-6">
                   {/* Icon matching the Landing Page "E-Learning Card" style */}

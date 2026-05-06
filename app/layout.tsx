@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LearningDeck - Sign In",
-  description: "Secure login to your LearningDeck account",
+  title: "LearningDeck | Intelligent LMS & EMS",
+  description: "The intelligent deck for modern educational management",
   icons: {
     icon: "/learningdeck-icon.png",
   },

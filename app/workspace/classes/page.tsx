@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { classApi } from '@/lib/api/classes';
 import { Class } from '@/types';
+import { ScaleLoader } from 'react-spinners';
+import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -117,7 +119,7 @@ export default function ClassesPage() {
       >
         <Button 
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] h-[48px] px-5 rounded-xl shadow-lg shadow-blue-900/10 transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674]  px-5 rounded transition-all active:scale-[0.98]"
         >
           <Plus size={18} />
           Add New Class
@@ -154,40 +156,33 @@ export default function ClassesPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
-          [1, 2, 3].map(i => (
-            <div key={i} className="animate-pulse border-none h-[100px] rounded bg-white" />
-          ))
-        ) : filteredClasses.length > 0 ? (
+          {isLoading ? (
+       <div className='flex flex-col items-center justify-center w-full h-full'>
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
+               </div>)  : filteredClasses.length > 0 ? (
           filteredClasses.map((cls) => (
             <div key={cls.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
-              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-indigo-50 text-purple-600 rounded-2xl flex items-center justify-center border border-purple-100/50 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                    <GraduationCap size={28} />
-                  </div>
-                  <div className="space-y-1">
+              <div className="p-2 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5 flex-1 w-ful px-4">
+                
+                
                     <h3 className="workspace text-[#1B2559] tracking-tight">{cls.name}</h3>
-                    <div className="flex items-center gap-4 workspace text-[#A3AED0]">
-                      <span className="flex items-center gap-1.5 uppercase text-[10px] font-black tracking-widest">Level Registry</span>
-                      <div className="w-1 h-1 bg-zinc-300 rounded-full" />
-                      <span className="workspace text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">ID: #{cls.id.slice(0, 8)}</span>
-                    </div>
-                  </div>
+                  
+                
                 </div>
 
                 <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
                   <div className="flex flex-col items-center mr-6">
-                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1">Students</span>
+                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1"></span>
                     <span className="workspace text-blue-500 bg-blue-50 px-3 py-1 rounded">--</span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Button onClick={() => handleOpenModal(cls)} variant="ghost" className="text-black">
-                      <Edit3 size={16} />
+                      <MdOutlineModeEditOutline size={16} />
                     </Button>
                     <Button onClick={() => handleDelete(cls.id)} variant="ghost" className="text-black">
-                      <Trash2 size={16} />
+                      <MdOutlineDelete size={16} />
                     </Button>
                   </div>
                 </div>

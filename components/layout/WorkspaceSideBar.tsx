@@ -3,16 +3,17 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { BiBookOpen, BiSolidShapes, BiUser } from 'react-icons/bi';
 import { BsPersonWorkspace } from 'react-icons/bs';
 import { GiTeacher } from 'react-icons/gi';
-import { MdReport, MdQuiz, MdBarChart, MdCreditCard, MdSettings, MdLogout } from 'react-icons/md';
+import { MdReport, MdQuiz, MdBarChart, MdCreditCard, MdSettings, MdLogout, MdArrowBack } from 'react-icons/md';
 import { SiGoogleclassroom } from 'react-icons/si';
 import { FiChevronDown } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
+
 
 const navItems = [
     // { label: 'Analytics', href: '/workspace', icon: MdBarChart },
@@ -45,6 +46,7 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
     const [workspacesExpanded, setWorkspacesExpanded] = useState(true);
     const [currentWorkspace, setCurrentWorkspace] = useState('Workspace 1');
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const navigate = useRouter();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -101,6 +103,13 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
                 })}
                 <div className="mt-auto pt-6 border-t border-zinc-400/20">
                     <button
+                        onClick={() => navigate.push('/dashboard')}
+                        className="w-full flex items-center gap-3 px-3 py-1 text-xs text-[#6b6b6b] hover:text-red-500 hover:bg-red-50 transition-all rounded-sm group mb-2"
+                    >
+                        <MdArrowBack className="group-hover:text-red-500" />
+                        <span className="font-medium">Back Home</span>
+                    </button>
+                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-1 text-xs text-[#6b6b6b] hover:text-red-500 hover:bg-red-50 transition-all rounded-sm group"
                     >
