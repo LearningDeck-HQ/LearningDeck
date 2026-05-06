@@ -33,7 +33,7 @@ export default function SubjectsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   
   // Selection states
-  const [selectedSubjects, setSelectedSubjects] = useState<number[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,7 +45,7 @@ export default function SubjectsPage() {
     name: string;
     code: string;
     description: string;
-    classIds: number[];
+    classIds: string[];
   }>({
     name: '',
     code: '',
@@ -56,7 +56,9 @@ export default function SubjectsPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const workspaceId = 1; // Real app should use context
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      
       const [subjectsRes, classesRes] = await Promise.all([
         subjectApi.list(workspaceId),
         classApi.list(workspaceId)
@@ -107,7 +109,8 @@ export default function SubjectsPage() {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      const workspaceId = 1;
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
       const payload = {
         ...formData,
         workspaceId
@@ -131,7 +134,7 @@ export default function SubjectsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
     try {
       setIsLoading(true);
@@ -159,7 +162,7 @@ export default function SubjectsPage() {
     }
   };
 
-  const toggleClass = (classId: number) => {
+  const toggleClass = (classId: string) => {
     setFormData(prev => ({
       ...prev,
       classIds: prev.classIds.includes(classId)
@@ -168,7 +171,7 @@ export default function SubjectsPage() {
     }));
   };
 
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string) => {
     setSelectedSubjects(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
@@ -201,135 +204,100 @@ export default function SubjectsPage() {
         </div>
       </DashboardHeader>
 
-      <div className="bg-white p-6 rounded-4xl border border-zinc-200/60 shadow-sm space-y-6">
-        <div className="flex items-center justify-between">
-            <h2 className="text-[16px] font-bold text-[#1B2559] flex items-center gap-2">
-                <Search size={18} className="text-blue-500" />
-                Curriculum Explorer
-            </h2>
-            <Button variant="ghost" onClick={fetchData} className="text-[#A3AED0] hover:text-blue-600">
-                <Database size={16} className="mr-2" /> Sync Records
-            </Button>
+      {/* Filter Section */}
+      <div className="bg-white p-5 rounded border border-zinc-200/60 space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600">
+              <Filter size={14} />
+            </div>
+            <h2 className="workspace text-[#1B2559]">Curriculum Filter Hub</h2>
+          </div>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="workspace text-blue-600 hover:underline text-[13px]"
+          >
+            Reset Filters
+          </button>
         </div>
-        
+
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={18} />
           <input
             type="text"
             placeholder="Search by subject name or catalog code..."
-            className="w-full pl-12 pr-4 h-14 rounded-2xl bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white text-[15px] text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
+            className="w-full pl-12 pr-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-4xl border border-zinc-200/60 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#F4F7FF]/50 border-b border-zinc-100">
-                <th className="p-6 w-12">
-                   <input 
-                      type="checkbox" 
-                      className="w-5 h-5 rounded-lg border-zinc-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer"
-                      checked={subjects.length > 0 && selectedSubjects.length === subjects.length}
-                      onChange={() => setSelectedSubjects(selectedSubjects.length === subjects.length ? [] : subjects.map(s => s.id))}
-                   />
-                </th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider">Subject Identity</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider">Associated Units</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider text-center">Resources</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50">
-              {isLoading ? (
-                [1, 2, 3].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="p-6"><div className="w-5 h-5 bg-gray-100 rounded" /></td>
-                    <td className="px-8 py-6"><div className="h-10 bg-gray-100 rounded-xl w-48" /></td>
-                    <td className="px-8 py-6"><div className="h-6 bg-gray-100 rounded-lg w-32" /></td>
-                    <td className="px-8 py-6 text-center"><div className="h-8 bg-gray-100 rounded-full w-12 mx-auto" /></td>
-                    <td className="px-8 py-6 text-right"><div className="h-8 bg-gray-100 rounded-lg w-16 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filteredSubjects.length > 0 ? (
-                filteredSubjects.map((subject) => (
-                  <tr key={subject.id} className="group hover:bg-[#F4F7FF]/30 transition-colors">
-                    <td className="p-6">
-                        <input 
-                            type="checkbox" 
-                            className="w-5 h-5 rounded-lg border-zinc-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer"
-                            checked={selectedSubjects.includes(subject.id)}
-                            onChange={() => toggleSelect(subject.id)}
-                        />
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
-                          <BookOpen size={24} />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[16px] font-bold text-[#1B2559]">{subject.name}</span>
-                          <span className="text-[12px] font-black text-blue-500 uppercase tracking-widest">{subject.code || 'UNCODED'}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex flex-wrap gap-2 max-w-70">
-                        {subject.classes && subject.classes.length > 0 ? (
-                            subject.classes.map(cls => (
-                                <span key={cls.id} className="text-[11px] font-bold text-zinc-600 bg-white border border-zinc-200 px-3 py-1 rounded-lg">
-                                    {cls.name}
-                                </span>
-                            ))
-                        ) : (
-                            <span className="text-[11px] text-[#A3AED0] italic">No active class units</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                       <div className="inline-flex items-center gap-2 bg-blue-50/50 px-3 py-1.5 rounded-xl border border-blue-100/50">
-                          <Layers size={14} className="text-blue-500" />
-                          <span className="text-[14px] font-bold text-[#1B2559]">{subject._count?.questions || 0}</span>
-                       </div>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                          <button 
-                              onClick={() => handleOpenModal(subject)}
-                              className="p-2 hover:bg-blue-50 text-blue-500 rounded-xl transition-colors border border-transparent hover:border-blue-100"
-                          >
-                              <Edit3 size={18} />
-                          </button>
-                          <button 
-                              onClick={() => handleDelete(subject.id)}
-                              className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-colors border border-transparent hover:border-red-100"
-                          >
-                              <Trash2 size={18} />
-                          </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-32 text-center">
-                     <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-[#F4F7FF] rounded-full flex items-center justify-center mb-6">
-                            <Layers size={40} className="text-[#A3AED0]" />
-                        </div>
-                        <h3 className="text-[20px] font-bold text-[#1B2559] mb-2">Curriculum Domain Empty</h3>
-                        <p className="text-[#A3AED0] max-w-xs mx-auto mb-8">Start building your question bank by creating subject categories.</p>
-                        <Button onClick={() => handleOpenModal()} className="bg-[#1B2559] rounded-xl px-8 h-12">Initialize Subject</Button>
-                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="grid grid-cols-1 gap-6">
+        {isLoading ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="animate-pulse border-none h-[120px] rounded bg-white" />
+          ))
+        ) : filteredSubjects.length > 0 ? (
+          filteredSubjects.map((subject) => (
+            <div key={subject.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
+              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5 flex-1 w-full">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm shrink-0">
+                    <BookOpen size={24} />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="workspace text-[#1B2559] tracking-tight">{subject.name}</h3>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 workspace text-[#A3AED0]">
+                      <span className="flex items-center gap-2 bg-[#F4F7FF] px-3 py-1 rounded text-blue-600 uppercase text-[10px] font-black">
+                        {subject.code || 'UNCODED'}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Layers size={16} /> Questions: {subject._count?.questions || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
+                  <div className="flex flex-wrap gap-2 max-w-[200px] mr-6">
+                    {subject.classes && subject.classes.length > 0 ? (
+                      subject.classes.map(cls => (
+                        <span key={cls.id} className="text-[10px] font-bold text-zinc-600 bg-white border border-zinc-200 px-2 py-1 rounded">
+                          {cls.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-[#A3AED0] italic">No units</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => handleOpenModal(subject)} variant="ghost" className="text-black">
+                      <Edit3 size={16} />
+                    </Button>
+                    <Button onClick={() => handleDelete(subject.id)} variant="ghost" className="text-black">
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-24 bg-white rounded border border-dashed border-[#E0E5F2] flex flex-col items-center">
+            <div className="w-24 h-24 bg-[#F4F7FF] rounded flex items-center justify-center mb-8 shadow-inner">
+              <Layers size={48} className="text-[#A3AED0]" />
+            </div>
+            <h3 className="text-[#1B2559] mb-3">Curriculum Domain Empty</h3>
+            <p className="text-[#A3AED0] max-w-sm mx-auto mb-10 workspace leading-relaxed">
+              Start building your question bank by creating subject categories.
+            </p>
+            <Button onClick={() => handleOpenModal()} className="py-2 px-10 bg-[#1B2559] text-white rounded hover:opacity-90 transition-all workspace shadow-blue-900/20">
+              Initialize Subject
+            </Button>
+          </div>
+        )}
       </div>
 
       <Modal
@@ -402,18 +370,18 @@ export default function SubjectsPage() {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4 sticky bottom-0 bg-white pb-2">
+          <div className="flex gap-4 pt-4">
             <Button
               type="button"
               variant="ghost"
-              className="flex-1 h-15 rounded-2xl text-[#6b7280] font-bold hover:bg-zinc-50"
+              className="flex-1 h-12 rounded text-[#6b7280] font-bold hover:bg-zinc-50"
               onClick={() => setIsModalOpen(false)}
             >
               Discard
             </Button>
             <Button
               type="submit"
-              className="flex-1 h-[60px] rounded-2xl bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
+              className="flex-1 h-12 rounded bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
               isLoading={isSubmitting}
             >
               {editingSubject ? (

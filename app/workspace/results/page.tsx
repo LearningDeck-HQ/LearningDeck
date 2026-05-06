@@ -45,7 +45,9 @@ export default function ResultsPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const workspaceId = 1; // Real app should use context
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+
       const [resultsRes, subjectsRes, questionsRes] = await Promise.all([
         resultApi.list({ workspaceId }),
         subjectApi.list(workspaceId),
@@ -85,7 +87,7 @@ export default function ResultsPage() {
     );
   }, [results, searchTerm]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this result record permanently?')) return;
     try {
       setIsLoading(true);
@@ -111,7 +113,7 @@ export default function ResultsPage() {
         return (
           <div className="flex flex-wrap gap-1.5">
             {Object.entries(scores).map(([subId, stats]: [string, SubjectScore]) => {
-              const subName = subjects.find(s => s.id.toString() === subId)?.name || 'General';
+              const subName = subjects.find(s => s.id === subId)?.name || 'General';
               return (
                 <span key={subId} className="inline-flex items-center gap-1 bg-[#F4F7FF] px-2 py-0.5 rounded-lg text-[10px] font-bold text-[#1B2559] border border-blue-100/50">
                   {subName}: {stats.correct}/{stats.total}
@@ -124,7 +126,7 @@ export default function ResultsPage() {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {Object.entries(scores).map(([subId, stats]: [string, SubjectScore]) => {
-              const subName = subjects.find(s => s.id.toString() === subId)?.name || 'General';
+              const subName = subjects.find(s => s.id === subId)?.name || 'General';
               const percentage = Math.round((stats.correct / stats.total) * 100);
               return (
                 <div key={subId} className="bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm space-y-2">
@@ -172,124 +174,104 @@ export default function ResultsPage() {
         </div>
       </DashboardHeader>
 
-      <div className="bg-white p-6 rounded-[32px] border border-zinc-200/60 shadow-sm space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[16px] font-bold text-[#1B2559] flex items-center gap-2">
-            <Search size={18} className="text-blue-500" />
-            Global Results Search
-          </h2>
-          <div className="flex gap-2">
-            <Button variant="ghost" className="text-[#A3AED0] hover:bg-[#F4F7FF] rounded-xl h-10 px-4">
-              <Filter size={16} className="mr-2" /> All Classes
-            </Button>
+      {/* Filter Section */}
+      <div className="bg-white p-5 rounded border border-zinc-200/60 space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600">
+              <Filter size={14} />
+            </div>
+            <h2 className="workspace text-[#1B2559]">Global Filter Hub</h2>
           </div>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="workspace text-blue-600 hover:underline text-[13px]"
+          >
+            Reset Filters
+          </button>
         </div>
 
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={18} />
           <input
             type="text"
             placeholder="Search by student name, examination title, or reference ID..."
-            className="w-full pl-12 pr-4 h-[56px] rounded-2xl bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white text-[15px] text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
+            className="w-full pl-12 pr-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-[32px] border border-zinc-200/60 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#F4F7FF]/50 border-b border-zinc-100">
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider">Candidate / Assessment</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider">Subject Breakdown</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider text-center">Score</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider text-center">Status</th>
-                <th className="px-8 py-5 text-[12px] font-bold text-[#A3AED0] uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50">
-              {isLoading ? (
-                [1, 2, 3, 4].map(i => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-8 py-6"><div className="h-10 bg-gray-100 rounded-xl w-64" /></td>
-                    <td className="px-8 py-6"><div className="h-6 bg-gray-100 rounded-lg w-48" /></td>
-                    <td className="px-8 py-6 text-center"><div className="h-8 bg-gray-100 rounded-lg w-12 mx-auto" /></td>
-                    <td className="px-8 py-6 text-center"><div className="h-6 bg-gray-100 rounded-full w-20 mx-auto" /></td>
-                    <td className="px-8 py-6 text-right"><div className="h-8 bg-gray-100 rounded-lg w-16 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filteredResults.length > 0 ? (
-                filteredResults.map((result) => (
-                  <tr key={result.id} className="group hover:bg-[#F4F7FF]/30 transition-colors">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[#1B2559] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-900/10">
-                          {result.userId.toString().charAt(0)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[15px] font-bold text-[#1B2559] flex items-center gap-2">
-                            <UserIcon size={14} className="text-[#A3AED0]" /> Student ID: {result.userId}
-                          </span>
-                          <span className="text-[13px] text-blue-600 font-black uppercase tracking-tight flex items-center gap-2">
-                            <FileText size={14} /> {result.exam?.exam_name || 'Loading Exam...'}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      {renderSubjectScores(result)}
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                      <span className={`text-[17px] font-black ${result.overallScore >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {result.overallScore}%
-                      </span>
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${result.overallScore >= 50 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-                        {result.overallScore >= 50 ? 'Passed' : 'Failed'}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => fetchResultDetails(result)}
-                          className="p-2 hover:bg-blue-50 text-blue-500 rounded-xl transition-colors border border-transparent hover:border-blue-100"
-                          title="Performance Analysis"
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(result.id)}
-                          className="p-2 hover:bg-red-50 text-red-500 rounded-xl transition-colors border border-transparent hover:border-red-100"
-                          title="Delete Record"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-32 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="w-24 h-24 bg-[#F4F7FF] rounded-full flex items-center justify-center mb-6">
-                        <BarChart3 size={48} className="text-[#A3AED0]" />
-                      </div>
-                      <h3 className="text-[22px] font-bold text-[#1B2559] mb-2">No Performance Records</h3>
-                      <p className="text-[#A3AED0] max-w-xs mx-auto mb-8">Results will appear here once students complete their assigned examinations.</p>
-                      <Button onClick={fetchData} variant="ghost" className="text-blue-500 font-bold flex items-center gap-2">
-                        <RefreshCw size={18} /> Refresh Records
-                      </Button>
+      <div className="grid grid-cols-1 gap-6">
+        {isLoading ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="animate-pulse border-none h-[120px] rounded bg-white" />
+          ))
+        ) : filteredResults.length > 0 ? (
+          filteredResults.map((result) => (
+            <div key={result.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
+              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-5 flex-1 w-full">
+                  <div className="w-12 h-12 rounded-2xl bg-[#1B2559] text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-900/10 shrink-0">
+                    {result.userId.toString().charAt(0)}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                       <span className="workspace text-[#1B2559] font-bold">Student: {result.userId.slice(0, 8)}</span>
+                       <div className="w-1 h-1 bg-zinc-300 rounded-full" />
+                       <span className="workspace text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">ID: #{result.id.slice(0, 8)}</span>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                    <h3 className="workspace text-[#1B2559] tracking-tight flex items-center gap-2">
+                       <FileText size={16} className="text-blue-500" /> {result.exam?.exam_name || 'Processing...'}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
+                  <div className="flex flex-col items-center mr-6">
+                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1">Score</span>
+                    <span className={`workspace text-[18px] font-black ${result.overallScore >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>
+                      {result.overallScore}%
+                    </span>
+                  </div>
+
+                  <div className={`inline-flex px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider mr-6 ${result.overallScore >= 50 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                    {result.overallScore >= 50 ? 'Passed' : 'Failed'}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => fetchResultDetails(result)} variant="ghost" className="text-black">
+                      <Eye size={16} />
+                    </Button>
+                    <Button onClick={() => handleDelete(result.id)} variant="ghost" className="text-black">
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="px-6 pb-6 pt-0">
+                <div className="border-t border-zinc-50 pt-4">
+                  {renderSubjectScores(result)}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-24 bg-white rounded border border-dashed border-[#E0E5F2] flex flex-col items-center">
+            <div className="w-24 h-24 bg-[#F4F7FF] rounded flex items-center justify-center mb-8 shadow-inner">
+              <BarChart3 size={48} className="text-[#A3AED0]" />
+            </div>
+            <h3 className="text-[#1B2559] mb-3">No Performance Records</h3>
+            <p className="text-[#A3AED0] max-w-sm mx-auto mb-10 workspace leading-relaxed">
+              Results will appear here once students complete their assigned examinations.
+            </p>
+            <Button onClick={fetchData} className="py-2 px-10 bg-[#1B2559] text-white rounded hover:opacity-90 transition-all workspace shadow-blue-900/20">
+              Refresh Records
+            </Button>
+          </div>
+        )}
       </div>
 
       <Modal
@@ -388,12 +370,12 @@ export default function ResultsPage() {
               )}
             </div>
 
-            <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
+            <div className="flex gap-4 pt-4">
               <Button
                 onClick={() => setSelectedResult(null)}
-                className="w-full h-[56px] rounded-2xl bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
+                className="w-full h-12 rounded bg-[#1B2559] text-white font-bold shadow-xl shadow-blue-900/20"
               >
-                Close Analysis Report
+                Close Analysis
               </Button>
             </div>
           </div>

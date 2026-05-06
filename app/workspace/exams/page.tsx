@@ -30,6 +30,7 @@ import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
 import { Exam, Class } from '@/types';
 import { MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
+import { workspaceApi } from '@/lib/api/workspaces';
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -52,12 +53,26 @@ export default function ExamsPage() {
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      const [examsRes, classesRes] = await Promise.all([
+      const [examsRes, classesRes, workspacesRes] = await Promise.all([
         examApi.list(),
-        classApi.list()
+        classApi.list(),
+        workspaceApi.list()
       ]);
       if (examsRes.data) setExams(examsRes.data);
       if (classesRes.data) setClasses(classesRes.data);
+
+      // Try to get workspaceId from user or first workspace
+      const userStr = localStorage.getItem('user');
+      const workspaces = workspacesRes.data || [];
+
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.workspaceId) {
+          setFormData(prev => ({ ...prev, workspaceId: user.workspaceId }));
+        }
+      } else if (workspaces.length > 0) {
+        setFormData(prev => ({ ...prev, workspaceId: workspaces[0].id }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -72,7 +87,7 @@ export default function ExamsPage() {
   const filteredExams = useMemo(() => {
     return exams.filter(exam => {
       const matchesSearch = exam.exam_name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesClass = selectedClass === 'all' || exam.classId === parseInt(selectedClass);
+      const matchesClass = selectedClass === 'all' || exam.classId === selectedClass;
       return matchesSearch && matchesClass;
     });
   }, [exams, searchTerm, selectedClass]);
@@ -83,8 +98,8 @@ export default function ExamsPage() {
       setFormData({
         exam_name: exam.exam_name,
         minutes: exam.minutes,
-        classId: exam.classId.toString(),
-        visible: true // Default to true for now
+        classId: exam.classId,
+        visible: exam.visible ?? true
       });
     } else {
       setEditingExam(null);
@@ -98,7 +113,7 @@ export default function ExamsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this exam?')) return;
     try {
       setIsLoading(true);
@@ -133,11 +148,20 @@ export default function ExamsPage() {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      const workspaceId = 1; // Placeholder
+
+      let workspaceId = formData.classId ? classes.find(c => c.id === formData.classId)?.workspaceId : null;
+
+      if (!workspaceId) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          workspaceId = JSON.parse(userStr).workspaceId;
+        }
+      }
+
       const payload = {
         ...formData,
-        workspaceId,
-        classId: parseInt(formData.classId),
+        workspaceId: workspaceId || '1', // Fallback to '1' if absolutely nothing found
+        classId: formData.classId,
         minutes: Number(formData.minutes)
       };
 
@@ -347,6 +371,20 @@ export default function ExamsPage() {
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-[#F4F7FF] rounded border border-zinc-200 mt-2">
+            <div className="flex flex-col">
+              <span className="text-[13px] font-bold text-[#1B2559]">Visibility Status</span>
+              <span className="text-[11px] text-[#A3AED0] font-medium">Students can see this exam</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, visible: !formData.visible })}
+              className={`w-11 h-6 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-[#1B2559]' : 'bg-gray-300'}`}
+            >
+              <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.visible ? 'translate-x-5' : 'translate-x-0'}`}></div>
+            </button>
           </div>
 
 

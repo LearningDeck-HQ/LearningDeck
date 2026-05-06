@@ -1,19 +1,19 @@
 export type UserRole = "ADMIN" | "TEACHER" | "STUDENT";
 
 export interface User {
-  id: number;
+  id: string;
   user_name: string;
   user_email: string;
   role: UserRole;
   active: boolean;
-  workspaceId: number;
-  classId: number | null;
+  workspaceId: string;
+  classId: string | null;
   img: string | null;
   createdAt: string;
 }
 
 export interface Workspace {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   _count?: {
@@ -27,17 +27,17 @@ export interface Workspace {
 }
 
 export interface Class {
-  id: number;
+  id: string;
   name: string;
-  workspaceId: number;
+  workspaceId: string;
 }
 
 export interface Subject {
-  id: number;
+  id: string;
   name: string;
   code?: string;
   description?: string;
-  workspaceId: number;
+  workspaceId: string;
   classes?: Class[];
   _count?: {
     questions: number;
@@ -45,26 +45,27 @@ export interface Subject {
 }
 
 export interface Exam {
-  id: number;
+  id: string;
   exam_name: string;
   minutes: number;
-  workspaceId: number;
-  classId: number;
+  workspaceId: string;
+  classId: string;
+  visible: boolean;
 }
 
 export type QuestionType = "MULTIPLE_CHOICE" | "TRUE_FALSE" | "FILL_IN_THE_BLANK";
 
 export interface Question {
-  id: number;
+  id: string;
   type: QuestionType;
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
   explanation: string | null;
   img: string | null;
-  examId: number;
-  subjectId: number;
-  classId: number;
+  examId: string;
+  subjectId: string;
+  classId: string;
 }
 
 export interface SubjectScore {
@@ -73,22 +74,22 @@ export interface SubjectScore {
 }
 
 export interface QuestionAttempt {
-  questionId: number;
+  questionId: string;
   userOption?: number;
   userTextAnswer?: string;
   options?: string[];
 }
 
 export interface Result {
-  id: number;
+  id: string;
   overallScore: number;
   subjectScores: Record<string, SubjectScore>;
   questionAttempts: QuestionAttempt[];
   attempted_questions: number;
   total_questions: number;
   date: string;
-  userId: number;
-  examId: number;
+  userId: string;
+  examId: string;
   exam?: Exam;
 }
 

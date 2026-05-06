@@ -59,7 +59,7 @@ export default function TeacherPage() {
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      const workspaceId = 1; 
+      const workspaceId = '1'; 
       const [usersRes, classesRes, subjectsRes] = await Promise.all([
         userApi.list({ role: 'TEACHER', workspaceId }),
         classApi.list(workspaceId),
@@ -80,9 +80,9 @@ export default function TeacherPage() {
     fetchInitialData();
   }, []);
 
-  const fetchAssignments = async (teacherId: number) => {
+  const fetchAssignments = async (teacherId: string) => {
     try {
-      const workspaceId = 1;
+      const workspaceId = '1';
       const res = await workspaceApi.getAssignments(workspaceId, teacherId);
       if (res.data) setTeacherAssignments(res.data);
     } catch (err) {
@@ -118,13 +118,13 @@ export default function TeacherPage() {
       setTeacherAssignments([]);
     }
     setNewAssignment({ 
-      subjectId: subjects[0]?.id.toString() || '', 
-      classId: classes[0]?.id.toString() || '' 
+      subjectId: subjects[0]?.id || '', 
+      classId: classes[0]?.id || '' 
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this teacher?')) return;
     try {
       setIsLoading(true);
@@ -141,7 +141,7 @@ export default function TeacherPage() {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      const workspaceId = 1;
+      const workspaceId = '1';
       
       let response;
       if (editingTeacher) {
@@ -178,10 +178,10 @@ export default function TeacherPage() {
   const handleAddAssignment = async () => {
     if (!editingTeacher || !newAssignment.subjectId || !newAssignment.classId) return;
     try {
-      const workspaceId = 1;
+      const workspaceId = '1';
       const res = await workspaceApi.addAssignment(workspaceId, editingTeacher.id, {
-        subjectId: parseInt(newAssignment.subjectId),
-        classId: parseInt(newAssignment.classId)
+        subjectId: newAssignment.subjectId,
+        classId: newAssignment.classId
       });
       if (res.success) {
         await fetchAssignments(editingTeacher.id);
@@ -191,10 +191,10 @@ export default function TeacherPage() {
     }
   };
 
-  const handleDeleteAssignment = async (assignmentId: number) => {
+  const handleDeleteAssignment = async (assignmentId: string) => {
     if (!editingTeacher) return;
     try {
-      const workspaceId = 1;
+      const workspaceId = '1';
       const res = await workspaceApi.deleteAssignment(workspaceId, editingTeacher.id, assignmentId);
       if (res.success) {
         await fetchAssignments(editingTeacher.id);

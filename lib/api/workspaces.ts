@@ -6,7 +6,7 @@ export const workspaceApi = {
     return apiFetch<Workspace[]>('/workspaces');
   },
 
-  async getById(id: number): Promise<ApiResponse<Workspace>> {
+  async getById(id: string): Promise<ApiResponse<Workspace>> {
     return apiFetch<Workspace>(`/workspaces/${id}`);
   },
 
@@ -17,14 +17,14 @@ export const workspaceApi = {
     });
   },
 
-  async update(id: number, data: Partial<Workspace>): Promise<ApiResponse<Workspace>> {
+  async update(id: string, data: Partial<Workspace>): Promise<ApiResponse<Workspace>> {
     return apiFetch<Workspace>(`/workspaces/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   },
 
-  async delete(id: number): Promise<ApiResponse<any>> {
+  async delete(id: string): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${id}`, {
       method: 'DELETE',
     });
@@ -37,32 +37,32 @@ export const workspaceApi = {
     });
   },
 
-  async createStudent(workspaceId: number, data: any): Promise<ApiResponse<any>> {
+  async createStudent(workspaceId: string, data: any): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/students`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async createTeacher(workspaceId: number, data: any): Promise<ApiResponse<any>> {
+  async createTeacher(workspaceId: string, data: any): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/teachers`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async getAssignments(workspaceId: number, userId: number): Promise<ApiResponse<any>> {
+  async getAssignments(workspaceId: string, userId: string): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`);
   },
 
-  async addAssignment(workspaceId: number, userId: number, data: { subjectId: number; classId: number }): Promise<ApiResponse<any>> {
+  async addAssignment(workspaceId: string, userId: string, data: { subjectId: string; classId: string }): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  async deleteAssignment(workspaceId: number, userId: number, assignmentId: number): Promise<ApiResponse<any>> {
+  async deleteAssignment(workspaceId: string, userId: string, assignmentId: string): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments/${assignmentId}`, {
       method: 'DELETE',
     });
