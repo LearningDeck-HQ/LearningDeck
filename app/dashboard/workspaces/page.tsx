@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight } from 'lucide-react';
+import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight, HelpCircle } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
+import Link from 'next/link';
 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -28,23 +29,15 @@ export default function WorkspacesPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100">
-      <DashboardHeader
-        title="Workspace Management"
-        description="Organize your educational institutions and departments into isolated containers."
-      >
-        <Button className="bg-blue-600 text-white text-[14px] font-medium px-4 py-2 rounded hover:bg-blue-700 transition-colors flex items-center gap-1.5 shadow-none border-none">
-          <Plus className="w-4 h-4" />
-          Create Workspace
-        </Button>
-      </DashboardHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
         {isLoading ? (
           [1, 2, 3].map(i => (
             <Card key={i} className="h-[280px] animate-pulse shadow-none">
               <CardContent className="p-8 h-full rounded" >
-                <div/>
-                </CardContent>
+                <div />
+              </CardContent>
             </Card>
           ))
         ) : workspaces.length > 0 ? (
@@ -70,10 +63,10 @@ export default function WorkspacesPage() {
                 </p>
 
                 {/* Subdued stats grid */}
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-8">
+                <div className="grid grid-cols-6 gap-y-3 gap-x-4 mb-8">
                   <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
                     <Users className="w-4 h-4 text-gray-400" />
-                    {ws._count?.users || 0} Users
+                    {ws._count?.users || 0} Students
                   </div>
                   <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
                     <FileText className="w-4 h-4 text-gray-400" />
@@ -81,18 +74,26 @@ export default function WorkspacesPage() {
                   </div>
                   <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
                     <GraduationCap className="w-4 h-4 text-gray-400" />
-                    {ws._count?.classes || 0} Classes
+                    {ws._count?.teachers || 0} Teachers
                   </div>
                   <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
                     <BookOpen className="w-4 h-4 text-gray-400" />
                     {ws._count?.subjects || 0} Subjects
                   </div>
+                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                    <HelpCircle className="w-4 h-4 text-gray-400" />
+                    {ws._count?.questions || 0} Questions
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                    <Plus className="w-4 h-4 text-gray-400" />
+                    {ws._count?.classes || 0} Classes
+                  </div>
                 </div>
 
                 {/* Secondary button style matching Landing Page Contact Sales button */}
-                <button className="hidden w-full h-[40px] bg-white text-gray-700 border border-gray-300 text-[14px] font-medium rounded hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:border-blue-200">
+                <Link href={`/workspace`} target='_blank' className=" w-full h-[40px] bg-white text-gray-700 border border-gray-300 text-[14px] font-medium rounded hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:border-blue-200">
                   Enter Workspace <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-                </button>
+                </Link>
               </CardContent>
             </Card>
           ))
@@ -111,6 +112,6 @@ export default function WorkspacesPage() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

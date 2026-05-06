@@ -58,7 +58,7 @@ const Footer = () => {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-200 flex items-center justify-between text-[13px] text-gray-500">
-        <span>© 2026 LearningDeck Technologies. All rights reserved.</span>
+        <span>© 2026 LearningDeck incooperation with <Link href="#" className="hover:text-blue-600 transition-colors">Arcixil Labs</Link>. All rights reserved.</span>
       </div>
     </footer>
   );

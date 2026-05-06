@@ -16,5 +16,18 @@ export const examApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  async update(id: number, data: any): Promise<ApiResponse<Exam>> {
+    return apiFetch<Exam>(`/exams/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async delete(id: number): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/exams/${id}`, {
+      method: 'DELETE',
+    });
   }
 };

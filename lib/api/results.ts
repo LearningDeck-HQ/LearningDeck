@@ -2,7 +2,7 @@ import { ApiResponse, Result } from "@/types";
 import { apiFetch } from "./client";
 
 export const resultApi = {
-  async list(params?: { userId?: number; examId?: number }): Promise<ApiResponse<Result[]>> {
+  async list(params?: { userId?: number; examId?: number; workspaceId?: number }): Promise<ApiResponse<Result[]>> {
     const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : '';
     return apiFetch<Result[]>(`/results${query}`);
   },
@@ -13,5 +13,11 @@ export const resultApi = {
 
   async getByUser(userId: number): Promise<ApiResponse<Result[]>> {
     return apiFetch<Result[]>(`/results/user/${userId}`);
+  },
+
+  async delete(id: number): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/results/${id}`, {
+      method: 'DELETE',
+    });
   }
 };

@@ -7,10 +7,9 @@ import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const menuItems = [
-  { label: 'Features', href: '/features' },
+
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Solutions', href: '/solutions' },
-  { label: 'About', href: '/about' },
+  //{ label: 'About', href: '/about' },
 ];
 
 const Header = () => {
@@ -54,7 +53,7 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8 text-[14px] font-medium text-gray-500">
-          
+
           {/* Products / Platform Dropdown */}
           <div
             className="relative"
@@ -63,24 +62,22 @@ const Header = () => {
           >
             <button
               type="button"
-              className={`transition-colors py-2 ${
-                isProductsOpen || isActive('/')
-                  ? 'text-[#FF623D] border-b-2 border-[#FF623D] pb-1 font-semibold'
-                  : 'hover:text-gray-900'
-              }`}
+              className={`transition-colors py-2 ${isProductsOpen
+                ? 'hover:text-[#FF623D]  pb-1 font-semibold'
+                : 'hover:text-gray-900'
+                }`}
             >
               Platform
             </button>
 
             {/* Mega Menu Popover */}
             <div
-              className={`absolute left-1/2 -translate-x-[35%] top-full z-50 mt-1 w-[900px] rounded border border-gray-200 bg-white  transition-all duration-200 flex overflow-hidden origin-top-left ${
-                isProductsOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
-              }`}
+              className={`absolute left-1/2 -translate-x-[35%] top-full z-50 mt-1 w-[900px] rounded border border-gray-200 bg-white  transition-all duration-200 flex overflow-hidden origin-top-left ${isProductsOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+                }`}
             >
               {/* Left & Center Main Content */}
               <div className="flex-1 p-8 grid grid-cols-4 gap-8 bg-white">
-                
+
                 {/* Platform Column */}
                 <div className="flex flex-col justify-between">
                   <div>
@@ -116,8 +113,8 @@ const Header = () => {
                             {item.i}
                           </div>
                           <div>
-                            <p className="text-[14px] font-bold text-gray-900 group-hover:text-[#FF623D] transition-colors">{item.t}</p>
-                            <p className="text-[13px] text-gray-500 mt-0.5">{item.d}</p>
+                            <p className="flex text-[14px] font-bold text-gray-900 group-hover:text-[#FF623D] transition-colors">{item.t}</p>
+                            <p className="flex text-[13px] text-gray-500 mt-0.5">{item.d}</p>
                           </div>
                         </div>
                       </Link>
@@ -158,12 +155,12 @@ const Header = () => {
                     { t: 'Fern', d: 'Instantly generate API docs and SDKs', i: '🌿' },
                   ].map((item) => (
                     <Link key={item.t} href="#" className="group block bg-white border border-gray-200 rounded p-4  hover:border-[#FF623D]/30 hover:shadow-md transition-all">
-                       <div className="flex items-center gap-2 mb-1.5">
-                         <span className="text-[16px]">{item.i}</span>
-                         <p className="text-[14px] font-bold text-gray-900 group-hover:text-[#FF623D] flex items-center gap-1 transition-colors">
-                            {item.t} <ChevronRight className="w-3 h-3" />
-                         </p>
-                       </div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="text-[16px]">{item.i}</span>
+                        <p className="text-[14px] font-bold text-gray-900 group-hover:text-[#FF623D] flex items-center gap-1 transition-colors">
+                          {item.t} <ChevronRight className="w-3 h-3" />
+                        </p>
+                      </div>
                       <p className="text-[12px] text-gray-500 leading-relaxed">{item.d}</p>
                     </Link>
                   ))}
@@ -177,11 +174,10 @@ const Header = () => {
             <Link
               key={item.label}
               href={item.href}
-              className={`transition-colors py-2 ${
-                isActive(item.href)
-                  ? 'text-[#FF623D] border-b-2 border-[#FF623D] pb-1 font-semibold'
-                  : 'hover:text-gray-900'
-              }`}
+              className={`transition-colors py-2 ${isActive(item.href)
+                ? 'text-[#FF623D] border-b-2 border-[#FF623D] pb-1 font-semibold'
+                : 'hover:text-gray-900'
+                }`}
             >
               {item.label}
             </Link>

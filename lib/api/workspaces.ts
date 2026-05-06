@@ -35,6 +35,37 @@ export const workspaceApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  async createStudent(workspaceId: number, data: any): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/workspaces/${workspaceId}/students`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async createTeacher(workspaceId: number, data: any): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/workspaces/${workspaceId}/teachers`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getAssignments(workspaceId: number, userId: number): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`);
+  },
+
+  async addAssignment(workspaceId: number, userId: number, data: { subjectId: number; classId: number }): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAssignment(workspaceId: number, userId: number, assignmentId: number): Promise<ApiResponse<any>> {
+    return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments/${assignmentId}`, {
+      method: 'DELETE',
+    });
   }
 };
 

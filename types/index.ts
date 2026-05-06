@@ -21,6 +21,8 @@ export interface Workspace {
     exams: number;
     subjects: number;
     classes: number;
+    questions: number;
+    teachers: number;
   };
 }
 
@@ -33,7 +35,13 @@ export interface Class {
 export interface Subject {
   id: number;
   name: string;
+  code?: string;
+  description?: string;
   workspaceId: number;
+  classes?: Class[];
+  _count?: {
+    questions: number;
+  };
 }
 
 export interface Exam {
@@ -59,15 +67,29 @@ export interface Question {
   classId: number;
 }
 
+export interface SubjectScore {
+  correct: number;
+  total: number;
+}
+
+export interface QuestionAttempt {
+  questionId: number;
+  userOption?: number;
+  userTextAnswer?: string;
+  options?: string[];
+}
+
 export interface Result {
   id: number;
   overallScore: number;
-  subjectScores: any;
+  subjectScores: Record<string, SubjectScore>;
+  questionAttempts: QuestionAttempt[];
   attempted_questions: number;
   total_questions: number;
   date: string;
   userId: number;
   examId: number;
+  exam?: Exam;
 }
 
 export interface ApiResponse<T> {

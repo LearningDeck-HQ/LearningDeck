@@ -26,7 +26,7 @@ const LandingPageContent = () => {
     <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-100">
       {/* Hero Section */}
       <header className="pt-32 pb-16 px-6 bg-gradient-to-b from-white via-sky-50 to-sky-200">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="w-full mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-gray-200 mb-6 shadow-sm">
             <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse" />
             <span className="text-[12px] text-gray-600"></span>
@@ -56,7 +56,7 @@ const LandingPageContent = () => {
           </div>
 
           {/* PLACEHOLDER: Animated Desktop Exam Manager UI (Start Server/Status) */}
-          <div className="h-full w-full border border-zinc-400/20 rounded ">
+          <div className="h-full w-full border border-zinc-400/20 rounded shadow-lg ">
             <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
           </div>
         </div>
@@ -81,7 +81,7 @@ const LandingPageContent = () => {
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Student Achievement Badges</li>
               </ul>
               <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
-                Explore LearningDeck <ChevronRight className="w-4 h-4" />
+                Explore LearningDeck Elearn <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
@@ -95,12 +95,12 @@ const LandingPageContent = () => {
                 Secure, robust, and scalable examination infrastructure. From auto-grading to proctoring, manage it all from one dashboard.
               </p>
               <ul className="space-y-3 mb-8 text-[14px] text-gray-600">
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Automated Result Processing</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> AI-Powered Proctoring</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Custom Certificate Generation</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Easy exam creation and management</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> AI-Native Exam manager</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Plugins & Templates Intergrations</li>
               </ul>
               <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
-                View Admin Suite <ChevronRight className="w-4 h-4" />
+                View LearningDeck Exam Manager <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -127,7 +127,7 @@ const LandingPageContent = () => {
                   <div className="mt-1"><Layers className="w-5 h-5 text-blue-600" /></div>
                   <div>
                     <h4 className="text-[16px] font-medium text-gray-900 mb-1">Resource Library</h4>
-                    <p className="text-[14px] text-gray-500 leading-relaxed">Organize assets, question banks, and media in a structured, searchable cloud repository.</p>
+                    <p className="text-[14px] text-gray-500 leading-relaxed">Organize assets, question banks, and media in a structured, searchable cloud workspace.</p>
                   </div>
                 </div>
               </div>
@@ -142,6 +142,42 @@ const LandingPageContent = () => {
         </div>
       </section>
 
+           <section className="py-24 px-6 bg-[#F8F9FA] border-y border-gray-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+             {/* PLACEHOLDER: Animated Dashboard UI */}
+            <div className="lg:w-1/2 w-full border border-zinc-400/20 rounded ">
+              <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
+
+            </div>
+            
+               <div className="lg:w-1/2">
+              <h2 className="text-[32px] leading-tight mb-6 text-gray-900">
+                Get customised templates & plugins for <br /> offline exams interface.
+              </h2>
+              <div className="space-y-8">
+                <div className="flex gap-4">
+                  <div className="mt-1"><Activity className="w-5 h-5 text-blue-600" /></div>
+                  <div>
+                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Get customised templates</h4>
+                    <p className="text-[14px] text-gray-500 leading-relaxed">Access a variety of pre-designed templates for creating offline exams that fit your institution's needs.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="mt-1"><Layers className="w-5 h-5 text-blue-600" /></div>
+                  <div>
+                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Get Customised Plugins</h4>
+                    <p className="text-[14px] text-gray-500 leading-relaxed">Enhance your offline exam experience with a range of customizable plugins designed to meet your specific requirements.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        
+          </div>
+        </div>
+      </section>
+
       {/* Stats/Social Proof */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -151,16 +187,16 @@ const LandingPageContent = () => {
               <div className="text-[13px] text-gray-500 uppercase tracking-wider">Uptime SLA</div>
             </div>
             <div className="text-center">
-              <div className="text-[32px] text-gray-900 mb-1">500k+</div>
-              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Active Students</div>
+              <div className="text-[32px] text-gray-900 mb-1">5+</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Active Users</div>
             </div>
             <div className="text-center">
-              <div className="text-[32px] text-gray-900 mb-1">120+</div>
-              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Institutions</div>
+              <div className="text-[32px] text-gray-900 mb-1">10+</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">Schools & Colleges</div>
             </div>
             <div className="text-center">
               <div className="text-[32px] text-gray-900 mb-1">Secure</div>
-              <div className="text-[13px] text-gray-500 uppercase tracking-wider">AES-256 Encryption</div>
+              <div className="text-[13px] text-gray-500 uppercase tracking-wider">High End Encryption</div>
             </div>
           </div>
         </div>
