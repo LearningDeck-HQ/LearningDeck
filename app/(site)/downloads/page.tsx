@@ -1,6 +1,6 @@
 import React from 'react';
 import { Download, Monitor, Globe, Box, Code, Zap } from 'lucide-react'; // Icons for visual flair
-
+import Link from 'next/link';
 const Downloads = () => {
   return (
     <div className="h-full px-6 py-16 pt-24 bg-white font-sans text-[#212121]">
@@ -24,10 +24,10 @@ const Downloads = () => {
             {/* The LearningDeck App */}
             <section className="flex flex-col w-full items-center justify-center">
 
-              <button className="bg-[#ff6c37] hover:bg-[#e05a2b] text-white  py-2 px-6 rounded flex items-center transition-colors">
+              <Link href="https://github.com/LearningDeck-HQ/LearningDeck-CBT-Exam-Manager/releases/download/v1.0.0/learningdeck-exam-manager-1.0.0-setup.exe" className="bg-[#ff6c37] hover:bg-[#e05a2b] text-white  py-2 px-6 rounded flex items-center transition-colors">
                 <Monitor className="w-5 h-5 mr-2" />
                 Windows x64
-              </button>
+              </Link>
               <a href="#" className="block mt-4 text-[#006aff] hover:underline text-sm ">
                 Download for Windows ARM64 →
               </a>
