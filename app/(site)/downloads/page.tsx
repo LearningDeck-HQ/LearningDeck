@@ -49,7 +49,7 @@ const Downloads = () => {
 
           {/* Right Column: Desktop UI Placeholder (Empty as requested) */}
           <div className="lg:col-span-7  bg-[#fcfcfc] border border-[#e6e6e6] rounded  flex items-center justify-center">
-            <img src="/dashboard.jpg" alt="LearningDeck Desktop App UI Placeholder" className="object-cover h-full w-full" />
+            <img src="/dashboard.JPG" alt="LearningDeck Desktop App UI Placeholder" className="object-cover h-full w-full" />
           </div>
         </div>
       </main>
