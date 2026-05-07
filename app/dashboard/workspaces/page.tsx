@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight, HelpCircle } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
@@ -29,86 +27,86 @@ export default function WorkspacesPage() {
   }, []);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full">
-
-
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 h-full">
-        {isLoading ? (
-          <div  className="flex items-center justify-center h-full w-full">
-             <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
-          </div>
-        ) : workspaces.length > 0 ? (
-          workspaces.map((ws) => (
-            <Card key={ws.id} className="group h-fit bg-white hover:border-blue-300 hover: transition-all shadow-none overflow-hidden p-0">
-              <CardContent className="p-8">
-                <div className="flex justify-between items-start mb-6">
-                  {/* Icon matching the Landing Page "E-Learning Card" style */}
-                  <div className="w-12 h-12 bg-blue-50 rounded flex items-center justify-center border border-blue-100">
-                    <Briefcase className="w-6 h-6 text-blue-600" />
+    <div className="flex flex-col gap-8 h-full">
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64 w-full">
+          <ScaleLoader barCount={3} color="#a7a7a7" height={20} width={5} />
+        </div>
+      ) : workspaces.length > 0 ? (
+        <div className="divide-y divide-gray-100 border-t border-b border-gray-100">
+          {workspaces.map((ws) => (
+            <div
+              key={ws.id}
+              className="group py-10 px-5 flex flex-col md:flex-row md:items-center justify-between gap-8 transition-colors hover:bg-gray-50/50 border-y border-zinc-400/20 rounded"
+            >
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-100">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
                   </div>
-
-                  {/* Status badge matching the Landing Page Hero pulse badge */}
-                  <div className="inline-flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-gray-200 ">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                    <span className="text-[12px] text-gray-600 font-medium">Active</span>
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h3 className=" text-gray-900  tracking-tight">
+                        {ws.name}
+                      </h3>
+                      <div className="inline-flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                        <span className=" text-gray-600  uppercase tracking-wider">Active</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 mt-1  max-w-2xl leading-relaxed">
+                      {ws.description || "Integrated digital learning environment for streamlined education management."}
+                    </p>
                   </div>
                 </div>
 
-                <h3 className="text-[20px] mb-2 text-gray-900 font-medium tracking-tight">{ws.name}</h3>
-                <p className="text-gray-500 mb-6 leading-relaxed text-[14px] line-clamp-2">
-                  {ws.description || "Integrated digital learning environment for streamlined education management."}
-                </p>
-
-                {/* Subdued stats grid */}
-                <div className="grid grid-cols-6 gap-y-3 gap-x-4 mb-8">
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
+                  <div className="flex items-center gap-2  text-gray-500">
                     <Users className="w-4 h-4 text-gray-400" />
-                    {ws._count?.users || 0} Students
+                    <span className="text-gray-700 ">{ws._count?.users || 0}</span> Students
                   </div>
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                  <div className="flex items-center gap-2  text-gray-500">
                     <FileText className="w-4 h-4 text-gray-400" />
-                    {ws._count?.exams || 0} Exams
+                    <span className="text-gray-700 ">{ws._count?.exams || 0}</span> Exams
                   </div>
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                  <div className="flex items-center gap-2  text-gray-500">
                     <GraduationCap className="w-4 h-4 text-gray-400" />
-                    {ws._count?.teachers || 0} Teachers
+                    <span className="text-gray-700 ">{ws._count?.teachers || 0}</span> Teachers
                   </div>
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
+                  <div className="flex items-center gap-2  text-gray-500">
                     <BookOpen className="w-4 h-4 text-gray-400" />
-                    {ws._count?.subjects || 0} Subjects
-                  </div>
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
-                    <HelpCircle className="w-4 h-4 text-gray-400" />
-                    {ws._count?.questions || 0} Questions
-                  </div>
-                  <div className="flex items-center gap-2 text-[13px] text-gray-600 font-medium">
-                    <Plus className="w-4 h-4 text-gray-400" />
-                    {ws._count?.classes || 0} Classes
+                    <span className="text-gray-700 ">{ws._count?.subjects || 0}</span> Subjects
                   </div>
                 </div>
+              </div>
 
-                {/* Secondary button style matching Landing Page Contact Sales button */}
-                <Link href={`/workspace`} target='_blank' className=" w-full h-[40px] bg-white text-gray-700 border border-gray-300 text-[14px] font-medium rounded hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 group-hover:border-blue-200">
-                  Enter Workspace <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/workspace`}
+                  target='_blank'
+                  className="h-11 px-6 bg-white text-gray-700 border border-gray-200   rounded hover:bg-white hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  Open Workspace
+                  <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-24 bg-[#F8F9FA] rounded border border-dashed border-gray-300">
-            <div className="w-16 h-16 bg-white rounded flex items-center justify-center mx-auto mb-6 border border-gray-200 ">
-              <Briefcase className="w-8 h-8 text-gray-400" />
+              </div>
             </div>
-            <h3 className="text-[20px] font-medium text-gray-900 mb-2">No workspaces found</h3>
-            <p className="text-[14px] text-gray-500 max-w-xs mx-auto mb-8 leading-relaxed">
-              Get started by creating your first workspace for your school or organization.
-            </p>
-            <Button className="bg-blue-600 text-white text-[14px] font-medium px-6 py-2 rounded hover:bg-blue-700 transition-colors shadow-none border-none">
-              Create Now
-            </Button>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-24 border border-dashed border-gray-200 rounded-xl">
+          <div className="w-12 h-12 bg-gray-50 rounded flex items-center justify-center mx-auto mb-4 border border-gray-100">
+            <Briefcase className="w-6 h-6 text-gray-400" />
           </div>
-        )}
-      </div>
-    </div >
+          <h3 className="  text-gray-900 mb-2">No workspaces found</h3>
+          <p className=" text-gray-500 max-w-xs mx-auto mb-6">
+            Get started by creating your first workspace for your school or organization.
+          </p>
+          <Button className="bg-blue-600 text-white   px-8 h-10 rounded hover:bg-blue-700 transition-colors border-none ring-0">
+            Create Now
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

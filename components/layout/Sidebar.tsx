@@ -88,10 +88,7 @@ const Sidebar = () => {
             <span>What is Learningdeck</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
-          <Link href="#" className={footerLinkStyles}>
-            <span>How to Publish</span>
-            <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
-          </Link>
+
           <Link href="#" className={footerLinkStyles}>
             <span>Learning Center</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
@@ -100,11 +97,8 @@ const Sidebar = () => {
             <span>Support Center</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
-          <Link href="#" className={footerLinkStyles}>
-            <span>Learningdeck Enterprise</span>
-            <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
-          </Link>
-          <Link href="#" className={footerLinkStyles}>
+
+          <Link href="/downloads" className={footerLinkStyles}>
             <span>Download Desktop App</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
