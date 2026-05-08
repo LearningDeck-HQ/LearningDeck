@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import DashContent from '@/components/layout/DashContent';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export const metadata: Metadata = {
 title: "Dashboard | LearningDeck",
@@ -10,5 +11,9 @@ title: "Dashboard | LearningDeck",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <DashContent>{children}</DashContent>;
+  return (
+    <AuthGuard>
+      <DashContent>{children}</DashContent>
+    </AuthGuard>
+  );
 }

@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/features/auth/components/AuthForm';
+import { ScaleLoader } from 'react-spinners';
 
 function InviteTeacherContent() {
   const searchParams = useSearchParams();
@@ -21,10 +22,10 @@ function InviteTeacherContent() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-gray-50/50">
-      <AuthForm 
-        type="invite" 
-        inviteToken={token} 
-        role="TEACHER" 
+      <AuthForm
+        type="invite"
+        inviteToken={token}
+        role="TEACHER"
       />
     </main>
   );
@@ -32,7 +33,9 @@ function InviteTeacherContent() {
 
 export default function InviteTeacherPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#1B2559] font-medium">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#1B2559] font-medium">
+      <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+    </div>}>
       <InviteTeacherContent />
     </Suspense>
   );

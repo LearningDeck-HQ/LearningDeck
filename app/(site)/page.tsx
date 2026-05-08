@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { ChevronRight, BookOpen, ShieldCheck, Activity, Layers } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { ScaleLoader } from 'react-spinners';
 
 const LandingPageContent = () => {
   const searchParams = useSearchParams();
@@ -142,16 +143,16 @@ const LandingPageContent = () => {
         </div>
       </section>
 
-           <section className="py-24 px-6 bg-[#F8F9FA] border-y border-gray-200">
+      <section className="py-24 px-6 bg-[#F8F9FA] border-y border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-16">
-             {/* PLACEHOLDER: Animated Dashboard UI */}
+            {/* PLACEHOLDER: Animated Dashboard UI */}
             <div className="lg:w-1/2 w-full border border-zinc-400/20 rounded ">
               <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
 
             </div>
-            
-               <div className="lg:w-1/2">
+
+            <div className="lg:w-1/2">
               <h2 className="text-[32px] leading-tight mb-6 text-gray-900">
                 Get customised templates & plugins for <br /> offline exams interface.
               </h2>
@@ -173,7 +174,7 @@ const LandingPageContent = () => {
               </div>
             </div>
 
-        
+
           </div>
         </div>
       </section>
@@ -202,14 +203,16 @@ const LandingPageContent = () => {
         </div>
       </section>
 
-     
+
     </div>
   );
 };
 
 const LandingPage = () => {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center">
+      <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+    </div>}>
       <LandingPageContent />
     </Suspense>
   );

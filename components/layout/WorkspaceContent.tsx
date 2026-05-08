@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Header from "@/components/layout/Header"
 import WorkspaceSideBar from "@/components/layout/WorkspaceSideBar"
 import { useSidebar } from "@/context/SidebarContext"
+import { useRouter } from 'next/navigation';
 
 const WorkspaceContent = ({ children }: { children: React.ReactNode }) => {
     const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
