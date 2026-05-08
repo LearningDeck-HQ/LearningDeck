@@ -1,17 +1,24 @@
-import React from 'react';
+"use client"
+import React, { useState } from 'react';
 import {
-  MessageSquare,
-  Clock,
-  Star,
   Lock,
   Layers,
   Zap,
   PartyPopper
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const LearningdeckDashboard = () => {
+  const [prompt, setPrompt] = useState('');
+  const router = useRouter();
+
+  const handleStart = () => {
+    if (!prompt.trim()) return;
+    // Navigate with the prompt as a query parameter
+    router.push(`/dashboard/agentic-mode?q=${encodeURIComponent(prompt)}`);
+  };
   return (
-    <div className="h-full  text-[#6b6b6b] font-sans">
+    <div className="h-full  text-[#6b6b6b] font-sans p-2 md:p-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* Left Section: Welcome & Input */}
@@ -24,7 +31,7 @@ const LearningdeckDashboard = () => {
             <div className="flex gap-4">
               <div className="mt-1">
                 <div className="p-2 bg-[#f0f0f0] rounded">
-                  <Zap size={18} className="text-orange-500" />
+                  <Zap size={18} className="text-blue-500" />
                 </div>
               </div>
               <div className="bg-[#f0f0f0] p-4 rounded-2xl rounded-tl-none max-w-[80%]">
@@ -38,10 +45,16 @@ const LearningdeckDashboard = () => {
             <div className="relative mt-8">
               <input
                 type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleStart()}
                 placeholder="Tell us what you want to build..."
-                className="w-full  border border-[#ededed] rounded py-4 px-6 pr-24 outline-none focus:border-orange-400 transition-colors"
+                className="w-full  border border-[#ededed] rounded py-4 px-6 pr-24 outline-none focus:border-blue-400 transition-colors"
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#ff6b3d]/10 text-[#ff6b3d]  py-2 px-5 rounded hover:bg-[#ff6b3d]/20 transition-colors">
+              <button
+                onClick={handleStart}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-400/10 text-blue-600  py-2 px-5 rounded hover:bg-blue-700/20 transition-colors"
+              >
                 Let's Go
               </button>
             </div>
@@ -91,12 +104,12 @@ const LearningdeckDashboard = () => {
           <h2 className="  text-[#1a1a1a]">Needs your attention</h2>
           <div className="bg-white border border-[#ededed] rounded p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
             <div className="mb-4">
-              <PartyPopper size={32} className="text-orange-400" />
+              <PartyPopper size={32} className="text-blue-400" />
             </div>
             <h4 className="text-[#1a1a1a]  mb-2">All caught up!</h4>
             <p className=" text-balance">
-               Start managing your first workspace to manage your exams, questions, and students. LearningDeck is here to help you streamline your educational management process and make learning more engaging for everyone involved.
-             </p>
+              Start managing your first workspace to manage your exams, questions, and students. LearningDeck is here to help you streamline your educational management process and make learning more engaging for everyone involved.
+            </p>
           </div>
         </div>
 

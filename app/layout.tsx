@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "LearningDeck | The Future of CBT Exams",
     description: "Stop relying on outdated PHP/SQL systems. Switch to LearningDeck for secure, offline-first exam management.",
-    creator: "@learningdeck",
+    creator: "@learningdeckorg",
     images: ["/og-image.png"],
   },
   robots: {

@@ -15,7 +15,7 @@ import {
 } from 'react-icons/md';
 import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
-import { BiCreditCard } from "react-icons/bi";
+import { BiBrain, BiCreditCard, BiWorld } from "react-icons/bi";
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
@@ -72,14 +72,14 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <div className="my-2 border-t border-[#ededed]/60" />
 
-        <Link href="/dashboard/private" className={getLinkStyles(pathname === '/dashboard/private')} onClick={onClose}>
-          <MdOutlineNetworkCheck className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Private Network</span>
+        <Link href="/dashboard/agentic-mode" className={getLinkStyles(pathname === '/dashboard/agentic-mode')} onClick={onClose}>
+          <BiBrain className=" opacity-70" />
+          <span className="text-[#6b6b6b]">Agentic mode</span>
         </Link>
 
-        <Link href="/dashboard/public" className={getLinkStyles(pathname === '/dashboard/public')} onClick={onClose}>
-          <MdPublic className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Public Network</span>
+        <Link href="/dashboard/environments" className={getLinkStyles(pathname === '/dashboard/environments')} onClick={onClose}>
+          <BiWorld className=" opacity-70" />
+          <span className="text-[#6b6b6b]">Environments</span>
         </Link>
 
         {/* Bottom External Links Section */}

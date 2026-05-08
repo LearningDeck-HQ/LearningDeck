@@ -38,7 +38,7 @@ const DashContent = ({ children }: { children: React.ReactNode }) => {
           </nav>
         </div>
 
-        <main className='flex-1 overflow-y-auto p-4 md:p-8 bg-[#FAFBFF] w-full'>
+        <main className='flex-1 overflow-y-auto bg-[#FAFBFF] w-full'>
           {children}
         </main>
       </div>
