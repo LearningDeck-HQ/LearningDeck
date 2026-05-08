@@ -9,27 +9,22 @@ import {
   Users as UsersIcon,
   Plus,
   Mail,
-  Shield,
   Search,
   Filter,
   Check,
-  X,
-  BookOpen,
   GraduationCap,
   ChevronDown,
 } from 'lucide-react';
 import { userApi } from '@/lib/api/users';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { classApi } from '@/lib/api/classes';
-import { subjectApi } from '@/lib/api/subjects';
-import { User, Workspace, Class, Subject } from '@/types';
+import { User, Class } from '@/types';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 
 export default function StudentsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -46,23 +41,17 @@ export default function StudentsPage() {
     active: true,
   });
 
-  // Assignment states
-  const [studentAssignments, setStudentAssignments] = useState<any[]>([]);
-  const [newAssignment, setNewAssignment] = useState({ subjectId: '', classId: '' });
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
       const userStr = localStorage.getItem('user');
       const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const [usersRes, clsRes, subRes] = await Promise.all([
+      const [usersRes, clsRes] = await Promise.all([
         userApi.list({ role: 'STUDENT', workspaceId }),
         classApi.list(workspaceId),
-        subjectApi.list(workspaceId),
       ]);
       if (usersRes.data) setUsers(usersRes.data);
       if (clsRes.data) setClasses(clsRes.data);
-      if (subRes.data) setSubjects(subRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -74,17 +63,6 @@ export default function StudentsPage() {
     fetchData();
   }, []);
 
-  const fetchAssignments = async (userId: string) => {
-    try {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const res = await workspaceApi.getAssignments(workspaceId, userId);
-      if (res.data) setStudentAssignments(res.data);
-    } catch (err) {
-      console.error('Failed to fetch assignments', err);
-    }
-  };
-
   const filteredUsers = useMemo(() => {
     return users.filter(
       (u) =>
@@ -93,7 +71,7 @@ export default function StudentsPage() {
     );
   }, [users, searchTerm]);
 
-  const handleOpenModal = async (u: User | null = null) => {
+  const handleOpenModal = (u: User | null = null) => {
     if (u) {
       setEditingUser(u);
       setFormData({
@@ -104,7 +82,6 @@ export default function StudentsPage() {
         role: u.role as any,
         active: u.active,
       });
-      await fetchAssignments(u.id);
     } else {
       setEditingUser(null);
       setFormData({
@@ -115,12 +92,7 @@ export default function StudentsPage() {
         role: 'STUDENT',
         active: true,
       });
-      setStudentAssignments([]);
     }
-    setNewAssignment({
-      subjectId: subjects[0]?.id.toString() || '',
-      classId: classes[0]?.id.toString() || '',
-    });
     setIsModalOpen(true);
   };
 
@@ -164,12 +136,7 @@ export default function StudentsPage() {
 
       if (response.success) {
         await fetchData();
-        if (!editingUser) {
-          setEditingUser(response.data);
-          setStudentAssignments([]);
-        } else {
-          setIsModalOpen(false);
-        }
+        setIsModalOpen(false);
       }
     } catch (err: any) {
       alert(err.message || 'An error occurred');
@@ -178,38 +145,11 @@ export default function StudentsPage() {
     }
   };
 
-  const handleAddAssignment = async () => {
-    if (!editingUser || !newAssignment.subjectId || !newAssignment.classId) return;
-    try {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const res = await workspaceApi.addAssignment(workspaceId, editingUser.id, {
-        subjectId: newAssignment.subjectId,
-        classId: newAssignment.classId,
-      });
-      if (res.success) await fetchAssignments(editingUser.id);
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
-  const handleDeleteAssignment = async (assignmentId: string) => {
-    if (!editingUser) return;
-    try {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const res = await workspaceApi.deleteAssignment(workspaceId, editingUser.id, assignmentId);
-      if (res.success) await fetchAssignments(editingUser.id);
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
         title="Students"
-        description="Manage student enrollments, class assignments, and account access."
+        description="Manage student enrollments and account access."
       >
         <button
           onClick={() => handleOpenModal()}
@@ -220,7 +160,7 @@ export default function StudentsPage() {
         </button>
       </DashboardHeader>
 
-      {/* ── Filter Section ── */}
+      {/* Filter Section */}
       <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
@@ -236,7 +176,6 @@ export default function StudentsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {/* Search */}
           <div className="md:col-span-3 relative">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]"
@@ -260,7 +199,7 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      {/* ── Student List ── */}
+      {/* Student List */}
       <div className="grid grid-cols-1 gap-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -273,7 +212,6 @@ export default function StudentsPage() {
               className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Student info */}
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
                     <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
@@ -289,8 +227,8 @@ export default function StudentsPage() {
                       </span>
                       <span
                         className={`flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium ${student.active
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-zinc-100 text-[#6b6b6b]'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-zinc-100 text-[#6b6b6b]'
                           }`}
                       >
                         {student.active ? 'Active' : 'Inactive'}
@@ -299,7 +237,6 @@ export default function StudentsPage() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
                   <button
                     onClick={() => handleOpenModal(student)}
@@ -320,14 +257,13 @@ export default function StudentsPage() {
             </div>
           ))
         ) : (
-          /* ── Empty state ── */
           <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
             <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
               <UsersIcon size={28} className="text-[#6b6b6b]" />
             </div>
             <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No students enrolled</h3>
             <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Start by enrolling your first student to organize their learning path and class assignments.
+              Start by enrolling your first student to organize their learning path.
             </p>
             <button
               onClick={() => handleOpenModal()}
@@ -339,14 +275,13 @@ export default function StudentsPage() {
         )}
       </div>
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingUser ? 'Edit Student' : 'New Student'}
       >
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Full Name */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Full Name</label>
             <Input
@@ -358,7 +293,6 @@ export default function StudentsPage() {
             />
           </div>
 
-          {/* Email */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Email / ID</label>
             <Input
@@ -371,7 +305,6 @@ export default function StudentsPage() {
             />
           </div>
 
-          {/* Password — create only */}
           {!editingUser && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Password</label>
@@ -386,7 +319,6 @@ export default function StudentsPage() {
             </div>
           )}
 
-          {/* Class */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class</label>
             <div className="relative">
@@ -408,77 +340,7 @@ export default function StudentsPage() {
             </div>
           </div>
 
-          {/* Subject Assignments — edit only */}
-          {editingUser && (
-            <div className="space-y-3 p-3 bg-zinc-50 rounded-sm border border-zinc-400/20">
-              <p className="text-xs font-medium text-[#0e0f10]">Subject Assignments</p>
-
-              <div className="space-y-1.5 min-h-[40px]">
-                {studentAssignments.length > 0 ? (
-                  studentAssignments.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-center justify-between bg-white px-3 py-1.5 rounded-sm border border-zinc-400/20"
-                    >
-                      <div className="flex items-center gap-2">
-                        <BookOpen size={11} className="text-[#6b6b6b]" />
-                        <span className="text-xs text-[#0e0f10]">{a.subject?.name}</span>
-                        <span className="text-[10px] text-[#6b6b6b]">— {a.class?.name}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteAssignment(a.id)}
-                        className="px-1.5 py-0.5 text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-[10px] text-[#6b6b6b] italic px-1">No assignments yet.</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="relative">
-                  <select
-                    className="w-full px-3 py-1 text-xs rounded-sm bg-white border border-zinc-400/20 text-[#0e0f10] outline-none appearance-none cursor-pointer"
-                    value={newAssignment.subjectId}
-                    onChange={(e) => setNewAssignment({ ...newAssignment, subjectId: e.target.value })}
-                  >
-                    <option value="" disabled>Subject</option>
-                    {subjects.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={11} />
-                </div>
-                <div className="relative">
-                  <select
-                    className="w-full px-3 py-1 text-xs rounded-sm bg-white border border-zinc-400/20 text-[#0e0f10] outline-none appearance-none cursor-pointer"
-                    value={newAssignment.classId}
-                    onChange={(e) => setNewAssignment({ ...newAssignment, classId: e.target.value })}
-                  >
-                    <option value="" disabled>Class</option>
-                    {classes.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={11} />
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddAssignment}
-                className="w-full py-1 text-xs text-[#6b6b6b] hover:bg-zinc-200 rounded-sm transition-colors border border-zinc-400/20 bg-white"
-              >
-                Add Assignment
-              </button>
-            </div>
-          )}
-
-          {/* Active toggle */}
-          <div className="flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
+          <div className="hidden flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
             <div>
               <p className="text-xs font-medium text-[#0e0f10]">Active Enrollment</p>
               <p className="text-[11px] text-[#6b6b6b] mt-0.5">Allow student to access exams</p>
@@ -486,17 +348,14 @@ export default function StudentsPage() {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, active: !formData.active })}
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-[#0e0f10]' : 'bg-zinc-300'
-                }`}
+              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-[#0e0f10]' : 'bg-zinc-300'}`}
             >
               <div
-                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.active ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.active ? 'translate-x-5' : 'translate-x-0'}`}
               />
             </button>
           </div>
 
-          {/* Footer buttons */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"

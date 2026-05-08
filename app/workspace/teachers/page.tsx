@@ -16,16 +16,19 @@ import {
   BookOpen,
   GraduationCap,
   ChevronDown,
+  Loader2,
+  Copy,
 } from 'lucide-react';
 import { GiTeacher } from 'react-icons/gi';
 import { userApi } from '@/lib/api/users';
 import { classApi } from '@/lib/api/classes';
 import { subjectApi } from '@/lib/api/subjects';
 import { workspaceApi } from '@/lib/api/workspaces';
+import { inviteApi } from '@/lib/api/invites';
 import { User, Class, Subject } from '@/types';
 import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
-import { BiUserPlus } from 'react-icons/bi';
+import { BiCopy, BiUserPlus } from 'react-icons/bi';
 
 export default function TeacherPage() {
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -48,6 +51,12 @@ export default function TeacherPage() {
   // Assignment states
   const [teacherAssignments, setTeacherAssignments] = useState<any[]>([]);
   const [newAssignment, setNewAssignment] = useState({ subjectId: '', classId: '' });
+
+  // Invite states
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [isLoadingInvite, setIsLoadingInvite] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchInitialData = async () => {
     try {
@@ -186,6 +195,23 @@ export default function TeacherPage() {
     }
   };
 
+  const handleGenerateInvite = async () => {
+    try {
+      setIsLoadingInvite(true);
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await inviteApi.create({ workspaceId, role: 'TEACHER' });
+      if (res.success && res.data) {
+        setInviteToken(res.data.token);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to generate invite');
+    } finally {
+      setIsLoadingInvite(false);
+    }
+  };
+
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
@@ -193,7 +219,7 @@ export default function TeacherPage() {
         description="Manage faculty members, subject assignments, and access permissions."
       >
         <button
-
+          onClick={() => setIsInviteModalOpen(true)}
           className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
         >
           <BiUserPlus size={14} /> Invite
@@ -470,6 +496,73 @@ export default function TeacherPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* ── Invite Link Modal ── */}
+      <Modal
+        isOpen={isInviteModalOpen}
+        onClose={() => {
+          setIsInviteModalOpen(false);
+          setInviteToken(null);
+          setCopied(false);
+        }}
+        title="Invite Teacher"
+      >
+        <div className="space-y-4 py-2">
+          {!inviteToken ? (
+            <div className="space-y-4">
+              <p className="text-xs text-[#6b6b6b] leading-relaxed">
+                Generate a secure invitation link for a new teacher to join this workspace.
+              </p>
+              <Button
+                onClick={handleGenerateInvite}
+                isLoading={isLoadingInvite}
+                className="w-full py-2 bg-[#0e0f10] text-white hover:bg-zinc-800"
+              >
+                <Plus size={14} className="mr-2" /> Generate Invite Link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+              <div className="p-3 bg-zinc-50 border border-zinc-400/20 rounded-sm">
+                <p className="text-[10px] uppercase tracking-wider text-[#6b6b6b] font-semibold mb-2">Invitation Link</p>
+                <div className="text-xs font-mono break-all text-[#0e0f10] bg-white p-2 border border-zinc-400/10 rounded-sm">
+                  {`https://learningdeck.online/invite/teacher?token=${inviteToken}`}
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://learningdeck.online/invite/teacher?token=${inviteToken}`);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className={`w-full py-2 rounded-sm flex items-center justify-center gap-2 text-xs font-medium transition-all ${
+                  copied
+                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                    : 'bg-[#0e0f10] text-white hover:bg-zinc-800'
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <Check size={14} /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <BiCopy size={14} /> Copy Link
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setInviteToken(null)}
+                className="w-full text-[11px] text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
+              >
+                Generate another link
+              </button>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

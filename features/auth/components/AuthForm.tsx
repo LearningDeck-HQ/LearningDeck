@@ -94,7 +94,9 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           return;
         }
 
-        router.push('/dashboard');
+        const user = response.data?.user;
+        const redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
+        router.push(redirectPath);
       } else {
         setError(response.message || 'Authentication failed');
       }

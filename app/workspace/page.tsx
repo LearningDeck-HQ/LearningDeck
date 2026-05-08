@@ -8,6 +8,7 @@ import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 import Image from 'next/image';
+import { ScaleLoader } from 'react-spinners';
 
 export default function WorkspacesPage() {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -40,9 +41,16 @@ export default function WorkspacesPage() {
         };
         fetchData();
     }, []);
+    let WorkspaceName = workspaces[0]?.name || 'Workspace';
+    const profileName = user?.user_name || user?.name || 'Guest';
+    const profileEmail = user?.user_email || user?.email || 'No email';
+
+    if (isLoading) return <div className='flex flex-col h-full w-full items-center justify-center'>
+        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+    </div>
 
     return (
-        <div className="flex flex-col h-full w-full justify-center items-center gap-5 text-black text-sm text-center">
+        <div className="flex flex-col h-full w-full justify-center items-center gap-5 text-black text-sm text-center ">
             <Image
                 src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
                 alt="Logo"
@@ -51,9 +59,9 @@ export default function WorkspacesPage() {
                 className="rounded"
             />
             <div className='text-center text-md'>
-                Welcome to  <strong>{workspaces[0]?.name}</strong> workspace, <br />You can get started by navigating to the sidebar for exam, classes and many more management features
+                Hi, <strong>{profileName}  </strong>  <br />       Welcome to  <strong>{WorkspaceName}</strong> workspace, <br />You can get started by navigating to the sidebar for exam, classes and many more management features
 
-                {user?.role}
+
 
             </div>        </div>
     );
