@@ -3,7 +3,12 @@ export interface ChatMessage {
   content: string;
 }
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  const getApiKey = () => {
+  const url = process.env.OPENROUTER_API_KEY ;
+  return url;
+};
+
+const OPENROUTER_API_KEY = getApiKey()
 
 const MODEL = 'baidu/cobuddy:free';
 
