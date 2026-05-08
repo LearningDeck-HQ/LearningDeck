@@ -58,7 +58,7 @@ const LandingPageContent = () => {
 
           {/* PLACEHOLDER: Animated Desktop Exam Manager UI (Start Server/Status) */}
           <div className="h-full w-full border border-zinc-400/20 rounded shadow-lg ">
-            <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
+            <Image src="/agentic.gif" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
           </div>
         </div>
       </header>
@@ -136,7 +136,7 @@ const LandingPageContent = () => {
 
             {/* PLACEHOLDER: Animated Dashboard UI */}
             <div className="lg:w-1/2 w-full border border-zinc-400/20 rounded ">
-              <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
+              <Image src="/agentic.gif" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
 
             </div>
           </div>
@@ -148,7 +148,7 @@ const LandingPageContent = () => {
           <div className="flex flex-col lg:flex-row items-center gap-16">
             {/* PLACEHOLDER: Animated Dashboard UI */}
             <div className="lg:w-1/2 w-full border border-zinc-400/20 rounded ">
-              <Image src="/dashboard.JPG" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
+              <Image src="/plugins.gif" className='object-cover h-full w-full' alt="" width={1920} height={1080} />
 
             </div>
 
