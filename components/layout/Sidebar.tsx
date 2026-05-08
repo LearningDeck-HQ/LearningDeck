@@ -17,7 +17,7 @@ import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
 import { BiCreditCard } from "react-icons/bi";
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
 
   const handleLogout = async () => {
@@ -37,7 +37,7 @@ const Sidebar = () => {
   const footerLinkStyles = "flex items-center justify-between px-3 py-1.5 text-[#6b6b6b] hover:text-[#0e0f10] transition-colors group";
 
   return (
-    <aside className="w-64 h-full bg-[#f9f9f9] border-r border-[#ededed] flex flex-col font-sans text-xs">
+    <aside className="w-full h-full bg-[#f9f9f9] border-r border-[#ededed] flex flex-col font-sans text-xs">
       {/* Top Action Button */}
       <div className="p-4">
         <button className="w-fit px-4 py-1.5 border border-[#ededed] rounded  font-medium text-[#0e0f10] hover:bg-[#ededed] transition-colors">
@@ -47,64 +47,67 @@ const Sidebar = () => {
 
       <nav className="flex flex-col flex-1 px-2 gap-0.5">
         {/* Main Navigation - Following image_75fd16.png structure */}
-        <Link href="/dashboard" className={getLinkStyles(pathname === '/dashboard')}>
+        <Link href="/dashboard" className={getLinkStyles(pathname === '/dashboard')} onClick={onClose}>
           <TbHome className="text-sm" />
 
           <span>Home</span>
         </Link>
 
-        <Link href="/dashboard/workspaces" className={getLinkStyles(pathname.startsWith('/dashboard/workspaces'))}>
+        <Link href="/dashboard/workspaces" className={getLinkStyles(pathname.startsWith('/dashboard/workspaces'))} onClick={onClose}>
           <MdWorkspaces className="" />
           <span>Workspace</span>
         </Link>
 
         <div className="my-2 border-t border-[#ededed]/60" />
 
-        <Link href="/dashboard/catalog" className={getLinkStyles(pathname === '/dashboard/catalog')}>
+        <Link href="/dashboard/catalog" className={getLinkStyles(pathname === '/dashboard/catalog')} onClick={onClose}>
           <BiCreditCard className=" opacity-70" />
           <span className="text-[#6b6b6b]">Plan</span>
         </Link>
 
-        <Link href="/dashboard/settings" className={getLinkStyles(pathname === '/dashboard/settings')}>
+        <Link href="/dashboard/settings" className={getLinkStyles(pathname === '/dashboard/settings')} onClick={onClose}>
           <MdSettings className=" opacity-70" />
           <span className="text-[#6b6b6b]">Settings</span>
         </Link>
 
         <div className="my-2 border-t border-[#ededed]/60" />
 
-        <Link href="/dashboard/private" className={getLinkStyles(pathname === '/dashboard/private')}>
+        <Link href="/dashboard/private" className={getLinkStyles(pathname === '/dashboard/private')} onClick={onClose}>
           <MdOutlineNetworkCheck className=" opacity-70" />
           <span className="text-[#6b6b6b]">Private Network</span>
         </Link>
 
-        <Link href="/dashboard/public" className={getLinkStyles(pathname === '/dashboard/public')}>
+        <Link href="/dashboard/public" className={getLinkStyles(pathname === '/dashboard/public')} onClick={onClose}>
           <MdPublic className=" opacity-70" />
           <span className="text-[#6b6b6b]">Public Network</span>
         </Link>
 
         {/* Bottom External Links Section */}
         <div className="mt-auto mb-4 flex flex-col gap-1 pt-4 border-t border-[#ededed] text-xs">
-          <Link href="#" className={footerLinkStyles}>
+          <Link href="#" className={footerLinkStyles} onClick={onClose}>
             <span>What is Learningdeck</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
 
-          <Link href="#" className={footerLinkStyles}>
+          <Link href="#" className={footerLinkStyles} onClick={onClose}>
             <span>Learning Center</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
-          <Link href="#" className={footerLinkStyles}>
+          <Link href="#" className={footerLinkStyles} onClick={onClose}>
             <span>Support Center</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
 
-          <Link href="/downloads" className={footerLinkStyles}>
+          <Link href="/downloads" className={footerLinkStyles} onClick={onClose}>
             <span>Download Desktop App</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
 
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              handleLogout();
+              onClose?.();
+            }}
             className="mt-2 flex items-center gap-3 px-3 py-2  text-[#6b6b6b] hover:text-red-600 hover:bg-red-50 transition-all rounded-md group"
           >
             <MdLogout className="text-lg group-hover:text-red-600" />

@@ -89,7 +89,7 @@ const Header = () => {
         </button>
 
         <Image src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" alt="LearningDeck" width={20} height={20} className='rounded' />
-        <span className='font-medium truncate'>LearningDeck | Web Dashboard</span>
+        <span className='font-medium truncate'><span className="text-black">LearningDeck |</span> Web Dashboard</span>
       </div>
       <div className="px-3 hidden md:block">
         <div className="relative group">

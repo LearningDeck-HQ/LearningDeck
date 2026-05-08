@@ -3,32 +3,26 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  HelpCircle, 
-  CheckCircle2, 
-  XCircle, 
-  Type, 
+import {
+  Plus,
+  Search,
+  Filter,
+  HelpCircle,
+  CheckCircle2,
+  Type,
   LayoutGrid,
-  Trash2,
-  Edit3,
   ChevronDown,
   BookOpen,
-  FileText,
   GraduationCap,
-  Check
+  Check,
 } from 'lucide-react';
 import { questionApi } from '@/lib/api/questions';
 import { examApi } from '@/lib/api/exams';
 import { subjectApi } from '@/lib/api/subjects';
 import { classApi } from '@/lib/api/classes';
 import { Question, Exam, Subject, Class, QuestionType } from '@/types';
-import { BiPlus } from 'react-icons/bi';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 
@@ -38,14 +32,12 @@ export default function QuestionsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Filters
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
 
-  // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -58,7 +50,7 @@ export default function QuestionsPage() {
     examId: '',
     subjectId: '',
     classId: '',
-    img: null as string | null
+    img: null as string | null,
   });
 
   const fetchData = async () => {
@@ -68,7 +60,7 @@ export default function QuestionsPage() {
         questionApi.list(),
         examApi.list(),
         subjectApi.list(),
-        classApi.list()
+        classApi.list(),
       ]);
       if (qRes.data) setQuestions(qRes.data);
       if (eRes.data) setExams(eRes.data);
@@ -81,9 +73,7 @@ export default function QuestionsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const filteredQuestions = useMemo(() => {
     return questions.filter(q => {
@@ -107,7 +97,7 @@ export default function QuestionsPage() {
         examId: q.examId,
         subjectId: q.subjectId,
         classId: q.classId,
-        img: q.img
+        img: q.img,
       });
     } else {
       setEditingQuestion(null);
@@ -120,7 +110,7 @@ export default function QuestionsPage() {
         examId: exams[0]?.id || '',
         subjectId: subjects[0]?.id || '',
         classId: classes[0]?.id || '',
-        img: null
+        img: null,
       });
     }
     setIsModalOpen(true);
@@ -145,20 +135,17 @@ export default function QuestionsPage() {
       setIsSubmitting(true);
       const userStr = localStorage.getItem('user');
       const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-
       const payload = {
         ...formData,
         workspaceId,
-        examId: formData.examId,
-        subjectId: formData.subjectId,
-        classId: formData.classId,
-        incorrect_answers: formData.type === 'MULTIPLE_CHOICE' ? formData.incorrect_answers.filter(a => a.trim() !== '') : []
+        incorrect_answers:
+          formData.type === 'MULTIPLE_CHOICE'
+            ? formData.incorrect_answers.filter(a => a.trim() !== '')
+            : [],
       };
-
       const response = editingQuestion
         ? await questionApi.update(editingQuestion.id, payload)
         : await questionApi.create(payload);
-
       if (response.success) {
         await fetchData();
         setIsModalOpen(false);
@@ -176,304 +163,346 @@ export default function QuestionsPage() {
     setFormData({ ...formData, incorrect_answers: newAnswers });
   };
 
+  const typeIcon = (type: QuestionType) => {
+    if (type === 'MULTIPLE_CHOICE') return <LayoutGrid size={11} />;
+    if (type === 'TRUE_FALSE') return <CheckCircle2 size={11} />;
+    return <Type size={11} />;
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 text-xs">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
         title="Question Bank"
-        description="Manage your collection of questions across different exams, subjects, and classes."
+        description="Manage your collection of questions across exams, subjects, and classes."
       >
-        <Button 
+        <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674] py-2 px-6 rounded  shadow-blue-900/10 transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
         >
-          <BiPlus  />
+          <Plus size={14} />
           Add Question
-        </Button>
+        </button>
       </DashboardHeader>
 
-      <div className="bg-white p-5 rounded border border-zinc-200/60 space-y-4">
+      {/* ── Filter Section ── */}
+      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600">
-              <Filter size={14} />
-            </div>
-            <h2 className="workspace text-[#1B2559]">Query Filter Hub</h2>
+          <div className="flex items-center gap-2 text-[#6b6b6b]">
+            <Filter size={13} />
+            <span className="text-xs font-medium text-[#0e0f10]">Filter</span>
           </div>
           <button
-            onClick={() => { setSearchTerm(''); setSelectedExam('all'); setSelectedSubject('all'); setSelectedClass('all'); }}
-            className="workspace text-blue-600 hover:underline "
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedExam('all');
+              setSelectedSubject('all');
+              setSelectedClass('all');
+            }}
+            className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
           >
-            Reset Filters
+            Reset
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={18} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="md:col-span-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
             <input
               type="text"
-              placeholder="Search question text..."
-              className="w-full pl-12 pr-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
+              placeholder="Search questions..."
+              className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
 
+          {/* Exam filter */}
           <div className="relative">
             <select
-              className="w-full px-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
               value={selectedExam}
-              onChange={(e) => setSelectedExam(e.target.value)}
+              onChange={e => setSelectedExam(e.target.value)}
             >
-              <option value="all">All Examinations</option>
+              <option value="all">All Exams</option>
               {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
 
+          {/* Subject filter */}
           <div className="relative">
             <select
-              className="w-full px-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
               value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
+              onChange={e => setSelectedSubject(e.target.value)}
             >
               <option value="all">All Subjects</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
 
+          {/* Class filter */}
           <div className="relative">
             <select
-              className="w-full px-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
               value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
+              onChange={e => setSelectedClass(e.target.value)}
             >
               <option value="all">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-         {isLoading ? (
-       <div className='flex flex-col items-center justify-center w-full h-full'>
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
-               </div>)  : filteredQuestions.length > 0 ? (
-          filteredQuestions.map((q) => (
-            <div key={q.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
-              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5 flex-1 w-full">
-                  <div className={`p-3 rounded flex items-center justify-center shrink-0 border  ${
-                    q.type === 'MULTIPLE_CHOICE' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                    q.type === 'TRUE_FALSE' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                    'bg-orange-50 text-orange-600 border-orange-100'
-                  }`}>
-                    {q.type === 'MULTIPLE_CHOICE' ? <LayoutGrid size={10} /> :
-                     q.type === 'TRUE_FALSE' ? <CheckCircle2 size={10} /> :
-                     <Type size={10} />}
-                  </div>
-                  
+      {/* ── Question List ── */}
+      <div className="grid grid-cols-1 gap-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+          </div>
+        ) : filteredQuestions.length > 0 ? (
+          filteredQuestions.map(q => (
+            <div
+              key={q.id}
+              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+            >
+              <div className="px-4 py-3 flex flex-col md:flex-row items-start justify-between gap-4">
+                {/* Left: question info */}
+                <div className="flex items-start gap-3 flex-1 w-full">
+                  <span className="mt-0.5 flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-0.5">
+                    {typeIcon(q.type)}
+                  </span>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="workspace text-[#A3AED0] uppercase  tracking-widest">{q.type.replace(/_/g, ' ')}</span>
-                      <div className="w-1 h-1 bg-zinc-300 rounded-full" />
-                      <span className="workspace  text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">ID: #{q.id.slice(0, 8)}</span>
-                    </div>
-                    
-                    <h3 className="workspace  text-[#1B2559] tracking-tight">
-                        {q.question}
+                    <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight leading-snug">
+                      {q.question}
                     </h3>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
-                  <div className="flex flex-col items-center mr-6">
-                  
-                    <span className="workspace  text-blue-500 bg-blue-50 px-3 py-1 rounded">{exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button onClick={() => handleOpenModal(q)} variant="ghost" className="text-black">
-                    <MdOutlineModeEditOutline/>
-                    </Button>
-                    <Button onClick={() => handleDelete(q.id)} variant="ghost" className="text-black">
-                      <MdOutlineDelete/>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="px-6 pb-6 pt-0">
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2  text-[#A3AED0]  border-t border-zinc-50 pt-4">
-                    <span className="flex items-center gap-1.5"><BookOpen size={14}/> Subject: {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}</span>
-                    <span className="flex items-center gap-1.5"><GraduationCap size={14}/> Class: {classes.find(c => c.id === q.classId)?.name || 'N/A'}</span>
-                    <div className="flex items-center gap-3 bg-emerald-50/50 px-3 py-1 rounded border border-emerald-100/50 ml-auto">
-                        <CheckCircle2 size={14} className="text-emerald-500" />
-                        <span className=" text-emerald-700 ">{q.correct_answer}</span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
+                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                        {q.type.replace(/_/g, ' ')}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <BookOpen size={11} />
+                        {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap size={11} />
+                        {classes.find(c => c.id === q.classId)?.name || 'N/A'}
+                      </span>
+                      <span className="flex items-center gap-1.5 text-emerald-600">
+                        <CheckCircle2 size={11} />
+                        {q.correct_answer}
+                      </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Right: exam tag + actions */}
+                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                  <span className="mr-2 text-xs text-[#6b6b6b] bg-zinc-300/20 px-2 py-0.5 rounded-sm hidden md:block">
+                    {exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}
+                  </span>
+                  <button
+                    onClick={() => handleOpenModal(q)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                    title="Edit"
+                  >
+                    <MdOutlineModeEditOutline size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(q.id)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                    title="Delete"
+                  >
+                    <MdOutlineDelete size={15} />
+                  </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-[#E0E5F2] flex flex-col items-center">
-            <HelpCircle size={64} className="text-[#A3AED0] mb-6" />
-            <h3 className="text-[22px]  text-[#1B2559] mb-2">No questions in repository</h3>
-            <p className="text-[#A3AED0] max-w-sm mb-8 ">Select filters above or create your first question to populate this view.</p>
-            <Button onClick={() => handleOpenModal()} className="py-2px-8 bg-[#1B2559] rounded ">Create Question</Button>
+          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+              <HelpCircle size={28} className="text-[#6b6b6b]" />
+            </div>
+            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No questions yet</h3>
+            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+              Build your question bank by adding multiple choice, true/false, or fill-in-the-blank questions.
+            </p>
+            <button
+              onClick={() => handleOpenModal()}
+              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+            >
+              Add First Question
+            </button>
           </div>
         )}
       </div>
 
+      {/* ── Modal ── */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingQuestion ? 'Modify Question Structure' : 'Compose New Question'}
+        title={editingQuestion ? 'Edit Question' : 'New Question'}
       >
-        <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="space-y-2">
-                <label className="  text-[#1B2559] ml-1">Question Type</label>
-                <div className="relative">
-                    <select 
-                        className="w-full py-2px-4 rounded bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer"
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as QuestionType })}
-                    >
-                        <option value="MULTIPLE_CHOICE">Multiple Choice (MCQ)</option>
-                        <option value="TRUE_FALSE">True / False</option>
-                        <option value="FILL_IN_THE_BLANK">Fill in the Blank</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
-                </div>
-             </div>
-             <div className="space-y-2">
-                <label className="  text-[#1B2559] ml-1">Subject Assignment</label>
-                <div className="relative">
-                    <select 
-                        className="w-full py-2px-4 rounded bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer"
-                        value={formData.subjectId}
-                        onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
-                        required
-                    >
-                        <option value="">Select Subject</option>
-                        {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
-                </div>
-             </div>
+        <form onSubmit={handleSubmit} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+          {/* Type + Subject */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Question Type</label>
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  value={formData.type}
+                  onChange={e => setFormData({ ...formData, type: e.target.value as QuestionType })}
+                >
+                  <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+                  <option value="TRUE_FALSE">True / False</option>
+                  <option value="FILL_IN_THE_BLANK">Fill in the Blank</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Subject</label>
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  value={formData.subjectId}
+                  onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
+                  required
+                >
+                  <option value="">Select Subject</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="  text-[#1B2559] ml-1">Question Content</label>
+          {/* Question text */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Question</label>
             <textarea
-              placeholder="Enter the query or problem statement..."
-              className="w-full p-4 min-h-[120px] rounded-2xl bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20  text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0] resize-none "
+              placeholder="Enter the question or problem statement..."
+              className="w-full px-3 py-2 text-xs min-h-[80px] rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b] resize-none"
               value={formData.question}
-              onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+              onChange={e => setFormData({ ...formData, question: e.target.value })}
               required
             />
           </div>
 
-          <div className="space-y-4">
-             <div className="flex items-center justify-between px-1">
-                <label className="  text-[#1B2559]">Correct Answer / Resolution</label>
-                {formData.type === 'TRUE_FALSE' && (
-                    <div className="flex gap-2">
-                        <button type="button" onClick={() => setFormData({...formData, correct_answer: 'TRUE'})} className={`px-3 py-1 rounded-lg text-[11px]  transition-all ${formData.correct_answer === 'TRUE' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>TRUE</button>
-                        <button type="button" onClick={() => setFormData({...formData, correct_answer: 'FALSE'})} className={`px-3 py-1 rounded-lg text-[11px]  transition-all ${formData.correct_answer === 'FALSE' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>FALSE</button>
-                    </div>
-                )}
-             </div>
-             <Input
-                placeholder={formData.type === 'TRUE_FALSE' ? 'TRUE or FALSE' : 'Provide the definite correct answer'}
-                value={formData.correct_answer}
-                onChange={(e) => setFormData({ ...formData, correct_answer: e.target.value })}
-                required
-                className="py-2rounded bg-[#F4F7FF] border-none focus:ring-2 focus:ring-emerald-500/20   text-emerald-600"
-             />
+          {/* Correct answer */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between ml-0.5">
+              <label className="text-xs font-medium text-[#0e0f10]">Correct Answer</label>
+              {formData.type === 'TRUE_FALSE' && (
+                <div className="flex gap-1">
+                  {['TRUE', 'FALSE'].map(v => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, correct_answer: v })}
+                      className={`px-2 py-0.5 text-xs rounded-sm transition-all ${formData.correct_answer === v ? 'bg-[#0e0f10] text-white' : 'bg-zinc-100 text-[#6b6b6b] hover:bg-zinc-200'}`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Input
+              placeholder={formData.type === 'TRUE_FALSE' ? 'TRUE or FALSE' : 'Correct answer'}
+              value={formData.correct_answer}
+              onChange={e => setFormData({ ...formData, correct_answer: e.target.value })}
+              required
+              className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10]"
+            />
           </div>
 
+          {/* Incorrect answers (MCQ only) */}
           {formData.type === 'MULTIPLE_CHOICE' && (
-            <div className="space-y-3">
-              <label className="  text-[#1B2559] ml-1">Incorrect Distractors (At least 1)</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Incorrect Options (min. 1)</label>
               {formData.incorrect_answers.map((ans, idx) => (
                 <Input
                   key={idx}
-                  placeholder={`Distractor #${idx + 1}`}
+                  placeholder={`Option ${idx + 1}`}
                   value={ans}
-                  onChange={(e) => handleIncorrectAnswerChange(idx, e.target.value)}
-                  className="py-2 rounded bg-zinc-50 border-none focus:ring-2 focus:ring-red-500/10 "
+                  onChange={e => handleIncorrectAnswerChange(idx, e.target.value)}
+                  className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10]"
                   required={idx === 0}
                 />
               ))}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="  text-[#1B2559] ml-1">Examination Hub</label>
-                <div className="relative">
-                    <select 
-                        className="w-full py-2px-4 rounded bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer"
-                        value={formData.examId}
-                        onChange={(e) => setFormData({ ...formData, examId: e.target.value })}
-                        required
-                    >
-                        <option value="">Select Exam</option>
-                        {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
-                </div>
-             </div>
-             <div className="space-y-2">
-                <label className="  text-[#1B2559] ml-1">Class Target</label>
-                <div className="relative">
-                    <select 
-                        className="w-full py-2px-4 rounded bg-[#F4F7FF] border-none text-[14px] text-[#1B2559] outline-none appearance-none cursor-pointer"
-                        value={formData.classId}
-                        onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                        required
-                    >
-                        <option value="">Select Class</option>
-                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
-                </div>
-             </div>
+          {/* Exam + Class */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Exam</label>
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  value={formData.examId}
+                  onChange={e => setFormData({ ...formData, examId: e.target.value })}
+                  required
+                >
+                  <option value="">Select Exam</option>
+                  {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class</label>
+              <div className="relative">
+                <select
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  value={formData.classId}
+                  onChange={e => setFormData({ ...formData, classId: e.target.value })}
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="  text-[#1B2559] ml-1">Pedagogical Explanation (Optional)</label>
+          {/* Explanation */}
+          <div className="hidden space-y-1.5">
+            <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Explanation (optional)</label>
             <textarea
-              placeholder="Provide reasoning for the correct answer to help students learn..."
-              className="w-full p-4 h-[80px] rounded-2xl bg-zinc-50 border-none focus:ring-2 focus:ring-blue-500/10 text-[14px] text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0] resize-none"
+              placeholder="Provide reasoning for the correct answer..."
+              className="w-full px-3 py-2 text-xs h-[60px] rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b] resize-none"
               value={formData.explanation}
-              onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
+              onChange={e => setFormData({ ...formData, explanation: e.target.value })}
             />
           </div>
 
-          <div className="flex gap-4 pt-4">
-            <Button
+          {/* Footer */}
+          <div className="flex gap-3 pt-2">
+            <button
               type="button"
-              variant="ghost"
-              className="flex-1 h-12 rounded text-[#6b7280]  hover:bg-zinc-50"
               onClick={() => setIsModalOpen(false)}
+              className="flex-1 py-1.5 text-xs text-[#6b6b6b] hover:bg-zinc-100 rounded-sm transition-all border border-zinc-400/20"
             >
-              Discard
-            </Button>
+              Cancel
+            </button>
             <Button
               type="submit"
-              className="flex-1 h-12 rounded bg-[#1B2559] text-white   shadow-blue-900/20"
+              className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
               isLoading={isSubmitting}
             >
               {editingQuestion ? (
-                <span className="flex items-center gap-2"><Check size={20}/> Update</span>
+                <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>
               ) : (
-                <span className="flex items-center gap-2"><Plus size={20}/> Commit</span>
+                <span className="flex items-center justify-center gap-1.5"><Plus size={13} /> Add Question</span>
               )}
             </Button>
           </div>

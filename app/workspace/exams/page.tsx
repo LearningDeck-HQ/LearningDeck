@@ -10,32 +10,31 @@ import {
   Plus,
   Clock,
   GraduationCap,
-  Calendar,
-  MoreVertical,
-  PlayCircle,
+  Layers,
   Search,
   Filter,
-  Loader2,
-  X,
   Check,
-  Edit3,
-  Trash2,
-  Copy,
   ChevronDown,
-  AlertCircle,
-  LayoutGrid,
-  Layers
 } from 'lucide-react';
 import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
-import { Exam, Class } from '@/types';
+import { Exam, Class, Subject, User, Result } from '@/types';
 import { MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { ScaleLoader } from 'react-spinners';
+import { questionApi } from '@/lib/api/questions';
+import { Question } from '@/types';
+import { subjectApi } from '@/lib/api/subjects';
+import { userApi } from '@/lib/api/users';
+import { resultApi } from '@/lib/api/results';
 
 export default function ExamsPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
@@ -54,15 +53,22 @@ export default function ExamsPage() {
   const fetchInitialData = async () => {
     try {
       setIsLoading(true);
-      const [examsRes, classesRes, workspacesRes] = await Promise.all([
+      const [examsRes, classesRes, questionRes, subjectsRes, usersRes, resultsRes, workspacesRes] = await Promise.all([
         examApi.list(),
         classApi.list(),
+        questionApi.list(),
+        subjectApi.list(),
+        userApi.list(),
+        resultApi.list(),
         workspaceApi.list()
       ]);
       if (examsRes.data) setExams(examsRes.data);
       if (classesRes.data) setClasses(classesRes.data);
+      if (questionRes.data) setQuestions(questionRes.data);
+      if (subjectsRes.data) setSubjects(subjectsRes.data);
+      if (usersRes.data) setUsers(usersRes.data);
+      if (resultsRes.data) setResults(resultsRes.data);
 
-      // Try to get workspaceId from user or first workspace
       const userStr = localStorage.getItem('user');
       const workspaces = workspacesRes.data || [];
 
@@ -150,18 +156,18 @@ export default function ExamsPage() {
     try {
       setIsSubmitting(true);
 
-      let workspaceId = formData.classId ? classes.find(c => c.id === formData.classId)?.workspaceId : null;
+      let workspaceId = formData.classId
+        ? classes.find(c => c.id === formData.classId)?.workspaceId
+        : null;
 
       if (!workspaceId) {
         const userStr = localStorage.getItem('user');
-        if (userStr) {
-          workspaceId = JSON.parse(userStr).workspaceId;
-        }
+        if (userStr) workspaceId = JSON.parse(userStr).workspaceId;
       }
 
       const payload = {
         ...formData,
-        workspaceId: workspaceId || '1', // Fallback to '1' if absolutely nothing found
+        workspaceId: workspaceId || '1',
         classId: formData.classId,
         minutes: Number(formData.minutes)
       };
@@ -182,166 +188,184 @@ export default function ExamsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
         title="Exams"
         description="Create and manage your exams or tests here."
       >
-        <Button
+        {/* ── Create button: sidebar-style rounded-sm, zinc bg ── */}
+        <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[#1B2559] truncate hover:bg-[#2B3674] py-2 px-4 rounded  shadow-blue-900/10 transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
         >
-          <Plus size={18} />
+          <Plus size={14} />
           Create New Exam
-        </Button>
+        </button>
       </DashboardHeader>
 
-      {/* Filter Section */}
-      <div className="bg-white p-5 rounded border border-zinc-200/60  space-y-4">
+      {/* ── Filter Section ── */}
+      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600">
-              <Filter size={14} />
-            </div>
-            <h2 className="workspace  text-[#1B2559]">Global Filter Hub</h2>
+          <div className="flex items-center gap-2 text-[#6b6b6b]">
+            <Filter size={13} />
+            <span className="text-xs font-medium text-[#0e0f10]">Filter</span>
           </div>
           <button
             onClick={() => { setSearchTerm(''); setSelectedClass('all'); }}
-            className="workspace text-blue-600  hover:underline"
+            className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
           >
-            Reset Filters
+            Reset
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-2 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={18} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="md:col-span-2 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
             <input
               type="text"
               placeholder="Search by exam name..."
-              className="w-full pl-12 pr-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
+              className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
+          {/* Class filter */}
           <div className="relative">
             <select
-              className="w-full px-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
             >
               <option value="all">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
 
-          <Button
+          <button
             onClick={fetchInitialData}
-            variant={"outline"}
-            className="py-2 rounded bg-zinc-100 text-[#1B2559] hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2 border-none shadow-none "
+            className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
-            Apply Criteria
-          </Button>
+            Apply
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-         {isLoading ? (
-       <div className='flex flex-col items-center justify-center w-full h-full'>
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
-               </div>)  : filteredExams.length > 0 ? (
+      {/* ── Exam List ── */}
+      <div className="grid grid-cols-1 gap-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+          </div>
+        ) : filteredExams.length > 0 ? (
           filteredExams.map((exam) => (
-            <div key={exam.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
-              <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5 flex-1 w-full">
-
+            <div
+              key={exam.id}
+              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+            >
+              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* Exam info */}
+                <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
-                    <h3 className="workspace  text-[#1B2559] tracking-tight">{exam.exam_name}</h3>
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-2 workspace text-[#A3AED0] ">
-                      <span className="flex items-center gap-2 bg-[#F4F7FF] px-3 py-1 rounded text-blue-600">
-                        <Clock size={14} /> {exam.minutes} Minutes
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                      {exam.exam_name}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                        <Clock size={11} /> {exam.minutes} min
                       </span>
-                      <span className="flex items-center gap-2">
-                        <GraduationCap size={16} /> Class: {classes.find(c => c.id === exam.classId)?.name || `ID: ${exam.classId}`}
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap size={13} />
+                        {classes.find(c => c.id === exam.classId)?.name || `ID: ${exam.classId}`}
                       </span>
-                      <span className="flex items-center gap-2">
-                        <Layers size={16} /> Questions: --
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> Questions: {questions.filter(q => q.examId === exam.id).length}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> Subjects: {subjects.filter(s => s.classes?.find(c => c.id === exam.classId)).length}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> Users: {users.filter(u => u.classId === exam.classId).length}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Layers size={13} /> Results: {results.filter(r => r.examId === exam.id).length}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
-              
-
-                  <div className="flex items-center gap-2 text-black">
-                    <Button
-                      onClick={() => handleOpenModal(exam)}
-                      variant="ghost" className=""
-                    >
-                      <MdOutlineModeEditOutline size={16} />
-
-
-                    </Button>
-                    <Button
-                      onClick={() => handleDuplicate(exam)}
-                      variant="ghost" >
-                      <MdOutlineControlPointDuplicate size={16} />
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(exam.id)}
-                      variant="ghost"
-                    >
-                      <MdOutlineDeleteOutline size={16} />
-                    </Button>
-                    <div className="w-[1px] h-8 bg-zinc-100 mx-2" />
-
-                  </div>
+                {/* Actions */}
+                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                  <button
+                    onClick={() => handleOpenModal(exam)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                    title="Edit"
+                  >
+                    <MdOutlineModeEditOutline size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDuplicate(exam)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                    title="Duplicate"
+                  >
+                    <MdOutlineControlPointDuplicate size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(exam.id)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                    title="Delete"
+                  >
+                    <MdOutlineDeleteOutline size={15} />
+                  </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-24 bg-white rounded border border-dashed border-[#E0E5F2] flex flex-col items-center">
-            <div className="w-24 h-24 bg-[#F4F7FF] rounded flex items-center justify-center mb-8 shadow-inner">
-              <FileText size={48} className="text-[#A3AED0]" />
+          /* ── Empty state ── */
+          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+              <FileText size={28} className="text-[#6b6b6b]" />
             </div>
-            <h3 className="  text-[#1B2559] mb-3">Your exam vault is empty</h3>
-            <p className="text-[#A3AED0] max-w-sm mx-auto mb-10 workspace leading-relaxed ">
-              Start creating your first digital assessment. You can add multiple choice, true/false, or fill-in-the-blank questions.
+            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No exams yet</h3>
+            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+              Start creating your first digital assessment. Add multiple choice, true/false, or fill-in-the-blank questions.
             </p>
-            <Button
+            <button
               onClick={() => handleOpenModal()}
-              className="py-2 px-10 bg-[#1B2559] text-white rounded hover:opacity-90 transition-all  workspace  shadow-blue-900/20"
+              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
-              Initialize First Exam
-            </Button>
+              Create First Exam
+            </button>
           </div>
         )}
       </div>
 
+      {/* ── Modal ── */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingExam ? 'Edit Examination Profile' : 'New Examination Setup'}
+        title={editingExam ? 'Edit Exam' : 'New Exam'}
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="workspace text-[#1B2559]  ml-1">Examination Title</label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Exam name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Exam Title</label>
             <Input
-              placeholder="e.g. Mid-Term Physics Assessment 2024"
+              placeholder="e.g. Mid-Term Physics Assessment"
               value={formData.exam_name}
               onChange={(e) => setFormData({ ...formData, exam_name: e.target.value })}
               required
-              className=" rounded bg-[#F4F7FF] mt-2 border border-zinc-400/20 focus:ring-2 focus:ring-blue-500/20 workspace"
+              className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] placeholder:text-[#6b6b6b]"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="workspace text-[#1B2559]  ml-1">Duration (Minutes)</label>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Duration */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Duration (mins)</label>
               <div className="relative">
                 <Input
                   type="number"
@@ -349,62 +373,63 @@ export default function ExamsPage() {
                   value={formData.minutes}
                   onChange={(e) => setFormData({ ...formData, minutes: parseInt(e.target.value) })}
                   required
-                  className="py-2 mt-2 rounded bg-[#F4F7FF] border border-zinc-400/20 focus:ring-2 focus:ring-blue-500/20 "
+                  className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] pr-8"
                 />
-                <Clock className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0]" size={18} />
+                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
               </div>
             </div>
-            <div className="space-y-2">
-              <label className="workspace text-[#1B2559]  ml-1">Target Class</label>
+
+            {/* Class */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class</label>
               <div className="relative">
                 <select
-                  className="w-full py-2 mt-2 px-4 rounded bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20 workspace text-[#1B2559] outline-none appearance-none cursor-pointer"
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
                   value={formData.classId}
                   onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
                   required
                 >
-                  <option value="" disabled>Select Target Audience</option>
+                  <option value="" disabled>Select a class</option>
                   {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3AED0] pointer-events-none" size={16} />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-[#F4F7FF] rounded border border-zinc-200 mt-2">
-            <div className="flex flex-col">
-              <span className="text-[13px] font-bold text-[#1B2559]">Visibility Status</span>
-              <span className="text-[11px] text-[#A3AED0] font-medium">Students can see this exam</span>
+          {/* Visibility toggle */}
+          <div className="hidden flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
+            <div>
+              <p className="text-xs font-medium text-[#0e0f10]">Visible to students</p>
+              <p className="text-[11px] text-[#6b6b6b] mt-0.5">Students can see and take this exam</p>
             </div>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, visible: !formData.visible })}
-              className={`w-11 h-6 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-[#1B2559]' : 'bg-gray-300'}`}
+              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-[#0e0f10]' : 'bg-zinc-300'}`}
             >
-              <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.visible ? 'translate-x-5' : 'translate-x-0'}`}></div>
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.visible ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
 
-
-
-          <div className="flex gap-4 pt-4">
-            <Button
+          {/* Footer buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
               type="button"
-              variant="ghost"
-              className="flex-1 py-2 rounded text-[#6b7280] "
               onClick={() => setIsModalOpen(false)}
+              className="flex-1 py-1.5 text-xs text-[#6b6b6b] hover:bg-zinc-100 rounded-sm transition-all border border-zinc-400/20"
             >
-              Discard Changes
-            </Button>
+              Cancel
+            </button>
             <Button
               type="submit"
-              className="flex-1 py-2 rounded bg-[#1B2559] text-white   shadow-blue-900/20"
+              className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
               isLoading={isSubmitting}
             >
               {editingExam ? (
-                <span className="flex items-center gap-2"><Check size={20} /> Save Changes</span>
+                <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>
               ) : (
-                <span className="flex items-center gap-2"><Plus size={20} /> Create Exam</span>
+                <span className="flex items-center justify-center gap-1.5"><Plus size={13} /> Create Exam</span>
               )}
             </Button>
           </div>

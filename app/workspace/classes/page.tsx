@@ -3,23 +3,14 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { 
-  GraduationCap, 
-  Plus, 
-  Users, 
-  Search, 
-  Loader2, 
-  X, 
-  Check, 
-  Edit3, 
-  Trash2,
-  MoreVertical,
-  ChevronRight,
-  Database,
-  Filter
+import {
+  GraduationCap,
+  Plus,
+  Search,
+  Filter,
+  Check,
 } from 'lucide-react';
 import { classApi } from '@/lib/api/classes';
 import { Class } from '@/types';
@@ -30,8 +21,7 @@ export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Modal States
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
@@ -49,15 +39,12 @@ export default function ClassesPage() {
     }
   };
 
-  useEffect(() => {
-    fetchClasses();
-  }, []);
+  useEffect(() => { fetchClasses(); }, []);
 
-  const filteredClasses = useMemo(() => {
-    return classes.filter(cls =>
-      cls.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [classes, searchTerm]);
+  const filteredClasses = useMemo(() =>
+    classes.filter(cls => cls.name.toLowerCase().includes(searchTerm.toLowerCase())),
+    [classes, searchTerm]
+  );
 
   const handleOpenModal = (cls: Class | null = null) => {
     if (cls) {
@@ -71,16 +58,11 @@ export default function ClassesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
-      return;
-    }
-
+    if (!window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) return;
     try {
       setIsLoading(true);
       const response = await classApi.delete(id);
-      if (response.success) {
-        await fetchClasses();
-      }
+      if (response.success) await fetchClasses();
     } catch (err: any) {
       alert(err.message || 'Failed to delete class');
     } finally {
@@ -94,12 +76,10 @@ export default function ClassesPage() {
       setIsSubmitting(true);
       const userStr = localStorage.getItem('user');
       const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      
       const payload = { ...formData, workspaceId };
       const response = editingClass
         ? await classApi.update(editingClass.id, payload)
         : await classApi.create(payload);
-
       if (response.success) {
         await fetchClasses();
         setIsModalOpen(false);
@@ -112,135 +92,146 @@ export default function ClassesPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 selection:bg-blue-100">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
-        title="Class Registry"
-        description="Manage your student groups and academic year structures with precision."
+        title="Classes"
+        description="Manage your student groups and academic year structures."
       >
-        <Button 
+        <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-[#1B2559] hover:bg-[#2B3674]  px-5 rounded transition-all active:scale-[0.98]"
+          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
         >
-          <Plus size={18} />
+          <Plus size={14} />
           Add New Class
-        </Button>
+        </button>
       </DashboardHeader>
 
-      {/* Filter Section */}
-      <div className="bg-white p-5 rounded border border-zinc-200/60 space-y-4">
+      {/* ── Filter Section ── */}
+      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center text-blue-600">
-              <Filter size={14} />
-            </div>
-            <h2 className="workspace text-[#1B2559]">Class Filter Hub</h2>
+          <div className="flex items-center gap-2 text-[#6b6b6b]">
+            <Filter size={13} />
+            <span className="text-xs font-medium text-[#0e0f10]">Filter</span>
           </div>
           <button
             onClick={() => setSearchTerm('')}
-            className="workspace text-blue-600 hover:underline text-[13px]"
+            className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
           >
-            Reset Filters
+            Reset
           </button>
         </div>
 
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A3AED0] group-focus-within:text-blue-500 transition-colors" size={18} />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
           <input
             type="text"
-            placeholder="Search by class nomenclature (e.g. Grade 10, JSS1)..."
-            className="w-full pl-12 pr-4 py-2 mt-2 rounded bg-[#F4F7FF]/50 border border-transparent focus:border-blue-200 focus:bg-white workspace text-[#1B2559] outline-none transition-all placeholder:text-[#A3AED0]"
+            placeholder="Search by class name..."
+            className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-          {isLoading ? (
-       <div className='flex flex-col items-center justify-center w-full h-full'>
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={20} width={5} />
-               </div>)  : filteredClasses.length > 0 ? (
-          filteredClasses.map((cls) => (
-            <div key={cls.id} className="group transition-all duration-300 border border-zinc-200/60 bg-white rounded overflow-hidden hover: hover:shadow-blue-900/5 hover:border-blue-200">
-              <div className="p-2 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-5 flex-1 w-ful px-4">
-                
-                
-                    <h3 className="workspace text-[#1B2559] tracking-tight">{cls.name}</h3>
-                  
-                
+      {/* ── Class List ── */}
+      <div className="grid grid-cols-1 gap-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+          </div>
+        ) : filteredClasses.length > 0 ? (
+          filteredClasses.map(cls => (
+            <div
+              key={cls.id}
+              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+            >
+              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                {/* Class info */}
+                <div className="flex items-center gap-3 flex-1 w-full">
+                  <span className="flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-1">
+                    <GraduationCap size={13} />
+                  </span>
+                  <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                    {cls.name}
+                  </h3>
                 </div>
 
-                <div className="flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-100 pt-4 md:pt-0 md:pl-8">
-                  <div className="flex flex-col items-center mr-6">
-                    <span className="workspace text-[#A3AED0] uppercase tracking-widest mb-1"></span>
-                    <span className="workspace text-blue-500 bg-blue-50 px-3 py-1 rounded">--</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button onClick={() => handleOpenModal(cls)} variant="ghost" className="text-black">
-                      <MdOutlineModeEditOutline size={16} />
-                    </Button>
-                    <Button onClick={() => handleDelete(cls.id)} variant="ghost" className="text-black">
-                      <MdOutlineDelete size={16} />
-                    </Button>
-                  </div>
+                {/* Actions */}
+                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                  <button
+                    onClick={() => handleOpenModal(cls)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                    title="Edit"
+                  >
+                    <MdOutlineModeEditOutline size={15} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(cls.id)}
+                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                    title="Delete"
+                  >
+                    <MdOutlineDelete size={15} />
+                  </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-24 bg-white rounded border border-dashed border-[#E0E5F2] flex flex-col items-center">
-            <div className="w-24 h-24 bg-[#F4F7FF] rounded flex items-center justify-center mb-8 shadow-inner">
-              <GraduationCap size={48} className="text-[#A3AED0]" />
+          /* ── Empty state ── */
+          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+              <GraduationCap size={28} className="text-[#6b6b6b]" />
             </div>
-            <h3 className="text-[#1B2559] mb-3">No classes defined</h3>
-            <p className="text-[#A3AED0] max-w-sm mx-auto mb-10 workspace leading-relaxed">
-              Start by organizing your academic structure. Create classes to assign students and exams.
+            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No classes yet</h3>
+            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+              Start by creating your first class to assign students and organise your exams.
             </p>
-            <Button onClick={() => handleOpenModal()} className="py-2 px-10 bg-[#1B2559] text-white rounded hover:opacity-90 transition-all workspace shadow-blue-900/20">
-              Add Your First Class
-            </Button>
+            <button
+              onClick={() => handleOpenModal()}
+              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+            >
+              Create First Class
+            </button>
           </div>
         )}
       </div>
 
+      {/* ── Modal ── */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingClass ? 'Modify Class Parameters' : 'Register New Class'}
+        title={editingClass ? 'Edit Class' : 'New Class'}
       >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="workspace text-[#1B2559] font-bold">Class Nomenclature</label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class Name</label>
             <Input
-              placeholder="e.g. JSS1, GRADE 10-A, FINAL YEAR"
+              placeholder="e.g. JSS1, Grade 10-A, Final Year"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
+              onChange={e => setFormData({ name: e.target.value.toUpperCase() })}
               required
-              className="h-12 rounded bg-[#F4F7FF] border-none focus:ring-2 focus:ring-blue-500/20 workspace"
+              className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] placeholder:text-[#6b6b6b]"
             />
-            <p className="text-[11px] text-[#A3AED0]">This name will be visible to students and teachers.</p>
+            <p className="text-[11px] text-[#6b6b6b] ml-0.5">This name will be visible to students and teachers.</p>
           </div>
 
-          <div className="flex gap-4 pt-4">
-            <Button
+          <div className="flex gap-3 pt-2">
+            <button
               type="button"
-              variant="ghost"
-              className="flex-1 h-12 rounded text-[#6b7280] font-bold hover:bg-zinc-50"
               onClick={() => setIsModalOpen(false)}
+              className="flex-1 py-1.5 text-xs text-[#6b6b6b] hover:bg-zinc-100 rounded-sm transition-all border border-zinc-400/20"
             >
-              Discard
-            </Button>
+              Cancel
+            </button>
             <Button
               type="submit"
-              className="flex-1 h-12 rounded bg-[#1B2559] text-white font-bold shadow-lg shadow-blue-900/20"
+              className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
               isLoading={isSubmitting}
             >
               {editingClass ? (
-                <span className="flex items-center gap-2"><Check size={18}/> Update</span>
+                <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>
               ) : (
-                <span className="flex items-center gap-2"><Plus size={18}/> Register</span>
+                <span className="flex items-center justify-center gap-1.5"><Plus size={13} /> Create Class</span>
               )}
             </Button>
           </div>

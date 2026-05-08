@@ -77,6 +77,15 @@ export default function WorkspacesPage() {
                     <BookOpen className="w-4 h-4 text-gray-400" />
                     <span className="text-gray-700 ">{ws._count?.subjects || 0}</span> Subjects
                   </div>
+                  <div className="flex items-center gap-2  text-gray-500">
+                    <BookOpen className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700 ">{ws._count?.questions || 0}</span> Questions
+                  </div>
+
+                  <div className="flex items-center gap-2  text-gray-500">
+                    <BookOpen className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-700 ">{ws._count?.classes || 0}</span> Classes
+                  </div>
                 </div>
               </div>
 

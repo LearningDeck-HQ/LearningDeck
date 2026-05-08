@@ -12,6 +12,20 @@ import Image from 'next/image';
 export default function WorkspacesPage() {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const storedUser = window.localStorage.getItem('user');
+        if (!storedUser) return;
+
+        try {
+            setUser(JSON.parse(storedUser));
+        } catch (error) {
+            console.error('Header: Failed to parse stored user', error);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -38,6 +52,8 @@ export default function WorkspacesPage() {
             />
             <div className='text-center text-md'>
                 Welcome to  <strong>{workspaces[0]?.name}</strong> workspace, <br />You can get started by navigating to the sidebar for exam, classes and many more management features
+
+                {user?.role}
 
             </div>        </div>
     );
