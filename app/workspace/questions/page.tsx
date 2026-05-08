@@ -37,6 +37,7 @@ export default function QuestionsPage() {
   const [selectedExam, setSelectedExam] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,9 +122,38 @@ export default function QuestionsPage() {
     try {
       setIsLoading(true);
       await questionApi.delete(id);
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
       await fetchData();
     } catch (err: any) {
       alert(err.message || 'Failed to delete question');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredQuestions.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredQuestions.map(q => q.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} questions?`)) return;
+    try {
+      setIsLoading(true);
+      await Promise.all(selectedIds.map(id => questionApi.delete(id)));
+      setSelectedIds([]);
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete some questions');
     } finally {
       setIsLoading(false);
     }
@@ -258,6 +288,32 @@ export default function QuestionsPage() {
         </div>
       </div>
 
+      {/* ── Selection Actions ── */}
+      {filteredQuestions.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 border border-zinc-400/20 rounded-sm">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              className="w-3.5 h-3.5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              checked={selectedIds.length === filteredQuestions.length && filteredQuestions.length > 0}
+              onChange={toggleSelectAll}
+            />
+            <span className="text-xs font-medium text-[#0e0f10]">
+              {selectedIds.length} {selectedIds.length === 1 ? 'question' : 'questions'} selected
+            </span>
+          </div>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-50 text-red-600 rounded-sm hover:bg-red-100 transition-all active:scale-95"
+            >
+              <MdOutlineDelete size={14} />
+              Delete Selected
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ── Question List ── */}
       <div className="grid grid-cols-1 gap-3">
         {isLoading ? (
@@ -270,55 +326,67 @@ export default function QuestionsPage() {
               key={q.id}
               className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
-              <div className="px-4 py-3 flex flex-col md:flex-row items-start justify-between gap-4">
-                {/* Left: question info */}
-                <div className="flex items-start gap-3 flex-1 w-full">
-                  <span className="mt-0.5 flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-0.5">
-                    {typeIcon(q.type)}
-                  </span>
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight leading-snug">
-                      {q.question}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
-                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
-                        {q.type.replace(/_/g, ' ')}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <BookOpen size={11} />
-                        {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <GraduationCap size={11} />
-                        {classes.find(c => c.id === q.classId)?.name || 'N/A'}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-emerald-600">
-                        <CheckCircle2 size={11} />
-                        {q.correct_answer}
-                      </span>
-                    </div>
-                  </div>
+              <div className="flex flex-col md:flex-row items-start justify-between">
+                {/* Selection Checkbox */}
+                <div className=" my-6 ml-4 md:pt-0 md:h-full md:flex md:items-center">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    checked={selectedIds.includes(q.id)}
+                    onChange={() => toggleSelectOne(q.id)}
+                  />
                 </div>
 
-                {/* Right: exam tag + actions */}
-                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                  <span className="mr-2 text-xs text-[#6b6b6b] bg-zinc-300/20 px-2 py-0.5 rounded-sm hidden md:block">
-                    {exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}
-                  </span>
-                  <button
-                    onClick={() => handleOpenModal(q)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="Edit"
-                  >
-                    <MdOutlineModeEditOutline size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(q.id)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                    title="Delete"
-                  >
-                    <MdOutlineDelete size={15} />
-                  </button>
+                <div className="px-4 py-3 flex flex-1 flex-col md:flex-row items-start justify-between gap-4 w-full">
+                  {/* Left: question info */}
+                  <div className="flex items-start gap-3 flex-1 w-full">
+                    <span className="mt-0.5 flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-0.5">
+                      {typeIcon(q.type)}
+                    </span>
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight leading-snug">
+                        {q.question}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                          {q.type.replace(/_/g, ' ')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <BookOpen size={11} />
+                          {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <GraduationCap size={11} />
+                          {classes.find(c => c.id === q.classId)?.name || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-emerald-600">
+                          <CheckCircle2 size={11} />
+                          {q.correct_answer}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: exam tag + actions */}
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <span className="mr-2 text-xs text-[#6b6b6b] bg-zinc-300/20 px-2 py-0.5 rounded-sm hidden md:block">
+                      {exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}
+                    </span>
+                    <button
+                      onClick={() => handleOpenModal(q)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Edit"
+                    >
+                      <MdOutlineModeEditOutline size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(q.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <MdOutlineDelete size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

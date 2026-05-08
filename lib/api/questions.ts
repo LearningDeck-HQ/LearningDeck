@@ -11,6 +11,7 @@ export const questionApi = {
     return apiFetch<Question>(`/questions/${id}`);
   },
 
+
   async create(data: any): Promise<ApiResponse<Question>> {
     return apiFetch<Question>('/questions', {
       method: 'POST',

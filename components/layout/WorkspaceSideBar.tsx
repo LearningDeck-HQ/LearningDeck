@@ -22,9 +22,9 @@ const navItems = [
 ];
 
 const TeacherNavItems = [
-    { label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
+    //{ label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
     { label: 'Questions', href: '/workspace/questions', icon: MdQuiz },
-    { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
+    //  { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 

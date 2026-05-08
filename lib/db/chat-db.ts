@@ -11,6 +11,7 @@ export interface Conversation {
   id: string;
   title: string;
   timestamp: number;
+  model?: string;
 }
 
 const DB_NAME = 'learningdeck_chat_db';
