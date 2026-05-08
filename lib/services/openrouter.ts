@@ -3,9 +3,9 @@ export interface ChatMessage {
   content: string;
 }
 
-  const getApiKey = () => {
-  const url = process.env.OPENROUTER_API_KEY ;
-  return url;
+const getApiKey = () => {
+  // Use the prefix required by your framework (e.g., NEXT_PUBLIC_ or VITE_)
+  return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
 };
 
 const OPENROUTER_API_KEY = getApiKey()
