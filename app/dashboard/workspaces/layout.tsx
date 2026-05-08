@@ -31,7 +31,7 @@ const WorkspacesLayout = ({ children }: { children: React.ReactNode }) => {
   const handleTabChange = (id: string) => setActiveTab(id as 'home' | 'manage' | 'usage');
 
   return (
-    <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full">
+    <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full p-4 md:p-8">
       <AshardTabs items={workspaceTabs} className="mb-4 max-w-[300px]" />
       {children}
     </div>

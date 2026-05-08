@@ -21,9 +21,7 @@ import {
     Zap
 } from 'lucide-react';
 import Image from 'next/image';
-import { GiSparkles } from 'react-icons/gi';
-import { BiBookmark, BiBookOpen, BiBrain, BiChevronDown, BiCopy, BiSend } from 'react-icons/bi';
-import { useRouter } from 'next/navigation';
+import { BiBookmark, BiBookOpen, BiBrain, BiChevronDown, BiCopy, BiSend, BiSolidShapes } from 'react-icons/bi';
 import { FiThumbsDown, FiThumbsUp } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -36,12 +34,14 @@ import { classApi } from '@/lib/api/classes';
 import { v4 as uuidv4 } from 'uuid';
 import { ScaleLoader } from 'react-spinners';
 import { useSearchParams } from 'next/navigation';
+import { SiGoogleclassroom } from 'react-icons/si';
+import { MdQuiz } from 'react-icons/md';
 
 const CONTEXT_OPTIONS = [
     { id: 'exams', label: 'Exams', icon: <BookOpen size={14} />, api: examApi },
-    { id: 'subjects', label: 'Subjects', icon: <BiBookOpen size={14} />, api: subjectApi },
-    { id: 'questions', label: 'Questions', icon: <HelpCircle size={14} />, api: questionApi },
-    { id: 'classes', label: 'Classes', icon: <Users size={14} />, api: classApi },
+    { id: 'subjects', label: 'Subjects', icon: <BiSolidShapes size={14} />, api: subjectApi },
+    { id: 'questions', label: 'Questions', icon: <MdQuiz size={14} />, api: questionApi },
+    { id: 'classes', label: 'Classes', icon: <SiGoogleclassroom size={14} />, api: classApi },
 ];
 
 const ChatInterface = () => {
@@ -566,17 +566,15 @@ const ChatInterface = () => {
 
                         {/* @ mention dropdown */}
                         {showMentionDropdown && (
-                            <div className="absolute bottom-full left-0 mb-3 w-56 bg-white border border-[#ededed] rounded shadow-lg overflow-hidden">
-                                <div className="px-4 py-2 border-b border-[#ededed]">
-                                    <span className="text-[10px] font-semibold text-[#6b6b6b] uppercase tracking-widest">Workspace Data</span>
-                                </div>
+                            <div className="absolute bottom-full left-0 mb-3 w-56 py-2 bg-white border border-[#ededed] rounded shadow overflow-hidden">
+
                                 {CONTEXT_OPTIONS.map(opt => (
                                     <button
                                         key={opt.id}
                                         onClick={() => addContext(opt.id)}
-                                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#fcfcfc] text-[#6b6b6b] hover:text-blue-500 text-sm transition-colors"
+                                        className="w-full flex items-center gap-3 px-4 py-1 hover:bg-[#fcfcfc] text-[#6b6b6b] hover:text-blue-500 text-xs transition-colors"
                                     >
-                                        <div className="p-1.5 bg-[#f0f0f0] rounded text-blue-500">
+                                        <div className="p-1 bg-[#f0f0f0] rounded text-blue-500">
                                             {opt.icon}
                                         </div>
                                         <span>{opt.label}</span>
