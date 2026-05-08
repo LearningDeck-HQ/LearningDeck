@@ -19,6 +19,20 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const storedUser = window.localStorage.getItem('user');
+    if (!storedUser) return;
+
+    try {
+      setUser(JSON.parse(storedUser));
+    } catch (error) {
+      console.error('Header: Failed to parse stored user', error);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,6 +50,9 @@ const Header = () => {
     return pathname === href;
   };
 
+  const isTeacher = user?.role === 'TEACHER';
+  const redirectPath = isTeacher ? '/workspace' : '/dashboard';
+  const redirectLabel = isTeacher ? 'Workspace' : 'Dashboard';
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-3 ">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
@@ -189,10 +206,10 @@ const Header = () => {
           {!isLoading && (
             isAuthenticated ? (
               <Link
-                href="/dashboard"
+                href={redirectPath}
                 className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1 "
               >
-                Go to Dashboard <ChevronRight className="w-4 h-4" />
+                Go to {redirectLabel} <ChevronRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
