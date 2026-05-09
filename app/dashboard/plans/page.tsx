@@ -260,8 +260,8 @@ export default function PlanPage() {
                                     {/* Price */}
                                     <div>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-semibold text-[#1a1a1a]">
-                                                {fmt(plan.price)}
+                                            <span className="text-2xl text-[#1a1a1a]">
+                                                {plan.price > 400000 ? fmt(500) + "k+" : fmt(plan.price)}
                                             </span>
                                             <span className="text-xs">/ {plan.period}</span>
                                         </div>
@@ -320,7 +320,7 @@ export default function PlanPage() {
                         {billingHistory.map((row, i) => (
                             <div
                                 key={i}
-                                className={`grid grid-cols-4 px-4 py-4 text-sm items-center ${i < billingHistory.length - 1 ? "border-b border-[#ededed]" : ""
+                                className={`grid grid-cols-4 px-4 py-4  items-center ${i < billingHistory.length - 1 ? "border-b border-[#ededed]" : ""
                                     }`}
                             >
                                 <span>{row.date}</span>
