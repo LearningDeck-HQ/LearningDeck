@@ -33,7 +33,7 @@ export default function WorkspacesPage() {
           <ScaleLoader barCount={3} color="#a7a7a7" height={20} width={5} />
         </div>
       ) : workspaces.length > 0 ? (
-        <div className="divide-y divide-gray-100 border-t border-b border-gray-100">
+        <div className="divide-y divide-gray-100 border-t border-b border-gray-100 bg-[#f9f9f9]">
           {workspaces.map((ws) => (
             <div
               key={ws.id}

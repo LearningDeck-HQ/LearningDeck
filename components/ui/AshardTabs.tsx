@@ -28,12 +28,11 @@ export const AshardTabs = ({ items, className = '' }: AshardTabsProps) => {
 
         return (
           <Link key={item.id} href={item.href} className="group">
-            <span className={`flex items-center justify-center gap-2 rounded px-4 py-2   transition-all duration-200 ${
-              isActive
-                ? 'bg-zinc-400/20 text-black'
-                : ' text-slate-700 hover:bg-slate-50'
-            }`}>
-              
+            <span className={`flex items-center justify-center  gap-2 rounded px-4 py-2   transition-all duration-200 ${isActive
+              ? 'bg-zinc-400/20 text-black'
+              : ' text-slate-700 hover:bg-slate-50'
+              }`}>
+
               <span>{item.label}</span>
             </span>
           </Link>
@@ -43,8 +42,8 @@ export const AshardTabs = ({ items, className = '' }: AshardTabsProps) => {
   );
 
   return (
-    <nav className={`grid grid-cols-3 gap-2  rounded p-1  ${className}`}>
-        
+    <nav className={`grid grid-cols-3 gap-2  rounded p-1 bg-[#f9f9f9] border border-[#ededed] w-full ${className}`}>
+
       {renderedItems}
     </nav>
   );

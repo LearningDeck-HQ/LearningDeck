@@ -18,11 +18,6 @@ interface Plan {
     color: string;
 }
 
-interface UsageItem {
-    label: string;
-    used: number;
-    total: number;
-}
 
 interface BillingRow {
     date: string;
@@ -102,11 +97,7 @@ const plans: Plan[] = [
     },
 ];
 
-const usageItems: UsageItem[] = [
-    { label: "Students enrolled", used: 18, total: 25 },
-    { label: "Active exams", used: 1, total: 2 },
-    { label: "AI requests today", used: 3, total: 5 },
-];
+
 
 const billingHistory: BillingRow[] = [
     { date: "Jan 1, 2025", amount: "₦99,000", status: "Paid", plan: "Starter" },
@@ -154,7 +145,7 @@ export default function PlanPage() {
                 </div>
 
                 {/* Current Plan Summary */}
-                <div className="bg-white border border-[#ededed] rounded p-5 flex flex-wrap gap-4 items-center justify-between">
+                <div className="bg-[#f9f9f9] border border-[#ededed] rounded p-5 flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="p-2 bg-[#f0f0f0] rounded">
                             <ActiveIcon size={18} className="text-blue-500" />
@@ -176,52 +167,6 @@ export default function PlanPage() {
                     </button>
                 </div>
 
-                {/* Usage */}
-                <div className="space-y-3">
-                    <h3 className="text-[#1a1a1a]">Current Usage</h3>
-                    <div className="bg-white border border-[#ededed] rounded overflow-hidden">
-                        {usageItems.map((item, i) => {
-                            const pct = Math.round((item.used / item.total) * 100);
-                            const isHigh = pct >= 80;
-                            return (
-                                <div
-                                    key={i}
-                                    className={`p-4 flex items-center gap-6 ${i < usageItems.length - 1 ? "border-b border-[#ededed]" : ""
-                                        }`}
-                                >
-                                    <div className="flex-1">
-                                        <div className="flex justify-between mb-2 text-sm">
-                                            <span className="text-[#1a1a1a]">{item.label}</span>
-                                            <span
-                                                className="text-xs font-mono"
-                                                style={{ color: isHigh ? "#ef4444" : "#6b6b6b" }}
-                                            >
-                                                {item.used} / {item.total}
-                                            </span>
-                                        </div>
-                                        <div className="h-1.5 rounded-full bg-[#f0f0f0] overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${pct}%`,
-                                                    background: isHigh
-                                                        ? "linear-gradient(90deg, #ef4444, #f87171)"
-                                                        : "linear-gradient(90deg, #60a5fa, #93c5fd)",
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <span
-                                        className="text-xs min-w-[32px] text-right"
-                                        style={{ color: isHigh ? "#ef4444" : "#6b6b6b" }}
-                                    >
-                                        {pct}%
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
 
                 {/* Plan Cards */}
                 <div className="space-y-3">
@@ -237,7 +182,7 @@ export default function PlanPage() {
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`bg-white rounded p-5 flex flex-col gap-4 border transition-colors ${isActive
+                                    className={`bg-[#f9f9f9] rounded p-5 flex flex-col gap-4 border transition-colors ${isActive
                                         ? "border-blue-400"
                                         : "border-[#ededed] hover:border-blue-200"
                                         }`}
@@ -310,7 +255,7 @@ export default function PlanPage() {
                 {/* Billing History */}
                 <div className="space-y-3 pb-10">
                     <h3 className="text-[#1a1a1a]">Billing History</h3>
-                    <div className="bg-white border border-[#ededed] rounded overflow-hidden">
+                    <div className="bg-[#f9f9f9] border border-[#ededed] rounded overflow-hidden">
                         <div className="grid grid-cols-4 px-4 py-3 border-b border-[#ededed] text-xs uppercase tracking-wider text-[#6b6b6b]">
                             <span>Date</span>
                             <span>Plan</span>
@@ -342,7 +287,7 @@ export default function PlanPage() {
                     onClick={() => setShowConfirm(null)}
                 >
                     <div
-                        className="bg-white border border-[#ededed] rounded p-6 max-w-sm w-[90%] shadow-lg"
+                        className="bg-[#f9f9f9] border border-[#ededed] rounded p-6 max-w-sm w-[90%] shadow-lg"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mb-5">
