@@ -1,6 +1,6 @@
 "use client";
 
-import { TbHome } from "react-icons/tb";
+import { TbHome, TbTemplate } from "react-icons/tb";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -15,7 +15,7 @@ import {
 } from 'react-icons/md';
 import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
-import { BiBrain, BiCreditCard, BiWorld } from "react-icons/bi";
+import { BiBrain, BiCreditCard, BiPlus, BiWorld } from "react-icons/bi";
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
@@ -40,8 +40,8 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     <aside className="w-full h-full bg-[#f9f9f9] border-r border-[#ededed] flex flex-col font-sans text-xs">
       {/* Top Action Button */}
       <div className="p-4">
-        <button className="w-fit px-4 py-1.5 border border-[#ededed] rounded  font-medium text-[#0e0f10] hover:bg-[#ededed] transition-colors">
-          Invite Teacher
+        <button className="w-full flex justify-center px-4 py-1.5 border border-[#ededed] rounded  font-medium text-[#0e0f10] hover:bg-[#ededed] transition-colors">
+          <BiPlus className="w-4 h-4 mr-2" />Invite
         </button>
       </div>
 
@@ -82,6 +82,11 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <span className="text-[#6b6b6b]">Environments</span>
         </Link>
 
+        <Link href="/dashboard/templates" className={getLinkStyles(pathname === '/dashboard/templates')} onClick={onClose}>
+          <TbTemplate className=" opacity-70" />
+          <span className="text-[#6b6b6b]">Plugins & Templates </span>
+        </Link>
+
         {/* Bottom External Links Section */}
         <div className="mt-auto mb-4 flex flex-col gap-1 pt-4 border-t border-[#ededed] text-xs">
           <Link href="#" className={footerLinkStyles} onClick={onClose}>
@@ -99,7 +104,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           </Link>
 
           <Link href="/downloads" className={footerLinkStyles} onClick={onClose}>
-            <span>Download Desktop App</span>
+            <span>Download Desktop Agent</span>
             <FiArrowUpRight className="opacity-0 group-hover:opacity-100" />
           </Link>
 
