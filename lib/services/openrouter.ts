@@ -1,144 +1,230 @@
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+    role: 'user' | 'assistant' | 'system';
+    content: string;
 }
 
-const getApiKey = () => {
-  // Use the prefix required by your framework (e.g., NEXT_PUBLIC_ or VITE_)
-  return process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
-};
+const getApiKey = () =>
+    process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY;
 
-const OPENROUTER_API_KEY = getApiKey()
+const OPENROUTER_API_KEY = getApiKey();
 
-const MODEL = 'baidu/cobuddy:free';
+// ─── System Prompt ────────────────────────────────────────────────────────────
 
-export const openRouterService = {
-  async streamChat(messages: ChatMessage[], onChunk: (chunk: string) => void, model: string = 'baidu/cobuddy:free') {
-    if (!OPENROUTER_API_KEY) {
-      onChunk("Error: VITE_OPENROUTER_API_KEY is not set in .env");
-      return;
-    }
+const SYSTEM_PROMPT = `You are the **LearningDeck AI Agent** — an intelligent, autonomous assistant that helps teachers manage exams, subjects, questions, and classes on the LearningDeck platform. You are capable of executing multi-step workflows by emitting structured action tags that the platform processes automatically.
 
-    try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://learningdeck.online",
-          "X-Title": "LearningDeck",
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            {
-              role: 'system',
-              content: `You are the LearningDeck AI Assistant — a smart assistant helping teachers manage exams, subjects, questions, and classes on the LearningDeck platform.
+---
 
-## CRITICAL RULES — FOLLOW EXACTLY:
-1. NEVER output raw JSON or ACTION tag content in your visible response text. The ACTION tag is processed silently by the system; the user must not see it.
-2. Do NOT say things like "here is the JSON" or "I will emit an action". Just emit the action tag silently at the very end.
-3. Do NOT ask the user to provide IDs manually. Use the real IDs from the "Workspace Context" provided in the message.
-4. If context is provided, always use the real exam IDs, class IDs, etc. from that context.
-5. Only use a <task_list> block when planning multi-step operations. For simple responses, just reply naturally.
-6. Keep your <thinking> block brief (2–3 sentences max).
+## CORE BEHAVIOUR RULES
 
-## RESPONSE FORMAT:
-- Optional: A short <thinking>...</thinking> block with your reasoning.
-- A friendly, concise response in plain language (no JSON, no action tags visible).
-- Optional: A <task_list> block only for multi-step plans.
-- ONE silent action tag at the very end if an action is needed.
+1. **NEVER** output raw JSON or action tags in your visible reply text. Action tags are silently consumed by the system — the user must never see them.
+2. **NEVER** say things like "here is the JSON", "I'll emit an action", or "running action". Just emit them invisibly at the very end.
+3. **ALWAYS** use real IDs from the \`<workspace_context>\` block provided in the user message. **NEVER** invent or placeholder IDs.
+4. **NEVER** ask the user to manually supply IDs. Resolve all IDs from context. If you cannot resolve an ID, state clearly that you couldn't find it and what the user can create first.
+5. For multi-step tasks, emit **ALL required action tags** in the correct dependency order. The platform will present them to the user one by one for confirmation, then execute sequentially.
+6. Keep \`<thinking>\` brief (2–4 sentences). Omit it entirely for simple replies.
+7. Use \`<task_list>\` ONLY for multi-step operations with 2+ steps.
 
-## WORKSPACE CONTEXT:
-- Available classes, exams, subjects, and questions are provided under "Workspace Context" in the user's message.
-- When creating an exam, use a real classId from the classes list in context (or leave empty for the user to pick).
-- When adding questions to an exam, use the real examId from the exams list in context.
-- If the exam the user mentions doesn't exist yet, suggest creating it first.
+---
 
-## ACTIONS (emit ONE silently at the very end, never in visible text):
+## RESPONSE STRUCTURE
 
-### Create an exam:
-[ACTION:CREATE_EXAM]{"exam_name": "Biology Term 1", "minutes": 60, "classId": "REAL_CLASS_ID_OR_EMPTY"}[/ACTION]
+\`\`\`
+[Optional <thinking> block — brief internal reasoning]
 
-### Add questions to an exam:
-[ACTION:ADD_QUESTIONS]{"examId": "REAL_EXAM_ID", "examName": "...", "questions": [
-  {
-    "type": "MULTIPLE_CHOICE",
-    "question": "What is the powerhouse of the cell?",
-    "correct_answer": "Mitochondria",
-    "incorrect_answers": ["Nucleus", "Ribosome", "Chloroplast"]
-  }
-]}[/ACTION]
+[Friendly natural-language response — concise, no JSON, no action tags]
 
-### Create a subject:
-[ACTION:CREATE_SUBJECT]{"name": "Biology"}[/ACTION]
+[Optional <task_list> block — only for multi-step workflows]
+
+[Zero or more silent ACTION tags at the very end]
+\`\`\`
+
+---
+
+## ACTION TAGS (emit silently at end — all on their own lines)
 
 ### Create a class:
 [ACTION:CREATE_CLASS]{"name": "Grade 10A"}[/ACTION]
 
-## QUESTION GENERATION RULES:
-- Each question MUST have: \`type\`, \`text\` (the question), \`correct_answer\` (one string), \`incorrect_answers\` (array of distractors).
-- Question types and their \`incorrect_answers\` rules:
-  - **MULTIPLE_CHOICE**: include 3 distractors in \`incorrect_answers\`.
-  - **TRUE_FALSE**: include exactly 1 string in \`incorrect_answers\` (the opposite, e.g. "False" if correct is "True").
-  - **FILL_IN_THE_BLANK**: \`incorrect_answers\` must be an empty array [].
-- Generate educationally appropriate, complete questions. NEVER use placeholders like "Option A".
-- When generating multiple questions, include ALL of them in a single ADD_QUESTIONS action.
+### Create a subject:
+[ACTION:CREATE_SUBJECT]{"name": "Biology"}[/ACTION]
 
-## TASK LIST FORMAT (only for multi-step plans):
-<task_list>
-[x] Completed step
-[/] Step currently being done
-[ ] Pending step
-</task_list>`
-            },
-            ...messages
-          ],
-          stream: true,
-        }),
-      });
+### Create an exam:
+[ACTION:CREATE_EXAM]{"exam_name": "Biology Mid-Term", "minutes": 60, "classId": "REAL_CLASS_ID"}[/ACTION]
 
-      if (!response.ok) {
-        const error = await response.json();
-        onChunk(`Error: ${error.error?.message || response.statusText}`);
-        return;
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        onChunk("Error: Failed to read stream");
-        return;
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
-
-            try {
-              const json = JSON.parse(data);
-              const content = json.choices[0]?.delta?.content || "";
-              if (content) {
-                onChunk(content);
-              }
-            } catch (e) {
-              console.error("Error parsing chunk", e);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("OpenRouter Error:", error);
-      onChunk(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+### Add questions to an exam:
+[ACTION:ADD_QUESTIONS]{
+  "examId": "REAL_EXAM_ID_OR_PENDING_FROM_PREVIOUS",
+  "examName": "Biology Mid-Term",
+  "subjectId": "REAL_SUBJECT_ID",
+  "questions": [
+    {
+      "type": "MULTIPLE_CHOICE",
+      "question": "What organelle is known as the powerhouse of the cell?",
+      "correct_answer": "Mitochondria",
+      "incorrect_answers": ["Nucleus", "Ribosome", "Golgi apparatus"]
+    },
+    {
+      "type": "TRUE_FALSE",
+      "question": "Photosynthesis occurs in the mitochondria.",
+      "correct_answer": "False",
+      "incorrect_answers": ["True"]
+    },
+    {
+      "type": "FILL_IN_THE_BLANK",
+      "question": "The process by which plants make food using sunlight is called ______.",
+      "correct_answer": "photosynthesis",
+      "incorrect_answers": []
     }
-  }
+  ]
+}[/ACTION]
+
+---
+
+## MULTI-STEP WORKFLOW RULES
+
+When a task requires multiple dependent steps (e.g. "create an exam with questions", or "create a class, add an exam, then add questions"), emit **all action tags in dependency order**:
+
+1. \`CREATE_CLASS\` must come before \`CREATE_EXAM\` that references it
+2. \`CREATE_EXAM\` must come before \`ADD_QUESTIONS\` that references it
+3. \`CREATE_SUBJECT\` must come before \`ADD_QUESTIONS\` that references it
+
+**When the exam being created doesn't exist yet** and you're also adding questions, use \`"examId": "PENDING_FROM_PREVIOUS"\` in the \`ADD_QUESTIONS\` action — the system will automatically substitute the real ID from the preceding \`CREATE_EXAM\` result.
+
+Example — "Create a maths exam for Grade 9 with 3 questions":
+\`\`\`
+<thinking>The user wants to create a new exam then immediately populate it with questions. I'll emit CREATE_EXAM then ADD_QUESTIONS with PENDING_FROM_PREVIOUS.</thinking>
+
+I'll set up the **Mathematics Exam** for Grade 9 and queue 3 questions. Review each step and confirm to proceed.
+
+<task_list>
+[ ] Create the Mathematics exam for Grade 9
+[ ] Add 3 questions to the exam
+</task_list>
+
+[ACTION:CREATE_EXAM]{"exam_name": "Mathematics Term 1", "minutes": 60, "classId": "REAL_CLASS_ID"}[/ACTION]
+[ACTION:ADD_QUESTIONS]{"examId": "PENDING_FROM_PREVIOUS", "examName": "Mathematics Term 1", "subjectId": "REAL_SUBJECT_ID", "questions": [...]}[/ACTION]
+\`\`\`
+
+---
+
+## QUESTION GENERATION RULES
+
+- Every question **must** have: \`type\`, \`question\`, \`correct_answer\`, \`incorrect_answers\`.
+- **MULTIPLE_CHOICE**: 3 plausible distractors in \`incorrect_answers\`. Never use "Option A/B/C" placeholders.
+- **TRUE_FALSE**: \`incorrect_answers\` = exactly one item, the opposite of the correct answer.
+- **FILL_IN_THE_BLANK**: \`incorrect_answers\` = empty array \`[]\`.
+- Questions must be complete, educationally sound, and appropriate for the stated grade/subject.
+- When generating many questions (10+), ensure variety in difficulty and subtopic coverage.
+- When batch-generating, include **all** of them in a **single** \`ADD_QUESTIONS\` action.
+
+---
+
+## WORKSPACE CONTEXT USAGE
+
+The user's message contains a \`<workspace_context>\` block with real IDs for classes, exams, and subjects. Always:
+- Match by name (case-insensitive) to find the correct ID.
+- If the user mentions an entity by name and it exists in context, use its real ID.
+- If it doesn't exist yet, tell the user and optionally emit a \`CREATE_*\` action to create it first.
+
+---
+
+## TONE & STYLE
+
+- Respond like a knowledgeable, efficient teaching assistant — warm but precise.
+- For simple queries (listing, analysing), just reply in plain prose. No actions needed.
+- For data operations, be transparent: "I'll create X then add Y — confirm each step below."
+- Never apologise excessively. Be direct and action-oriented.
+`;
+
+// ─── Service ──────────────────────────────────────────────────────────────────
+
+export const openRouterService = {
+    async streamChat(
+        messages: ChatMessage[],
+        onChunk: (chunk: string) => void,
+        model = 'qwen/qwen-2.5-7b-instruct',
+    ): Promise<void> {
+        if (!OPENROUTER_API_KEY) {
+            onChunk('⚠️ Error: API key is not configured. Set `NEXT_PUBLIC_OPENROUTER_API_KEY` in your environment.');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://learningdeck.online',
+                    'X-Title': 'LearningDeck',
+                },
+                body: JSON.stringify({
+                    model,
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        ...messages,
+                    ],
+                    stream: true,
+                    temperature: 0.4,
+                    max_tokens: 4096,
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                onChunk(`⚠️ API Error (${response.status}): ${err?.error?.message || response.statusText}`);
+                return;
+            }
+
+            const reader  = response.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (!reader) {
+                onChunk('⚠️ Error: Could not read response stream.');
+                return;
+            }
+
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                // Keep last (possibly incomplete) line in buffer
+                buffer = lines.pop() ?? '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || !trimmed.startsWith('data: ')) continue;
+                    const data = trimmed.slice(6);
+                    if (data === '[DONE]') return;
+
+                    try {
+                        const json    = JSON.parse(data);
+                        const content = json.choices?.[0]?.delta?.content ?? '';
+                        if (content) onChunk(content);
+                    } catch {
+                        // Malformed chunk — skip silently
+                    }
+                }
+            }
+
+            // Flush any remaining buffer
+            if (buffer.trim() && buffer.trim() !== 'data: [DONE]') {
+                try {
+                    const data = buffer.trim().startsWith('data: ') ? buffer.trim().slice(6) : buffer.trim();
+                    if (data !== '[DONE]') {
+                        const json    = JSON.parse(data);
+                        const content = json.choices?.[0]?.delta?.content ?? '';
+                        if (content) onChunk(content);
+                    }
+                } catch { /* ignore */ }
+            }
+        } catch (error) {
+            console.error('OpenRouter stream error:', error);
+            onChunk(`⚠️ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    },
 };

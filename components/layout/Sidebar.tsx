@@ -74,7 +74,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <Link href="/dashboard/agentic-mode" className={getLinkStyles(pathname === '/dashboard/agentic-mode')} onClick={onClose}>
           <BiBrain className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Agentic mode</span>
+          <span className="text-[#6b6b6b]">Agentic mode <span className="text-blue-500 ml-1 border border-blue-500 rounded text-[10px] px-1 py-0.5">BETA</span></span>
         </Link>
 
         <Link href="/dashboard/environments" className={getLinkStyles(pathname === '/dashboard/environments')} onClick={onClose}>

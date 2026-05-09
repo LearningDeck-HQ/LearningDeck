@@ -21,7 +21,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!isAuthorized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAFBFF]">
-        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+
       </div>
     );
   }
