@@ -1,9 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Zap, Star, Crown, ArrowRight, RotateCcw, CreditCard } from "lucide-react";
+import { Check, Zap, Star, Crown, ArrowRight, RotateCcw, CreditCard, LucideIcon } from "lucide-react";
 
-const plans = [
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface Plan {
+    id: string;
+    name: string;
+    price: number;
+    period: string;
+    description: string;
+    badge: string | null;
+    icon: LucideIcon;
+    featured?: boolean;
+    features: string[];
+    color: string;
+}
+
+interface UsageItem {
+    label: string;
+    used: number;
+    total: number;
+}
+
+interface BillingRow {
+    date: string;
+    amount: string;
+    status: string;
+    plan: string;
+}
+
+type ConfirmAction = "upgrade" | "downgrade";
+
+interface ConfirmState {
+    plan: Plan;
+    action: ConfirmAction;
+}
+
+// ── Data ───────────────────────────────────────────────────────────────────────
+
+const plans: Plan[] = [
     {
         id: "starter",
         name: "Starter",
@@ -65,36 +102,46 @@ const plans = [
     },
 ];
 
-const usageItems = [
+const usageItems: UsageItem[] = [
     { label: "Students enrolled", used: 18, total: 25 },
     { label: "Active exams", used: 1, total: 2 },
     { label: "AI requests today", used: 3, total: 5 },
 ];
 
-const billingHistory = [
+const billingHistory: BillingRow[] = [
     { date: "Jan 1, 2025", amount: "₦99,000", status: "Paid", plan: "Starter" },
     { date: "Jan 1, 2024", amount: "₦99,000", status: "Paid", plan: "Starter" },
 ];
 
-const fmt = (n) => "₦" + n.toLocaleString("en-NG");
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const fmt = (n: number): string => "₦" + n.toLocaleString("en-NG");
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
-    const [currentPlan, setCurrentPlan] = useState("professional");
-    const [showConfirm, setShowConfirm] = useState(null);
+    const [currentPlan, setCurrentPlan] = useState<string>("professional");
+    const [showConfirm, setShowConfirm] = useState<ConfirmState | null>(null);
 
-    const activePlan = plans.find((p) => p.id === currentPlan);
+    // Non-null assertion is safe here: "professional" always exists in plans.
+    // But we handle the edge case gracefully with a fallback.
+    const activePlan = plans.find((p) => p.id === currentPlan) ?? plans[0];
 
-    const handleAction = (plan) => {
+    const handleAction = (plan: Plan): void => {
         const planIndex = plans.findIndex((p) => p.id === plan.id);
         const currentIndex = plans.findIndex((p) => p.id === currentPlan);
         if (plan.id === currentPlan) return;
-        setShowConfirm({ plan, action: planIndex > currentIndex ? "upgrade" : "downgrade" });
+        const action: ConfirmAction = planIndex > currentIndex ? "upgrade" : "downgrade";
+        setShowConfirm({ plan, action });
     };
 
-    const confirmChange = () => {
+    const confirmChange = (): void => {
+        if (!showConfirm) return;
         setCurrentPlan(showConfirm.plan.id);
         setShowConfirm(null);
     };
+
+    const ActiveIcon = activePlan.icon;
 
     return (
         <div className="h-full text-[#6b6b6b] font-sans p-2 md:p-4">
@@ -110,7 +157,7 @@ export default function PlanPage() {
                 <div className="bg-white border border-[#ededed] rounded p-5 flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="p-2 bg-[#f0f0f0] rounded">
-                            <activePlan.icon size={18} className="text-blue-500" />
+                            <ActiveIcon size={18} className="text-blue-500" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2 mb-0.5">
@@ -139,7 +186,8 @@ export default function PlanPage() {
                             return (
                                 <div
                                     key={i}
-                                    className={`p-4 flex items-center gap-6 ${i < usageItems.length - 1 ? "border-b border-[#ededed]" : ""}`}
+                                    className={`p-4 flex items-center gap-6 ${i < usageItems.length - 1 ? "border-b border-[#ededed]" : ""
+                                        }`}
                                 >
                                     <div className="flex-1">
                                         <div className="flex justify-between mb-2 text-sm">
@@ -184,6 +232,7 @@ export default function PlanPage() {
                             const planIndex = plans.findIndex((p) => p.id === plan.id);
                             const currentIndex = plans.findIndex((p) => p.id === currentPlan);
                             const isUpgrade = planIndex > currentIndex;
+                            const PlanIcon = plan.icon;
 
                             return (
                                 <div
@@ -197,7 +246,7 @@ export default function PlanPage() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <div className="p-2 bg-[#f0f0f0] rounded w-fit mb-3">
-                                                <plan.icon size={16} className="text-blue-500" />
+                                                <PlanIcon size={16} className="text-blue-500" />
                                             </div>
                                             <p className="font-medium text-[#1a1a1a]">{plan.name}</p>
                                         </div>
@@ -231,7 +280,10 @@ export default function PlanPage() {
 
                                     {/* CTA */}
                                     {isActive ? (
-                                        <button className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] bg-[#f0f0f0] cursor-default">
+                                        <button
+                                            className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] bg-[#f0f0f0] cursor-default"
+                                            disabled
+                                        >
                                             Manage plan
                                         </button>
                                     ) : isUpgrade ? (
@@ -284,7 +336,7 @@ export default function PlanPage() {
             </div>
 
             {/* Confirm Modal */}
-            {showConfirm && (
+            {showConfirm !== null && (
                 <div
                     className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
                     onClick={() => setShowConfirm(null)}
@@ -295,18 +347,24 @@ export default function PlanPage() {
                     >
                         <div className="mb-5">
                             <div className="p-2 bg-[#f0f0f0] rounded w-fit mb-4">
-                                {showConfirm.action === "upgrade"
-                                    ? <ArrowRight size={18} className="text-blue-500" />
-                                    : <RotateCcw size={18} className="text-red-400" />
-                                }
+                                {showConfirm.action === "upgrade" ? (
+                                    <ArrowRight size={18} className="text-blue-500" />
+                                ) : (
+                                    <RotateCcw size={18} className="text-red-400" />
+                                )}
                             </div>
                             <h4 className="text-[#1a1a1a] font-medium mb-2">
-                                {showConfirm.action === "upgrade" ? "Upgrade" : "Downgrade"} to {showConfirm.plan.name}?
+                                {showConfirm.action === "upgrade" ? "Upgrade" : "Downgrade"} to{" "}
+                                {showConfirm.plan.name}?
                             </h4>
                             <p className="text-sm leading-relaxed">
                                 {showConfirm.action === "upgrade"
-                                    ? `Your plan will change to ${showConfirm.plan.name} at ${fmt(showConfirm.plan.price)}/year. You'll be billed the difference immediately.`
-                                    : `Your plan will change to ${showConfirm.plan.name} at ${fmt(showConfirm.plan.price)}/year at your next billing cycle.`}
+                                    ? `Your plan will change to ${showConfirm.plan.name} at ${fmt(
+                                        showConfirm.plan.price
+                                    )}/year. You'll be billed the difference immediately.`
+                                    : `Your plan will change to ${showConfirm.plan.name} at ${fmt(
+                                        showConfirm.plan.price
+                                    )}/year at your next billing cycle.`}
                             </p>
                         </div>
                         <div className="flex gap-3">
