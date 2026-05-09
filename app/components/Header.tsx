@@ -8,8 +8,10 @@ import { useEffect, useState } from 'react';
 
 const menuItems = [
 
+  { label: 'Home', href: '/' },
   { label: 'Pricing', href: '/pricing' },
-  //{ label: 'About', href: '/about' },
+  { label: 'Developers', href: '/developers' },
+  { label: 'About', href: '/about' },
 ];
 
 const Header = () => {
@@ -55,7 +57,7 @@ const Header = () => {
   const redirectLabel = isTeacher ? 'Workspace' : 'Dashboard';
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-6 py-3 ">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className=" mx-auto flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href={'/'} className="flex items-center gap-3">
           <Image
@@ -77,15 +79,7 @@ const Header = () => {
             onMouseEnter={() => setIsProductsOpen(true)}
             onMouseLeave={() => setIsProductsOpen(false)}
           >
-            <button
-              type="button"
-              className={`transition-colors py-2 ${isProductsOpen
-                ? 'hover:text-[#FF623D]  pb-1 font-semibold'
-                : 'hover:text-gray-900'
-                }`}
-            >
-              Platform
-            </button>
+
 
             {/* Mega Menu Popover */}
             <div
@@ -204,12 +198,22 @@ const Header = () => {
         {/* Auth/CTA Buttons */}
         <div className="flex items-center gap-4">
           {!isLoading && (
+            isAuthenticated && (
+              <Link
+                href={redirectPath}
+                className="bg-gray-300/20  text-black border-2 border-zinc-400 text-[14px] font-medium px-4 py-2 rounded hover:bg-gray-300/50 transition-colors flex items-center gap-1 "
+              >
+                Contact us <ChevronRight className="w-4 h-4" />
+              </Link>
+            )
+          )}
+          {!isLoading && (
             isAuthenticated ? (
               <Link
                 href={redirectPath}
-                className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2 rounded-md hover:bg-[#E55837] transition-colors flex items-center gap-1 "
+                className="bg-[#FF623D] text-white text-[14px] font-medium px-4 py-2.5 rounded hover:bg-[#E55837] transition-colors flex items-center gap-1 "
               >
-                Go to {redirectLabel} <ChevronRight className="w-4 h-4" />
+                Launch LearningDeck <ChevronRight className="w-4 h-4" />
               </Link>
             ) : (
               <>

@@ -37,7 +37,7 @@ const LandingPageContent = () => {
             <span className="text-blue-600">modern education.</span>
           </h1>
           <p className="text-[16px] text-gray-500 max-w-[600px] mx-auto mb-10 leading-relaxed">
-            A unified platform for seamless e-learning delivery and professional-grade exam management. Built for students, perfected for educators.
+            A unified platform for professional-grade exam management. Built for students, perfected for educators.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             {!isLoading && isAuthenticated ? (
@@ -66,9 +66,9 @@ const LandingPageContent = () => {
       {/* Dual Solutions Section */}
       <section id="solutions" className="py-24 px-6 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-1 gap-6">
             {/* E-Learning Card */}
-            <div className="p-8 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group">
+            <div className="hidden p-8 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group">
               <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-6 border border-blue-100">
                 <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
@@ -91,7 +91,7 @@ const LandingPageContent = () => {
               <div className="w-12 h-12 bg-[#F8F9FA] rounded-lg flex items-center justify-center mb-6 border border-gray-200">
                 <ShieldCheck className="w-6 h-6 text-gray-700" />
               </div>
-              <h3 className="text-[20px] mb-3 text-gray-900">Hybrid Exam Manager</h3>
+              <h3 className="text-[20px] mb-3 text-gray-900">Exam Manager</h3>
               <p className="text-gray-500 mb-6 leading-relaxed text-[15px]">
                 Secure, robust, and scalable examination infrastructure. From auto-grading to proctoring, manage it all from one dashboard.
               </p>
@@ -101,7 +101,7 @@ const LandingPageContent = () => {
                 <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Plugins & Templates Intergrations</li>
               </ul>
               <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
-                View LearningDeck Exam Manager <ChevronRight className="w-4 h-4" />
+                View Exam Manager <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>

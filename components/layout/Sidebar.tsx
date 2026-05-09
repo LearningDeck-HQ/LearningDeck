@@ -60,7 +60,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <div className="my-2 border-t border-[#ededed]/60" />
 
-        <Link href="/dashboard/catalog" className={getLinkStyles(pathname === '/dashboard/catalog')} onClick={onClose}>
+        <Link href="/dashboard/plans" className={getLinkStyles(pathname === '/dashboard/plans')} onClick={onClose}>
           <BiCreditCard className=" opacity-70" />
           <span className="text-[#6b6b6b]">Plan</span>
         </Link>
