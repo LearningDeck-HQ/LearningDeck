@@ -232,7 +232,7 @@ export default function StudentsPage() {
             <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
           </div>
           <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-red-500 transition-all duration-300 ease-out"
               style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
             />
@@ -309,13 +309,12 @@ export default function StudentsPage() {
                     <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {student.user_name}
                       {student.status && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${
-                          student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                          student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                          student.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                          student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              student.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                          }`}>
                           {student.status}
                         </span>
                       )}
@@ -370,7 +369,7 @@ export default function StudentsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Enroll First Student
             </button>
@@ -451,7 +450,7 @@ export default function StudentsPage() {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, active: !formData.active })}
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-[#0e0f10]' : 'bg-zinc-300'}`}
+              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-blue-500' : 'bg-zinc-300'}`}
             >
               <div
                 className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.active ? 'translate-x-5' : 'translate-x-0'}`}

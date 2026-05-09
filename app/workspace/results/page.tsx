@@ -27,37 +27,34 @@ export default function ResultsPage() {
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  const { data: results = [], isLoading: isLoadingResults } = useQuery({
-    queryKey: ['results'],
+  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  const workspaceId = useMemo(() => userStr ? JSON.parse(userStr).workspaceId : '1', [userStr]);
+
+  const { data: results = [], isLoading: isLoadingResults, isFetching: isFetchingResults } = useQuery({
+    queryKey: ['results', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
       const res = await resultApi.list({ workspaceId });
       return res.data || [];
     },
   });
 
-  const { data: subjects = [] } = useQuery({
-    queryKey: ['subjects'],
+  const { data: subjects = [], isFetching: isFetchingSubjects } = useQuery({
+    queryKey: ['subjects', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
       const res = await subjectApi.list(workspaceId);
       return res.data || [];
     },
   });
 
-  const { data: allQuestions = [] } = useQuery({
-    queryKey: ['questions'],
+  const { data: allQuestions = [], isFetching: isFetchingQuestions } = useQuery({
+    queryKey: ['questions', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
       const res = await questionApi.list({ workspaceId });
       return res.data || [];
     },
   });
 
-  const isLoading = isLoadingResults;
+  const isLoading = isLoadingResults || isFetchingResults || isFetchingSubjects || isFetchingQuestions;
 
 
   const fetchResultDetails = async (result: Result) => {
@@ -72,11 +69,9 @@ export default function ResultsPage() {
     }
   };
   const fetchData = () => {
-    queryClient.invalidateQueries({ queryKey: ['results'] });
-    queryClient.invalidateQueries({ queryKey: ['subjects'] });
-    queryClient.invalidateQueries({ queryKey: ['questions'] });
-    queryClient.invalidateQueries({ queryKey: ['users'] });
-
+    queryClient.invalidateQueries({ queryKey: ['results', workspaceId] });
+    queryClient.invalidateQueries({ queryKey: ['subjects', workspaceId] });
+    queryClient.invalidateQueries({ queryKey: ['questions', workspaceId] });
   };
 
   const filteredResults = useMemo(() => {
@@ -90,19 +85,19 @@ export default function ResultsPage() {
   const deleteResultMutation = useMutation({
     mutationFn: (id: string) => resultApi.delete(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['results'] });
-      const previousResults = queryClient.getQueryData<Result[]>(['results']);
-      queryClient.setQueryData(['results'], (old: Result[] = []) =>
+      await queryClient.cancelQueries({ queryKey: ['results', workspaceId] });
+      const previousResults = queryClient.getQueryData<Result[]>(['results', workspaceId]);
+      queryClient.setQueryData(['results', workspaceId], (old: Result[] = []) =>
         old.filter((r) => r.id !== id)
       );
       return { previousResults };
     },
     onError: (err, id, context) => {
-      queryClient.setQueryData(['results'], context?.previousResults);
+      queryClient.setQueryData(['results', workspaceId], context?.previousResults);
       alert('Failed to delete result');
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['results'] });
+      queryClient.invalidateQueries({ queryKey: ['results', workspaceId] });
     },
   });
 
@@ -179,7 +174,7 @@ export default function ResultsPage() {
         description="Monitor student performance, scores, and examination outcomes."
       >
         <button
-          onClick={() => queryClient.invalidateQueries({ queryKey: ['results'] })}
+          onClick={fetchData}
           className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
         >
           <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
@@ -217,7 +212,7 @@ export default function ResultsPage() {
             />
           </div>
           <button
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['results'] })}
+            onClick={fetchData}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -298,7 +293,7 @@ export default function ResultsPage() {
             </p>
             <button
               onClick={fetchData}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Refresh Records
             </button>

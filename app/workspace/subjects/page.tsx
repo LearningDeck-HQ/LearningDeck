@@ -396,7 +396,7 @@ export default function SubjectsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Create First Subject
             </button>
@@ -464,7 +464,7 @@ export default function SubjectsPage() {
                     type="button"
                     onClick={() => toggleClass(cls.id)}
                     className={`px-3 py-1 text-xs rounded-sm transition-all border ${formData.classIds.includes(cls.id)
-                      ? 'bg-[#0e0f10] text-white border-[#0e0f10]'
+                      ? 'bg-blue-500 text-white border-[#0e0f10]'
                       : 'bg-white text-[#6b6b6b] border-zinc-400/20 hover:border-zinc-400/60 hover:text-[#0e0f10]'
                       }`}
                   >

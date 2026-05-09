@@ -81,7 +81,7 @@ const ManageWorkspacePage = () => {
   }
 
   return (
-    <div className="rounded  p-8 border-y border-zinc-200  animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="rounded  p-8 border-y border-zinc-200 bg-[#f9f9f9]">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-blue-50 rounded">
           <Briefcase className="w-5 h-5 text-blue-600" />

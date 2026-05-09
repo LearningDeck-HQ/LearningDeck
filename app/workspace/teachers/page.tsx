@@ -307,7 +307,7 @@ export default function TeacherPage() {
             <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
           </div>
           <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-red-500 transition-all duration-300 ease-out"
               style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
             />
@@ -383,13 +383,12 @@ export default function TeacherPage() {
                     <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {teacher.user_name}
                       {teacher.status && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${
-                          teacher.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                          teacher.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                          teacher.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                          teacher.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${teacher.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            teacher.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              teacher.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                teacher.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                          }`}>
                           {teacher.status}
                         </span>
                       )}
@@ -442,7 +441,7 @@ export default function TeacherPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Add First Teacher
             </button>
@@ -575,7 +574,7 @@ export default function TeacherPage() {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, active: !formData.active })}
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-[#0e0f10]' : 'bg-zinc-300'
+              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.active ? 'bg-blue-500' : 'bg-zinc-300'
                 }`}
             >
               <div
@@ -628,7 +627,7 @@ export default function TeacherPage() {
               <Button
                 onClick={handleGenerateInvite}
                 isLoading={isLoadingInvite}
-                className="w-full py-2 bg-[#0e0f10] text-white hover:bg-zinc-800"
+                className="w-full py-2 bg-blue-500 text-white hover:bg-zinc-800"
               >
                 <Plus size={14} className="mr-2" /> Generate Invite Link
               </Button>
@@ -648,11 +647,10 @@ export default function TeacherPage() {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className={`w-full py-2 rounded-sm flex items-center justify-center gap-2 text-xs font-medium transition-all ${
-                  copied
+                className={`w-full py-2 rounded-sm flex items-center justify-center gap-2 text-xs font-medium transition-all ${copied
                     ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                    : 'bg-[#0e0f10] text-white hover:bg-zinc-800'
-                }`}
+                    : 'bg-blue-500 text-white hover:bg-zinc-800'
+                  }`}
               >
                 {copied ? (
                   <>

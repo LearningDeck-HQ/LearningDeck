@@ -823,11 +823,11 @@ const ChatInterface = () => {
         <div className="flex h-full w-full bg-white text-[#6b6b6b] font-sans overflow-hidden relative">
 
             {/* ── Sidebar ──────────────────────────────────────────────────── */}
-            <aside className={`flex flex-col border-r border-[#ededed] bg-white transition-all duration-300 ease-in-out ${sidebarOpen ? 'w-60' : 'w-0 overflow-hidden'}`}>
-                <div className="p-4 border-b border-[#ededed]">
+            <aside className={`flex flex-col border-r border-[#ededed]  transition-all duration-300 ease-in-out ${sidebarOpen ? 'w-60' : 'w-0 overflow-hidden'}`}>
+                <div className="p-4 border-b border-[#ededed] ">
                     <button
                         onClick={startNewChat}
-                        className="w-full flex items-center justify-center gap-2 border border-[#ededed] rounded py-2 text-[#1a1a1a] hover:border-blue-400 hover:text-blue-500 transition-colors text-sm font-medium"
+                        className="w-full flex items-center justify-center gap-2 border border-[#ededed] rounded py-2 text-[#1a1a1a] hover:border-blue-400 hover:text-blue-500 transition-colors  font-medium bg-[#f9f9f9]"
                     >
                         <Plus size={14} /> New Chat
                     </button>
@@ -839,7 +839,7 @@ const ChatInterface = () => {
                         <div
                             key={conv.id}
                             onClick={() => loadMessages(conv.id)}
-                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded cursor-pointer group transition-colors text-sm ${currentConversationId === conv.id
+                            className={`flex items-center justify-between gap-2 px-3 py-2 rounded cursor-pointer group transition-colors  ${currentConversationId === conv.id
                                 ? 'bg-blue-500/10 text-blue-500'
                                 : 'text-[#6b6b6b] hover:bg-[#f9f9f9] hover:text-[#1a1a1a]'
                                 }`}
@@ -860,17 +860,17 @@ const ChatInterface = () => {
             </aside>
 
             {/* ── Main Panel ───────────────────────────────────────────────── */}
-            <div className="flex-1 flex flex-col relative min-w-0">
+            <div className="flex-1 flex flex-col relative min-w-0 ">
 
                 {/* Header */}
-                <header className="flex items-center justify-between px-5 py-3 border-b border-[#ededed] bg-white z-10">
+                <header className="flex items-center justify-between px-5 py-3 border-b border-[#ededed]  z-10">
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1.5 border border-[#ededed] rounded hover:border-blue-300 transition-colors group relative">
+                        <div className="flex items-center gap-2 px-3 py-1.5 border border-[#ededed] bg-[#f9f9f9] rounded hover:border-blue-300 transition-colors group relative">
                             <div className="p-1 bg-[#f0f0f0] rounded group-hover:bg-blue-500/10 transition-colors">
                                 <BiBrain size={14} className="text-blue-500" />
                             </div>
                             <div className="flex flex-col leading-none">
-                                <span className="text-[#1a1a1a] text-sm font-medium">Agentic Mode</span>
+                                <span className="text-[#1a1a1a]  font-medium">Agentic Mode</span>
                             </div>
                             <div className="h-4 w-px bg-[#ededed] mx-1" />
                             <select
@@ -959,15 +959,15 @@ const ChatInterface = () => {
 
                 {/* Chat Area */}
                 <main className="flex-1 overflow-y-auto max-h-[60vh] scrollbar-hide">
-                    <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+                    <div className=" mx-auto px-6 py-8 space-y-6">
                         {messages.length === 0 ? (
                             <div className="h-[55vh] flex flex-col items-center justify-center text-center space-y-6">
                                 <div className="p-4 bg-[#f0f0f0] rounded-full">
                                     <Image src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4" alt="LearningDeck" width={30} height={30} className="rounded-full" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h2 className="text-2xl font-semibold text-[#1a1a1a]">How can I help you today?</h2>
-                                    <p className="text-[#6b6b6b] max-w-md mx-auto text-sm">
+                                    <h2 className="text-lg font-medium text-[#1a1a1a]">How can I help you today?</h2>
+                                    <p className="text-[#6b6b6b] max-w-md mx-auto ">
                                         Type <code className="bg-[#f0f0f0] px-1.5 py-0.5 rounded text-blue-500 font-mono text-xs">@</code> to inject workspace context, then describe any multi-step task.
                                     </p>
                                 </div>
@@ -981,7 +981,7 @@ const ChatInterface = () => {
                                         <button
                                             key={s}
                                             onClick={() => setInputText(s)}
-                                            className="p-4 bg-white border border-[#ededed] rounded text-sm text-[#6b6b6b] hover:border-blue-300 hover:text-blue-500 transition-colors text-left"
+                                            className="p-4 bg-[#f9f9f9] border border-[#ededed] rounded  text-[#6b6b6b] hover:border-blue-300 hover:text-blue-500 transition-colors text-left"
                                         >
                                             {s}
                                         </button>
@@ -1000,8 +1000,8 @@ const ChatInterface = () => {
                                 )}
 
                                 <div className={`max-w-[82%] space-y-1.5 ${msg.role === 'user' ? 'order-1' : ''}`}>
-                                    <div className={`px-4 py-3 rounded leading-relaxed text-sm ${msg.role === 'user'
-                                        ? 'bg-blue-500 text-white rounded-tr-none'
+                                    <div className={`px-4 py-3 rounded leading-relaxed  ${msg.role === 'user'
+                                        ? 'bg-[#f9f9f9] text-black rounded-tr-none'
                                         : 'bg-white border border-[#ededed] text-[#3a3a3a] rounded-tl-none'
                                         }`}>
                                         <div className="prose prose-sm max-w-none">
@@ -1078,7 +1078,7 @@ const ChatInterface = () => {
                                 </div>
 
                                 {msg.role === 'user' && (
-                                    <div className="w-8 h-8 rounded bg-[#f0f0f0] flex items-center justify-center text-[#1a1a1a] text-xs font-bold border border-[#ededed] order-2 shrink-0">
+                                    <div className="w-8 h-8 rounded bg-blue-500 rounded-full text-white flex items-center justify-center text-[#1a1a1a] text-xs font-bold border border-[#ededed] order-2 shrink-0">
                                         {firstLetter}
                                     </div>
                                 )}
@@ -1120,7 +1120,7 @@ const ChatInterface = () => {
                                 <Loader2 size={18} className="animate-spin text-blue-500" />
                             </div>
                             <div>
-                                <p className="text-sm font-semibold text-[#1a1a1a]">
+                                <p className=" font-semibold text-[#1a1a1a]">
                                     Executing: {ACTION_META[activeAction.type].label}
                                 </p>
                                 <p className="text-xs text-[#6b6b6b] mt-0.5">
@@ -1138,7 +1138,7 @@ const ChatInterface = () => {
                             <div className="flex items-start gap-3 mb-4">
                                 <div className="p-2 bg-red-50 rounded"><AlertCircle size={16} className="text-red-400" /></div>
                                 <div>
-                                    <p className="text-sm font-semibold text-[#1a1a1a]">Action failed</p>
+                                    <p className=" font-semibold text-[#1a1a1a]">Action failed</p>
                                     <p className="text-xs text-red-500 mt-0.5">{activeAction.errorMsg}</p>
                                 </div>
                             </div>
@@ -1155,7 +1155,7 @@ const ChatInterface = () => {
                 )}
 
                 {/* ── Input ─────────────────────────────────────────────────── */}
-                <footer className="px-6 py-5 border-t border-[#ededed] bg-white relative z-10">
+                <footer className="px-6 py-5 border-t border-[#ededed] bg-[#f9f9f9] relative z-10">
                     <div className="max-w-3xl mx-auto relative">
 
                         {showMentionDropdown && (
@@ -1191,7 +1191,7 @@ const ChatInterface = () => {
                                 onChange={handleInput}
                                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                                 placeholder="Type @ to add context or describe a multi-step task…"
-                                className="w-full min-h-[72px] max-h-[260px] bg-transparent text-[#1a1a1a] text-sm leading-relaxed p-4 outline-none resize-none placeholder:text-[#6b6b6b]/50"
+                                className="w-full min-h-[72px] max-h-[260px] bg-transparent text-[#1a1a1a]  leading-relaxed p-4 outline-none resize-none placeholder:text-[#6b6b6b]/50"
                                 rows={1}
                             />
 
@@ -1214,7 +1214,7 @@ const ChatInterface = () => {
                                     <button
                                         disabled={isStreaming || (!inputText && selectedContext.length === 0)}
                                         onClick={() => handleSendMessage()}
-                                        className={`py-2 px-4 rounded text-sm font-medium transition-colors ${inputText || selectedContext.length > 0
+                                        className={`py-2 px-4 rounded  font-medium transition-colors ${inputText || selectedContext.length > 0
                                             ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20'
                                             : 'bg-[#f0f0f0] text-[#6b6b6b]/40 cursor-not-allowed'
                                             }`}
@@ -1290,7 +1290,7 @@ const ActionConfirmPanel: React.FC<ConfirmPanelProps> = ({
     const [showResolution, setShowResolution] = useState(false);
     const [questionPreviewIdx, setQuestionPreviewIdx] = useState<number | null>(null);
 
-    const fieldClass = "w-full border border-[#ededed] rounded py-2 px-3 text-sm text-[#1a1a1a] outline-none focus:border-blue-400 transition-colors";
+    const fieldClass = "w-full border border-[#ededed] rounded py-2 px-3  text-[#1a1a1a] outline-none focus:border-blue-400 transition-colors";
     const labelClass = "text-[10px] font-bold text-[#a0a0a0] uppercase tracking-widest";
 
     // Resolved fields for display
@@ -1319,7 +1319,7 @@ const ActionConfirmPanel: React.FC<ConfirmPanelProps> = ({
                             <Sparkles size={15} style={{ color: meta.color }} />
                         </div>
                         <div>
-                            <h3 className="text-[#1a1a1a] font-semibold text-sm">{meta.label}</h3>
+                            <h3 className="text-[#1a1a1a] font-semibold ">{meta.label}</h3>
                             <p className="text-[11px] text-[#9b9b9b]">
                                 Step {activeIdx + 1} of {queueLength}
                                 {queueLength > 1 && activeIdx < queueLength - 1 && ` · ${queueLength - activeIdx - 1} more after this`}
@@ -1525,7 +1525,7 @@ const ActionConfirmPanel: React.FC<ConfirmPanelProps> = ({
                                             const allOptions = [correct, ...incorrect].filter(Boolean);
                                             return (
                                                 <div className="p-4 space-y-3">
-                                                    <p className="text-sm text-[#1a1a1a] leading-relaxed font-medium">{q.question || q.text}</p>
+                                                    <p className=" text-[#1a1a1a] leading-relaxed font-medium">{q.question || q.text}</p>
                                                     <div className="grid grid-cols-1 gap-1.5">
                                                         {allOptions.map((opt: string, j: number) => (
                                                             <div key={j} className={`flex items-center gap-2 text-xs px-3 py-2 rounded border ${opt === correct ? 'border-green-300 bg-green-50 text-green-700 font-semibold' : 'border-[#ededed] text-[#6b6b6b]'}`}>
@@ -1605,13 +1605,13 @@ const ActionConfirmPanel: React.FC<ConfirmPanelProps> = ({
                         <SkipForward size={12} /> Skip this step
                     </button>
                     <div className="flex gap-2">
-                        <button onClick={onClose} className="px-4 py-2 text-sm text-[#6b6b6b] hover:text-[#1a1a1a] border border-[#ededed] rounded transition-colors">
+                        <button onClick={onClose} className="px-4 py-2  text-[#6b6b6b] hover:text-[#1a1a1a] border border-[#ededed] rounded transition-colors">
                             Cancel all
                         </button>
                         <button
                             onClick={onConfirm}
                             disabled={isExecuting || (action.type === 'ADD_QUESTIONS' && (!d.examId || !d.subjectId))}
-                            className="flex items-center gap-2 px-5 py-2 rounded text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                            className="flex items-center gap-2 px-5 py-2 rounded  font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white"
                             style={{ background: meta.color }}
                         >
                             {isExecuting

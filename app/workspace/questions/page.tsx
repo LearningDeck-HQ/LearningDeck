@@ -518,7 +518,7 @@ export default function QuestionsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Add First Question
             </button>
@@ -590,7 +590,7 @@ export default function QuestionsPage() {
                       key={v}
                       type="button"
                       onClick={() => setFormData({ ...formData, correct_answer: v })}
-                      className={`px-2 py-0.5 text-xs rounded-sm transition-all ${formData.correct_answer === v ? 'bg-[#0e0f10] text-white' : 'bg-zinc-100 text-[#6b6b6b] hover:bg-zinc-200'}`}
+                      className={`px-2 py-0.5 text-xs rounded-sm transition-all ${formData.correct_answer === v ? 'bg-blue-500 text-white' : 'bg-zinc-100 text-[#6b6b6b] hover:bg-zinc-200'}`}
                     >
                       {v}
                     </button>
