@@ -19,39 +19,46 @@ import { resultApi } from '@/lib/api/results';
 import { questionApi } from '@/lib/api/questions';
 import { subjectApi } from '@/lib/api/subjects';
 import { ScaleLoader } from 'react-spinners';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function ResultsPage() {
-  const [results, setResults] = useState<Result[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
+  const { data: results = [], isLoading: isLoadingResults } = useQuery({
+    queryKey: ['results'],
+    queryFn: async () => {
       const userStr = localStorage.getItem('user');
       const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const [resultsRes, subjectsRes, questionsRes] = await Promise.all([
-        resultApi.list({ workspaceId }),
-        subjectApi.list(workspaceId),
-        questionApi.list({ workspaceId }),
-      ]);
-      if (resultsRes.data) setResults(resultsRes.data);
-      if (subjectsRes.data) setSubjects(subjectsRes.data);
-      if (questionsRes.data) setAllQuestions(questionsRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const res = await resultApi.list({ workspaceId });
+      return res.data || [];
+    },
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await subjectApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const { data: allQuestions = [] } = useQuery({
+    queryKey: ['questions'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await questionApi.list({ workspaceId });
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingResults;
+
 
   const fetchResultDetails = async (result: Result) => {
     try {
@@ -64,6 +71,13 @@ export default function ResultsPage() {
       setIsLoadingDetails(false);
     }
   };
+  const fetchData = () => {
+    queryClient.invalidateQueries({ queryKey: ['results'] });
+    queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    queryClient.invalidateQueries({ queryKey: ['questions'] });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+
+  };
 
   const filteredResults = useMemo(() => {
     return results.filter(
@@ -73,17 +87,28 @@ export default function ResultsPage() {
     );
   }, [results, searchTerm]);
 
+  const deleteResultMutation = useMutation({
+    mutationFn: (id: string) => resultApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['results'] });
+      const previousResults = queryClient.getQueryData<Result[]>(['results']);
+      queryClient.setQueryData(['results'], (old: Result[] = []) =>
+        old.filter((r) => r.id !== id)
+      );
+      return { previousResults };
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['results'], context?.previousResults);
+      alert('Failed to delete result');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['results'] });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this result record permanently?')) return;
-    try {
-      setIsLoading(true);
-      await resultApi.delete(id);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete record');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteResultMutation.mutate(id);
   };
 
   const renderSubjectScores = (result: Result, mode: 'table' | 'modal' = 'table') => {
@@ -154,7 +179,7 @@ export default function ResultsPage() {
         description="Monitor student performance, scores, and examination outcomes."
       >
         <button
-          onClick={fetchData}
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['results'] })}
           className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
         >
           <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
@@ -192,7 +217,7 @@ export default function ResultsPage() {
             />
           </div>
           <button
-            onClick={fetchData}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['results'] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -225,8 +250,8 @@ export default function ResultsPage() {
                       </span>
                       <span
                         className={`flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-medium ${result.overallScore >= 50
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-red-50 text-red-500'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-red-50 text-red-500'
                           }`}
                       >
                         {result.overallScore >= 50 ? 'Passed' : 'Failed'}
@@ -310,8 +335,8 @@ export default function ResultsPage() {
                 <p className="text-[10px] text-[#6b6b6b] uppercase tracking-wide mb-0.5">Status</p>
                 <span
                   className={`text-[10px] font-medium px-2 py-0.5 rounded-sm ${selectedResult.overallScore >= 50
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : 'bg-red-50 text-red-500'
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : 'bg-red-50 text-red-500'
                     }`}
                 >
                   {selectedResult.overallScore >= 50 ? 'Passed' : 'Failed'}

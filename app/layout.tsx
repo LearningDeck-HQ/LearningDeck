@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google"; // Updated import
 import "./globals.css";
 import { SidebarProvider } from "@/context/SidebarContext";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 // Configure Inter with preferred weights and CSS variable
 const inter = Inter({
@@ -88,9 +89,11 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="font-sans min-h-full flex flex-col bg-[#E9EDF7]">
-        <SidebarProvider>
-          {children}
-        </SidebarProvider>
+        <QueryProvider>
+          <SidebarProvider>
+            {children}
+          </SidebarProvider>
+        </QueryProvider>
       </body>
     </html>
   );

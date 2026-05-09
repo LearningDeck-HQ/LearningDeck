@@ -25,19 +25,52 @@ import { classApi } from '@/lib/api/classes';
 import { Question, Exam, Subject, Class, QuestionType } from '@/types';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+type QuestionWithStatus = Question & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function QuestionsPage() {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
+    queryKey: ['questions'],
+    queryFn: async () => {
+      const res = await questionApi.list();
+      return (res.data || []) as QuestionWithStatus[];
+    },
+  });
+
+  const { data: exams = [] } = useQuery({
+    queryKey: ['exams'],
+    queryFn: async () => {
+      const res = await examApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const res = await subjectApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const res = await classApi.list();
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingQuestions;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,27 +87,6 @@ export default function QuestionsPage() {
     img: null as string | null,
   });
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const [qRes, eRes, sRes, cRes] = await Promise.all([
-        questionApi.list(),
-        examApi.list(),
-        subjectApi.list(),
-        classApi.list(),
-      ]);
-      if (qRes.data) setQuestions(qRes.data);
-      if (eRes.data) setExams(eRes.data);
-      if (sRes.data) setSubjects(sRes.data);
-      if (cRes.data) setClasses(cRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
 
   const filteredQuestions = useMemo(() => {
     return questions.filter(q => {
@@ -117,19 +129,96 @@ export default function QuestionsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this question?')) return;
-    try {
-      setIsLoading(true);
-      await questionApi.delete(id);
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete question');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const createQuestionMutation = useMutation({
+    mutationFn: (payload: any) => questionApi.create(payload),
+    onMutate: async (newQuestion) => {
+      await queryClient.cancelQueries({ queryKey: ['questions'] });
+      const previousQuestions = queryClient.getQueryData<QuestionWithStatus[]>(['questions']);
+      const tempId = Math.random().toString(36).substring(7);
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) => [
+        { ...newQuestion, id: tempId, status: 'saving' } as QuestionWithStatus,
+        ...old,
+      ]);
+      return { previousQuestions, tempId };
+    },
+    onError: (err, newQuestion, context) => {
+      queryClient.setQueryData(['questions'], context?.previousQuestions);
+      alert('Failed to create question');
+    },
+    onSuccess: (data, newQuestion, context) => {
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+        old.map((q) =>
+          q.id === context?.tempId ? { ...data.data, status: 'saved' } : q
+        )
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+          old.map((q) => (q.id === data?.data?.id ? { ...q, status: undefined } : q))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    },
+  });
+
+  const updateQuestionMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) => questionApi.update(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['questions'] });
+      const previousQuestions = queryClient.getQueryData<QuestionWithStatus[]>(['questions']);
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+        old.map((q) => (q.id === id ? { ...q, ...payload, status: 'saving' } : q))
+      );
+      return { previousQuestions };
+    },
+    onError: (err, { id }, context) => {
+      queryClient.setQueryData(['questions'], context?.previousQuestions);
+      alert('Failed to update question');
+    },
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+        old.map((q) => (q.id === id ? { ...q, status: 'saved' } : q))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+          old.map((q) => (q.id === id ? { ...q, status: undefined } : q))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    },
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: (id: string) => questionApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['questions'] });
+      const previousQuestions = queryClient.getQueryData<QuestionWithStatus[]>(['questions']);
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+        old.map((q) => (q.id === id ? { ...q, status: 'deleting' } : q))
+      );
+      return { previousQuestions };
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+        old.map((q) => (q.id === id ? { ...q, status: 'done' } : q))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['questions'], (old: QuestionWithStatus[] = []) =>
+          old.filter((q) => q.id !== id)
+        );
+      }, 1000);
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['questions'], context?.previousQuestions);
+      alert('Failed to delete question');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+    },
+  });
 
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredQuestions.length) {
@@ -145,46 +234,49 @@ export default function QuestionsPage() {
     );
   };
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this question?')) return;
+    deleteQuestionMutation.mutate(id);
+    setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+  };
+
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} questions?`)) return;
-    try {
-      setIsLoading(true);
-      await Promise.all(selectedIds.map(id => questionApi.delete(id)));
-      setSelectedIds([]);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete some questions');
-    } finally {
-      setIsLoading(false);
+    const idsToDelete = [...selectedIds];
+    setDeleteProgress({ current: 0, total: idsToDelete.length });
+
+    for (let i = 0; i < idsToDelete.length; i++) {
+      const id = idsToDelete[i];
+      try {
+        await deleteQuestionMutation.mutateAsync(id);
+        setDeleteProgress(prev => prev ? { ...prev, current: i + 1 } : null);
+      } catch (err) {
+        console.error(`Failed to delete ${id}`, err);
+      }
     }
+
+    setTimeout(() => setDeleteProgress(null), 2000);
+    setSelectedIds([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const payload = {
-        ...formData,
-        workspaceId,
-        incorrect_answers:
-          formData.type === 'MULTIPLE_CHOICE'
-            ? formData.incorrect_answers.filter(a => a.trim() !== '')
-            : [],
-      };
-      const response = editingQuestion
-        ? await questionApi.update(editingQuestion.id, payload)
-        : await questionApi.create(payload);
-      if (response.success) {
-        await fetchData();
-        setIsModalOpen(false);
-      }
-    } catch (err: any) {
-      alert(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+    const userStr = localStorage.getItem('user');
+    const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+    const payload = {
+      ...formData,
+      workspaceId,
+      incorrect_answers:
+        formData.type === 'MULTIPLE_CHOICE'
+          ? formData.incorrect_answers.filter(a => a.trim() !== '')
+          : [],
+    };
+    if (editingQuestion) {
+      updateQuestionMutation.mutate({ id: editingQuestion.id, payload });
+    } else {
+      createQuestionMutation.mutate(payload);
     }
+    setIsModalOpen(false);
   };
 
   const handleIncorrectAnswerChange = (index: number, value: string) => {
@@ -200,7 +292,21 @@ export default function QuestionsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+      {deleteProgress && (
+        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Questions...</span>
+            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
+          </div>
+          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       <DashboardHeader
         title="Question Bank"
         description="Manage your collection of questions across exams, subjects, and classes."
@@ -344,8 +450,18 @@ export default function QuestionsPage() {
                       {typeIcon(q.type)}
                     </span>
                     <div className="space-y-1">
-                      <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight leading-snug">
+                      <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight leading-snug flex items-center gap-2">
                         {q.question}
+                        {q.status && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${q.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            q.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              q.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                q.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
+                            {q.status}
+                          </span>
+                        )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
                         <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
@@ -565,7 +681,7 @@ export default function QuestionsPage() {
             <Button
               type="submit"
               className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
-              isLoading={isSubmitting}
+              isLoading={createQuestionMutation.isPending || updateQuestionMutation.isPending}
             >
               {editingQuestion ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>

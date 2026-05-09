@@ -29,13 +29,46 @@ import { User, Class, Subject } from '@/types';
 import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { BiCopy, BiUserPlus } from 'react-icons/bi';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function TeacherPage() {
-  const [teachers, setTeachers] = useState<User[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: teachers = [], isLoading: isLoadingTeachers } = useQuery({
+    queryKey: ['teachers'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await userApi.list({ role: 'TEACHER', workspaceId });
+      return (res.data || []) as UserWithStatus[];
+    },
+  });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await classApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await subjectApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingTeachers;
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,28 +91,6 @@ export default function TeacherPage() {
   const [isLoadingInvite, setIsLoadingInvite] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const fetchInitialData = async () => {
-    try {
-      setIsLoading(true);
-      const workspaceId = '1';
-      const [usersRes, classesRes, subjectsRes] = await Promise.all([
-        userApi.list({ role: 'TEACHER', workspaceId }),
-        classApi.list(workspaceId),
-        subjectApi.list(workspaceId),
-      ]);
-      if (usersRes.data) setTeachers(usersRes.data);
-      if (classesRes.data) setClasses(classesRes.data);
-      if (subjectsRes.data) setSubjects(subjectsRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
 
   const fetchAssignments = async (teacherId: string) => {
     try {
@@ -121,52 +132,127 @@ export default function TeacherPage() {
     setIsModalOpen(true);
   };
 
+  const createTeacherMutation = useMutation({
+    mutationFn: (payload: any) => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      return workspaceApi.createTeacher(workspaceId, payload);
+    },
+    onMutate: async (newTeacher) => {
+      await queryClient.cancelQueries({ queryKey: ['teachers'] });
+      const previousTeachers = queryClient.getQueryData<UserWithStatus[]>(['teachers']);
+      const tempId = Math.random().toString(36).substring(7);
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) => [
+        { ...newTeacher, id: tempId, status: 'saving' } as UserWithStatus,
+        ...old,
+      ]);
+      return { previousTeachers, tempId };
+    },
+    onError: (err, newTeacher, context) => {
+      queryClient.setQueryData(['teachers'], context?.previousTeachers);
+      alert('Failed to add teacher');
+    },
+    onSuccess: (data, newTeacher, context) => {
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+        old.map((t) =>
+          t.id === context?.tempId ? { ...data.data, status: 'saved' } : t
+        )
+      );
+      setEditingTeacher(data.data);
+      setTeacherAssignments([]);
+      setTimeout(() => {
+        queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+          old.map((t) => (t.id === data.data.id ? { ...t, status: undefined } : t))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+  });
+
+  const updateTeacherMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) => userApi.update(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['teachers'] });
+      const previousTeachers = queryClient.getQueryData<UserWithStatus[]>(['teachers']);
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+        old.map((t) => (t.id === id ? { ...t, ...payload, status: 'saving' } : t))
+      );
+      return { previousTeachers };
+    },
+    onError: (err, { id }, context) => {
+      queryClient.setQueryData(['teachers'], context?.previousTeachers);
+      alert('Failed to update teacher');
+    },
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+        old.map((t) => (t.id === id ? { ...t, status: 'saved' } : t))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+          old.map((t) => (t.id === id ? { ...t, status: undefined } : t))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+  });
+
+  const deleteTeacherMutation = useMutation({
+    mutationFn: (id: string) => userApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['teachers'] });
+      const previousTeachers = queryClient.getQueryData<UserWithStatus[]>(['teachers']);
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+        old.map((t) => (t.id === id ? { ...t, status: 'deleting' } : t))
+      );
+      return { previousTeachers };
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+        old.map((t) => (t.id === id ? { ...t, status: 'done' } : t))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
+          old.filter((t) => t.id !== id)
+        );
+      }, 1000);
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['teachers'], context?.previousTeachers);
+      alert('Failed to delete teacher');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this teacher?')) return;
-    try {
-      setIsLoading(true);
-      await userApi.delete(id);
-      await fetchInitialData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete teacher');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteTeacherMutation.mutate(id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
-      const workspaceId = '1';
-      let response;
-      if (editingTeacher) {
-        response = await userApi.update(editingTeacher.id, {
+    if (editingTeacher) {
+      updateTeacherMutation.mutate({
+        id: editingTeacher.id,
+        payload: {
           user_name: formData.user_name,
           user_email: formData.user_email,
           active: formData.active,
-        });
-      } else {
-        response = await workspaceApi.createTeacher(workspaceId, {
-          user_name: formData.user_name,
-          user_email: formData.user_email,
-          user_password: formData.user_password,
-          active: formData.active,
-        });
-      }
-      if (response.success) {
-        await fetchInitialData();
-        if (!editingTeacher) {
-          setEditingTeacher(response.data);
-          setTeacherAssignments([]);
-        } else {
-          setIsModalOpen(false);
-        }
-      }
-    } catch (err: any) {
-      alert(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+        },
+      });
+      setIsModalOpen(false);
+    } else {
+      createTeacherMutation.mutate({
+        user_name: formData.user_name,
+        user_email: formData.user_email,
+        user_password: formData.user_password,
+        active: formData.active,
+      });
     }
   };
 
@@ -213,7 +299,21 @@ export default function TeacherPage() {
 
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+      {deleteProgress && (
+        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Teachers...</span>
+            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
+          </div>
+          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       <DashboardHeader
         title="Teachers"
         description="Manage faculty members, subject assignments, and access permissions."
@@ -256,7 +356,7 @@ export default function TeacherPage() {
             />
           </div>
           <button
-            onClick={fetchInitialData}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['teachers'] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -280,8 +380,19 @@ export default function TeacherPage() {
                 {/* Teacher info */}
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {teacher.user_name}
+                      {teacher.status && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${
+                          teacher.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                          teacher.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                          teacher.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                          teacher.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {teacher.status}
+                        </span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
                       <span className="flex items-center gap-1.5">
@@ -486,7 +597,7 @@ export default function TeacherPage() {
             <Button
               type="submit"
               className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
-              isLoading={isSubmitting}
+              isLoading={createTeacherMutation.isPending || updateTeacherMutation.isPending}
             >
               {editingTeacher ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>

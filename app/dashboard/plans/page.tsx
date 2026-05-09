@@ -39,7 +39,7 @@ const plans: Plan[] = [
     {
         id: "starter",
         name: "Starter",
-        price: 99000,
+        price: 0,
         period: "Year",
         description: "Perfect for small schools and evaluation.",
         badge: null,
@@ -77,7 +77,7 @@ const plans: Plan[] = [
     },
     {
         id: "school",
-        name: "School",
+        name: "Custom",
         price: 500000,
         period: "Year",
         description: "For institutions requiring full-scale management.",

@@ -20,13 +20,37 @@ import { classApi } from '@/lib/api/classes';
 import { Subject, Class } from '@/types';
 import { ScaleLoader } from 'react-spinners';
 import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+type SubjectWithStatus = Subject & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function SubjectsPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [allClasses, setAllClasses] = useState<Class[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: subjects = [], isLoading: isLoadingSubjects } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await subjectApi.list(workspaceId);
+      return (res.data || []) as SubjectWithStatus[];
+    },
+  });
+
+  const { data: allClasses = [] } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await classApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingSubjects;
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,27 +68,6 @@ export default function SubjectsPage() {
     classIds: [],
   });
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const [subjectsRes, classesRes] = await Promise.all([
-        subjectApi.list(workspaceId),
-        classApi.list(workspaceId),
-      ]);
-      if (subjectsRes.data) setSubjects(subjectsRes.data);
-      if (classesRes.data) setAllClasses(classesRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const filteredSubjects = useMemo(() => {
     return subjects.filter(
@@ -90,55 +93,134 @@ export default function SubjectsPage() {
     setIsModalOpen(true);
   };
 
+  const createSubjectMutation = useMutation({
+    mutationFn: (payload: any) => subjectApi.create(payload),
+    onMutate: async (newSubject) => {
+      await queryClient.cancelQueries({ queryKey: ['subjects'] });
+      const previousSubjects = queryClient.getQueryData<SubjectWithStatus[]>(['subjects']);
+      const tempId = Math.random().toString(36).substring(7);
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) => [
+        { ...newSubject, id: tempId, status: 'saving' } as SubjectWithStatus,
+        ...old,
+      ]);
+      return { previousSubjects, tempId };
+    },
+    onError: (err, newSubject, context) => {
+      queryClient.setQueryData(['subjects'], context?.previousSubjects);
+      alert('Failed to create subject');
+    },
+    onSuccess: (data, newSubject, context) => {
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+        old.map((s) =>
+          s.id === context?.tempId ? { ...data.data, status: 'saved' } : s
+        )
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+          old.map((s) => (s.id === data?.data?.id ? { ...s, status: undefined } : s))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    },
+  });
+
+  const updateSubjectMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) => subjectApi.update(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['subjects'] });
+      const previousSubjects = queryClient.getQueryData<SubjectWithStatus[]>(['subjects']);
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, ...payload, status: 'saving' } : s))
+      );
+      return { previousSubjects };
+    },
+    onError: (err, { id }, context) => {
+      queryClient.setQueryData(['subjects'], context?.previousSubjects);
+      alert('Failed to update subject');
+    },
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'saved' } : s))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+          old.map((s) => (s.id === id ? { ...s, status: undefined } : s))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    },
+  });
+
+  const deleteSubjectMutation = useMutation({
+    mutationFn: (id: string) => subjectApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['subjects'] });
+      const previousSubjects = queryClient.getQueryData<SubjectWithStatus[]>(['subjects']);
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'deleting' } : s))
+      );
+      return { previousSubjects };
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'done' } : s))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['subjects'], (old: SubjectWithStatus[] = []) =>
+          old.filter((s) => s.id !== id)
+        );
+      }, 1000);
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['subjects'], context?.previousSubjects);
+      alert('Failed to delete subject');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const payload = { ...formData, workspaceId };
+    const userStr = localStorage.getItem('user');
+    const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+    const payload = { ...formData, workspaceId };
 
-      const response = editingSubject
-        ? await subjectApi.update(editingSubject.id, payload)
-        : await subjectApi.create(payload);
-
-      if (response.success) {
-        await fetchData();
-        setIsModalOpen(false);
-      }
-    } catch (err: any) {
-      alert(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+    if (editingSubject) {
+      updateSubjectMutation.mutate({ id: editingSubject.id, payload });
+    } else {
+      createSubjectMutation.mutate(payload);
     }
+    setIsModalOpen(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
-    try {
-      setIsLoading(true);
-      await subjectApi.delete(id);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete subject');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteSubjectMutation.mutate(id);
   };
 
   const handleBulkDelete = async () => {
     if (selectedSubjects.length === 0) return;
     if (!window.confirm(`Delete ${selectedSubjects.length} subjects?`)) return;
-    try {
-      setIsLoading(true);
-      await Promise.all(selectedSubjects.map((id) => subjectApi.delete(id)));
-      await fetchData();
-      setSelectedSubjects([]);
-    } catch (err: any) {
-      alert(err.message || 'Bulk delete failed');
-    } finally {
-      setIsLoading(false);
+    const idsToDelete = [...selectedSubjects];
+    setDeleteProgress({ current: 0, total: idsToDelete.length });
+
+    for (let i = 0; i < idsToDelete.length; i++) {
+      const id = idsToDelete[i];
+      try {
+        await deleteSubjectMutation.mutateAsync(id);
+        setDeleteProgress(prev => prev ? { ...prev, current: i + 1 } : null);
+      } catch (err) {
+        console.error(`Failed to delete ${id}`, err);
+      }
     }
+
+    setTimeout(() => setDeleteProgress(null), 2000);
+    setSelectedSubjects([]);
   };
 
   const toggleClass = (classId: string) => {
@@ -151,7 +233,21 @@ export default function SubjectsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+      {deleteProgress && (
+        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Subjects...</span>
+            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
+          </div>
+          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       <DashboardHeader
         title="Subjects"
         description="Define your learning domains, subject codes, and curriculum structure."
@@ -206,7 +302,7 @@ export default function SubjectsPage() {
             />
           </div>
           <button
-            onClick={fetchData}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['subjects'] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -230,8 +326,18 @@ export default function SubjectsPage() {
                 {/* Subject info */}
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {subject.name}
+                      {subject.status && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${subject.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                          subject.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                            subject.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                              subject.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                'bg-red-100 text-red-700'
+                          }`}>
+                          {subject.status}
+                        </span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
                       <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10] font-mono text-[10px]">
@@ -383,7 +489,7 @@ export default function SubjectsPage() {
             <Button
               type="submit"
               className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
-              isLoading={isSubmitting}
+              isLoading={createSubjectMutation.isPending || updateSubjectMutation.isPending}
             >
               {editingSubject ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>

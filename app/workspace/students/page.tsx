@@ -21,12 +21,36 @@ import { classApi } from '@/lib/api/classes';
 import { User, Class } from '@/types';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function StudentsPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['students'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await userApi.list({ role: 'STUDENT', workspaceId });
+      return (res.data || []) as UserWithStatus[];
+    },
+  });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      const res = await classApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingUsers;
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,27 +65,6 @@ export default function StudentsPage() {
     active: true,
   });
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const [usersRes, clsRes] = await Promise.all([
-        userApi.list({ role: 'STUDENT', workspaceId }),
-        classApi.list(workspaceId),
-      ]);
-      if (usersRes.data) setUsers(usersRes.data);
-      if (clsRes.data) setClasses(clsRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const filteredUsers = useMemo(() => {
     return users.filter(
@@ -96,57 +99,146 @@ export default function StudentsPage() {
     setIsModalOpen(true);
   };
 
+  const createStudentMutation = useMutation({
+    mutationFn: (payload: any) => {
+      const userStr = localStorage.getItem('user');
+      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      return workspaceApi.createStudent(workspaceId, payload);
+    },
+    onMutate: async (newStudent) => {
+      await queryClient.cancelQueries({ queryKey: ['students'] });
+      const previousStudents = queryClient.getQueryData<UserWithStatus[]>(['students']);
+      const tempId = Math.random().toString(36).substring(7);
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) => [
+        { ...newStudent, id: tempId, status: 'saving' } as UserWithStatus,
+        ...old,
+      ]);
+      return { previousStudents, tempId };
+    },
+    onError: (err, newStudent, context) => {
+      queryClient.setQueryData(['students'], context?.previousStudents);
+      alert('Failed to enroll student');
+    },
+    onSuccess: (data, newStudent, context) => {
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+        old.map((s) =>
+          s.id === context?.tempId ? { ...data.data, status: 'saved' } : s
+        )
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+          old.map((s) => (s.id === data.data.id ? { ...s, status: undefined } : s))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+  });
+
+  const updateStudentMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) => userApi.update(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['students'] });
+      const previousStudents = queryClient.getQueryData<UserWithStatus[]>(['students']);
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, ...payload, status: 'saving' } : s))
+      );
+      return { previousStudents };
+    },
+    onError: (err, { id }, context) => {
+      queryClient.setQueryData(['students'], context?.previousStudents);
+      alert('Failed to update student');
+    },
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'saved' } : s))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+          old.map((s) => (s.id === id ? { ...s, status: undefined } : s))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+  });
+
+  const deleteStudentMutation = useMutation({
+    mutationFn: (id: string) => userApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['students'] });
+      const previousStudents = queryClient.getQueryData<UserWithStatus[]>(['students']);
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'deleting' } : s))
+      );
+      return { previousStudents };
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+        old.map((s) => (s.id === id ? { ...s, status: 'done' } : s))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['students'], (old: UserWithStatus[] = []) =>
+          old.filter((s) => s.id !== id)
+        );
+      }, 1000);
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['students'], context?.previousStudents);
+      alert('Failed to delete student');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this account?')) return;
-    try {
-      setIsLoading(true);
-      await userApi.delete(id);
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete user');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteStudentMutation.mutate(id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-
-      let response;
-      if (editingUser) {
-        response = await userApi.update(editingUser.id, {
+    if (editingUser) {
+      updateStudentMutation.mutate({
+        id: editingUser.id,
+        payload: {
           user_name: formData.user_name,
           user_email: formData.user_email,
           classId: formData.classId || null,
           active: formData.active,
-        });
-      } else {
-        response = await workspaceApi.createStudent(workspaceId, {
-          user_name: formData.user_name,
-          user_email: formData.user_email,
-          user_password: formData.user_password,
-          classId: formData.classId || null,
-          active: formData.active,
-        });
-      }
-
-      if (response.success) {
-        await fetchData();
-        setIsModalOpen(false);
-      }
-    } catch (err: any) {
-      alert(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+        },
+      });
+    } else {
+      createStudentMutation.mutate({
+        user_name: formData.user_name,
+        user_email: formData.user_email,
+        user_password: formData.user_password,
+        classId: formData.classId || null,
+        active: formData.active,
+      });
     }
+    setIsModalOpen(false);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+      {deleteProgress && (
+        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Students...</span>
+            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
+          </div>
+          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       <DashboardHeader
         title="Students"
         description="Manage student enrollments and account access."
@@ -191,7 +283,7 @@ export default function StudentsPage() {
           </div>
 
           <button
-            onClick={fetchData}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['students'] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -214,8 +306,19 @@ export default function StudentsPage() {
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {student.user_name}
+                      {student.status && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${
+                          student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                          student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                          student.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                          student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {student.status}
+                        </span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
                       <span className="flex items-center gap-1.5">
@@ -367,7 +470,7 @@ export default function StudentsPage() {
             <Button
               type="submit"
               className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
-              isLoading={isSubmitting}
+              isLoading={createStudentMutation.isPending || updateStudentMutation.isPending}
             >
               {editingUser ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>

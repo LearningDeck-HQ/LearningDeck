@@ -3,7 +3,7 @@ import WorkspaceContent from '@/components/layout/WorkspaceContent';
 import AuthGuard from '@/components/auth/AuthGuard';
 
 export const metadata: Metadata = {
-  title: "Workspace | LearningDeck",
+  title: "Workspace",
   description: "Manage your courses and collaborative tools",
 };
 

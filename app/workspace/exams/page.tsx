@@ -27,17 +27,65 @@ import { Question } from '@/types';
 import { subjectApi } from '@/lib/api/subjects';
 import { userApi } from '@/lib/api/users';
 import { resultApi } from '@/lib/api/results';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+type ExamWithStatus = Exam & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function ExamsPage() {
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [results, setResults] = useState<Result[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: exams = [], isLoading: isLoadingExams } = useQuery({
+    queryKey: ['exams'],
+    queryFn: async () => {
+      const res = await examApi.list();
+      return (res.data || []) as ExamWithStatus[];
+    },
+  });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes'],
+    queryFn: async () => {
+      const res = await classApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: questions = [] } = useQuery({
+    queryKey: ['questions'],
+    queryFn: async () => {
+      const res = await questionApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const res = await subjectApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const res = await userApi.list();
+      return res.data || [];
+    },
+  });
+
+  const { data: results = [] } = useQuery({
+    queryKey: ['results'],
+    queryFn: async () => {
+      const res = await resultApi.list();
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingExams;
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,46 +98,6 @@ export default function ExamsPage() {
     visible: true
   });
 
-  const fetchInitialData = async () => {
-    try {
-      setIsLoading(true);
-      const [examsRes, classesRes, questionRes, subjectsRes, usersRes, resultsRes, workspacesRes] = await Promise.all([
-        examApi.list(),
-        classApi.list(),
-        questionApi.list(),
-        subjectApi.list(),
-        userApi.list(),
-        resultApi.list(),
-        workspaceApi.list()
-      ]);
-      if (examsRes.data) setExams(examsRes.data);
-      if (classesRes.data) setClasses(classesRes.data);
-      if (questionRes.data) setQuestions(questionRes.data);
-      if (subjectsRes.data) setSubjects(subjectsRes.data);
-      if (usersRes.data) setUsers(usersRes.data);
-      if (resultsRes.data) setResults(resultsRes.data);
-
-      const userStr = localStorage.getItem('user');
-      const workspaces = workspacesRes.data || [];
-
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.workspaceId) {
-          setFormData(prev => ({ ...prev, workspaceId: user.workspaceId }));
-        }
-      } else if (workspaces.length > 0) {
-        setFormData(prev => ({ ...prev, workspaceId: workspaces[0].id }));
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
 
   const filteredExams = useMemo(() => {
     return exams.filter(exam => {
@@ -120,75 +128,154 @@ export default function ExamsPage() {
     setIsModalOpen(true);
   };
 
+  const createExamMutation = useMutation({
+    mutationFn: (payload: any) => examApi.create(payload),
+    onMutate: async (newExam) => {
+      await queryClient.cancelQueries({ queryKey: ['exams'] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
+      const tempId = Math.random().toString(36).substring(7);
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) => [
+        { ...newExam, id: tempId, status: 'saving' } as ExamWithStatus,
+        ...old,
+      ]);
+      return { previousExams, tempId };
+    },
+    onError: (err, newExam, context) => {
+      queryClient.setQueryData(['exams'], context?.previousExams);
+      alert('Failed to create exam');
+    },
+    onSuccess: (data, newExam, context) => {
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        old.map((exam) =>
+          exam.id === context?.tempId ? { ...data.data, status: 'saved' } : exam
+        )
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+          old.map((exam) => (exam.id === data?.data?.id ? { ...exam, status: undefined } : exam))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    },
+  });
+
+  const updateExamMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: any }) => examApi.update(id, payload),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['exams'] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        old.map((exam) => (exam.id === id ? { ...exam, ...payload, status: 'saving' } : exam))
+      );
+      return { previousExams };
+    },
+    onError: (err, { id }, context) => {
+      queryClient.setQueryData(['exams'], context?.previousExams);
+      alert('Failed to update exam');
+    },
+    onSuccess: (data, { id }) => {
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        old.map((exam) => (exam.id === id ? { ...exam, status: 'saved' } : exam))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+          old.map((exam) => (exam.id === id ? { ...exam, status: undefined } : exam))
+        );
+      }, 3000);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    },
+  });
+
+  const deleteExamMutation = useMutation({
+    mutationFn: (id: string) => examApi.delete(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['exams'] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        old.map((exam) => (exam.id === id ? { ...exam, status: 'deleting' } : exam))
+      );
+      return { previousExams };
+    },
+    onSuccess: (data, id) => {
+      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        old.map((exam) => (exam.id === id ? { ...exam, status: 'done' } : exam))
+      );
+      setTimeout(() => {
+        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+          old.filter((exam) => exam.id !== id)
+        );
+      }, 1000);
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['exams'], context?.previousExams);
+      alert('Failed to delete exam');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['exams'] });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this exam?')) return;
-    try {
-      setIsLoading(true);
-      await examApi.delete(id);
-      await fetchInitialData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete exam');
-    } finally {
-      setIsLoading(false);
-    }
+    deleteExamMutation.mutate(id);
   };
 
   const handleDuplicate = async (exam: Exam) => {
-    try {
-      setIsLoading(true);
-      const payload = {
-        exam_name: `${exam.exam_name} (Copy)`,
-        minutes: exam.minutes,
-        classId: exam.classId,
-        workspaceId: exam.workspaceId
-      };
-      await examApi.create(payload);
-      await fetchInitialData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to duplicate exam');
-    } finally {
-      setIsLoading(false);
-    }
+    const payload = {
+      exam_name: `${exam.exam_name} (Copy)`,
+      minutes: exam.minutes,
+      classId: exam.classId,
+      workspaceId: exam.workspaceId
+    };
+    createExamMutation.mutate(payload);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsSubmitting(true);
+    let workspaceId = formData.classId
+      ? classes.find(c => c.id === formData.classId)?.workspaceId
+      : null;
 
-      let workspaceId = formData.classId
-        ? classes.find(c => c.id === formData.classId)?.workspaceId
-        : null;
-
-      if (!workspaceId) {
-        const userStr = localStorage.getItem('user');
-        if (userStr) workspaceId = JSON.parse(userStr).workspaceId;
-      }
-
-      const payload = {
-        ...formData,
-        workspaceId: workspaceId || '1',
-        classId: formData.classId,
-        minutes: Number(formData.minutes)
-      };
-
-      const response = editingExam
-        ? await examApi.update(editingExam.id, payload)
-        : await examApi.create(payload);
-
-      if (response.success) {
-        await fetchInitialData();
-        setIsModalOpen(false);
-      }
-    } catch (err: any) {
-      alert(err.message || 'An error occurred');
-    } finally {
-      setIsSubmitting(false);
+    if (!workspaceId) {
+      const userStr = localStorage.getItem('user');
+      if (userStr) workspaceId = JSON.parse(userStr).workspaceId;
     }
+
+    const payload = {
+      ...formData,
+      workspaceId: workspaceId || '1',
+      classId: formData.classId,
+      minutes: Number(formData.minutes)
+    };
+
+    if (editingExam) {
+      updateExamMutation.mutate({ id: editingExam.id, payload });
+    } else {
+      createExamMutation.mutate(payload);
+    }
+    setIsModalOpen(false);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+      {deleteProgress && (
+        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Exams...</span>
+            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
+          </div>
+          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-red-500 transition-all duration-300 ease-out"
+              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       <DashboardHeader
         title="Exams"
         description="Create and manage your exams or tests here."
@@ -245,7 +332,7 @@ export default function ExamsPage() {
           </div>
 
           <button
-            onClick={fetchInitialData}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
@@ -269,8 +356,18 @@ export default function ExamsPage() {
                 {/* Exam info */}
                 <div className="flex items-center gap-4 flex-1 w-full">
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
                       {exam.exam_name}
+                      {exam.status && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${exam.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            exam.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              exam.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                exam.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                          }`}>
+                          {exam.status}
+                        </span>
+                      )}
                     </h3>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
                       <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
@@ -424,7 +521,7 @@ export default function ExamsPage() {
             <Button
               type="submit"
               className="flex-1 py-1.5 text-xs rounded-sm bg-blue-500 text-white hover:bg-zinc-700 transition-all"
-              isLoading={isSubmitting}
+              isLoading={createExamMutation.isPending || updateExamMutation.isPending}
             >
               {editingExam ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>
