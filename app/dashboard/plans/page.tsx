@@ -141,7 +141,7 @@ export default function PlanPage() {
                 {/* Header */}
                 <div>
 
-                    <p className="text-sm mt-1">Manage your plan, usage, and payment details.</p>
+                    <p className="text-sm mt-1">Manage your plan and payment details.</p>
                 </div>
 
                 {/* Current Plan Summary */}
