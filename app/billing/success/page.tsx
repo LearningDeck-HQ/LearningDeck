@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, ArrowRight, Loader2, PartyPopper, Sparkles } from "lucide-react";
 import { authApi } from "@/lib/api/auth";
 import { toast, Toaster } from "sonner";
 import Image from "next/image";
+import { ScaleLoader } from "react-spinners";
 
 export default function BillingSuccessPage() {
     const router = useRouter();
@@ -25,7 +26,7 @@ export default function BillingSuccessPage() {
                 if (res.success && res.data?.user) {
                     localStorage.setItem('user', JSON.stringify(res.data.user));
                     setStatus("success");
-                    
+
                     // Start countdown to redirect
                     const timer = setInterval(() => {
                         setCountdown((prev) => {
@@ -49,10 +50,14 @@ export default function BillingSuccessPage() {
         verifyAndRefresh();
     }, [router]);
 
-    return (
+    return (<Suspense fallback={<div className="text-[#1B2559] font-medium">
+        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+    </div>}>
+
+
         <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center p-6 text-center">
             <Toaster />
-            
+
             {/* Background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
@@ -149,6 +154,6 @@ export default function BillingSuccessPage() {
             <footer className="mt-20 text-xs text-gray-400">
                 Transaction Ref: <span className="font-mono">{reference || "N/A"}</span>
             </footer>
-        </div>
+        </div> </Suspense>
     );
 }
