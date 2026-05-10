@@ -8,6 +8,7 @@ import { ChevronRight, BookOpen, ShieldCheck, Activity, Layers } from 'lucide-re
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { ScaleLoader } from 'react-spinners';
+import { authApi } from '@/lib/api/auth';
 
 const LandingPageContent = () => {
   const searchParams = useSearchParams();
@@ -16,11 +17,20 @@ const LandingPageContent = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        const response = await authApi.verifyToken();
+        if (response.success) {
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error('LandingPage: Auth check failed', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, [source]);
 
   return (

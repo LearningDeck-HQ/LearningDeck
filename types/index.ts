@@ -10,6 +10,7 @@ export interface User {
   classId: string | null;
   img: string | null;
   createdAt: string;
+  hasSubscription?: boolean;
 }
 
 export interface Workspace {

@@ -42,7 +42,7 @@ export const authApi = {
   },
 
   async verifyToken(): Promise<ApiResponse<any>> {
-    return apiFetch<any>('/auth/verify-token');
+    return apiFetch<any>('/auth/verify-token', { redirectOnFailure: false });
   },
 
   async refresh(): Promise<ApiResponse<AuthData>> {

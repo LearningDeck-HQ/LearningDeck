@@ -34,8 +34,8 @@ const getHeaders = () => {
 
 let isRefreshing = false;
 
-export const apiFetch = async <T>(endpoint: string, options: RequestInit & { skipRefresh?: boolean } = {}): Promise<ApiResponse<T>> => {
-  const { skipRefresh, ...fetchOptions } = options;
+export const apiFetch = async <T>(endpoint: string, options: RequestInit & { skipRefresh?: boolean, redirectOnFailure?: boolean } = {}): Promise<ApiResponse<T>> => {
+  const { skipRefresh, redirectOnFailure = true, ...fetchOptions } = options;
   
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...fetchOptions,
@@ -73,8 +73,8 @@ export const apiFetch = async <T>(endpoint: string, options: RequestInit & { ski
       accessToken = null;
       localStorage.removeItem('user');
       
-      // Only redirect if we are not already on the login page
-      if (window.location.pathname !== '/login') {
+      // Only redirect if allowed and we are not already on the login page
+      if (redirectOnFailure && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }

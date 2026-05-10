@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Zap, Star, Crown, Building2, ArrowRight, RotateCcw, CreditCard, LucideIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, Zap, Star, Crown, Building2, ArrowRight, RotateCcw, CreditCard, LucideIcon, Loader2 } from "lucide-react";
+import { billingApi } from "@/lib/api/billing";
+import { toast } from "sonner";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -135,6 +137,28 @@ const formatPrice = (plan: Plan): string => {
 export default function PlanPage() {
     const [currentPlan, setCurrentPlan] = useState<string>("professional");
     const [showConfirm, setShowConfirm] = useState<ConfirmState | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            fetchSubscription(parsedUser.workspaceId);
+        }
+    }, []);
+
+    const fetchSubscription = async (workspaceId: string) => {
+        try {
+            const res = await billingApi.getSubscription(workspaceId);
+            if (res.success && res.data) {
+                setCurrentPlan(res.data.plan.toLowerCase());
+            }
+        } catch (error) {
+            console.error("Failed to fetch subscription", error);
+        }
+    };
 
     const activePlan = plans.find((p) => p.id === currentPlan) ?? plans[0];
 
@@ -146,10 +170,36 @@ export default function PlanPage() {
         setShowConfirm({ plan, action });
     };
 
-    const confirmChange = (): void => {
-        if (!showConfirm) return;
-        setCurrentPlan(showConfirm.plan.id);
-        setShowConfirm(null);
+    const confirmChange = async (): Promise<void> => {
+        if (!showConfirm || !user) return;
+        
+        setIsLoading(true);
+        try {
+            const amount = typeof showConfirm.plan.price === 'number' ? showConfirm.plan.price : 0;
+            
+            if (amount === 0) {
+                toast.error("Please contact support for enterprise pricing");
+                return;
+            }
+
+            const res = await billingApi.initialize({
+                workspaceId: user.workspaceId,
+                plan: showConfirm.plan.id.toUpperCase(),
+                amount: amount,
+                email: user.user_email
+            });
+
+            if (res.success && res.data?.authorization_url) {
+                window.location.href = res.data.authorization_url;
+            } else {
+                toast.error(res.message || "Failed to initialize payment");
+            }
+        } catch (error) {
+            toast.error("An error occurred. Please try again.");
+        } finally {
+            setIsLoading(false);
+            setShowConfirm(null);
+        }
     };
 
     const ActiveIcon = activePlan.icon;
@@ -344,12 +394,13 @@ export default function PlanPage() {
                             </button>
                             <button
                                 onClick={confirmChange}
-                                className={`flex-1 text-sm rounded py-2 px-4 transition-colors ${showConfirm.action === "upgrade"
+                                disabled={isLoading}
+                                className={`flex-1 text-sm rounded py-2 px-4 transition-colors flex items-center justify-center gap-2 ${showConfirm.action === "upgrade"
                                     ? "bg-blue-400/10 text-blue-600 hover:bg-blue-700/20"
                                     : "bg-red-50 text-red-500 border border-red-100 hover:bg-red-100"
                                     }`}
                             >
-                                Confirm {showConfirm.action}
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : `Confirm ${showConfirm.action}`}
                             </button>
                         </div>
                     </div>

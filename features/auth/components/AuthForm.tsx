@@ -116,8 +116,17 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         }
 
         const user = response.data?.user;
-        const redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
-        router.push(redirectPath);
+        let redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
+        
+        if (user?.role === 'ADMIN' && !user?.hasSubscription) {
+          redirectPath = '/setup';
+        }
+
+        if (type === "signup") {
+          router.push('/login');
+        } else {
+          router.push(redirectPath);
+        }
       } else {
         setError(response.message || 'Authentication failed');
       }
