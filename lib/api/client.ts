@@ -13,34 +13,70 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl();
 
+let accessToken: string | null = null;
+//let isRefreshing = false;
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+};
+
 const getHeaders = () => {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
   }
   
   return headers;
 };
 
-export const apiFetch = async <T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
+let isRefreshing = false;
+
+export const apiFetch = async <T>(endpoint: string, options: RequestInit & { skipRefresh?: boolean } = {}): Promise<ApiResponse<T>> => {
+  const { skipRefresh, ...fetchOptions } = options;
+  
   const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
+    ...fetchOptions,
+    credentials: 'include',
     headers: {
       ...getHeaders(),
-      ...options.headers,
+      ...fetchOptions.headers,
     },
   });
   
-  if (response.status === 401) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  if (response.status === 401 && !skipRefresh && endpoint !== '/auth/login' && endpoint !== '/auth/refresh') {
+    if (typeof window !== 'undefined' && !isRefreshing) {
+      isRefreshing = true;
+      
+      try {
+        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        const result = await refreshRes.json();
+        
+        if (result.success && result.data?.accessToken) {
+          accessToken = result.data.accessToken;
+          isRefreshing = false;
+          // Retry original request
+          return apiFetch<T>(endpoint, options);
+        }
+      } catch (e) {
+        console.error("Token refresh failed", e);
+      }
+      
+      isRefreshing = false;
+      accessToken = null;
+      localStorage.removeItem('user');
+      
+      // Only redirect if we are not already on the login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
   }
   

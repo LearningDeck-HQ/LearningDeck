@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { authApi } from '@/lib/api/auth';
 
 const menuItems = [
 
@@ -24,26 +25,23 @@ const Header = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const storedUser = window.localStorage.getItem('user');
-    if (!storedUser) return;
-
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (error) {
-      console.error('Header: Failed to parse stored user', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        setIsAuthenticated(true);
+    const checkAuth = async () => {
+      try {
+        const response = await authApi.verifyToken();
+        if (response.success) {
+          setIsAuthenticated(true);
+          if (response.data?.user) {
+            setUser(response.data.user);
+          }
+        }
+      } catch (error) {
+        console.error('Header: Auth check failed', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    }
+    };
+
+    checkAuth();
   }, [source]);
 
   const isActive = (href: string) => {

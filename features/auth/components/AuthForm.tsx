@@ -10,6 +10,7 @@ import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 import { ChevronRight, Check, User, LogOut } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface AuthFormProps {
   type: 'login' | 'signup' | 'invite';
@@ -28,22 +29,38 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
   const [storedUser, setStoredUser] = useState<any>(null);
   const [isContinuing, setIsContinuing] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
+  const [session, setSession] = useState<any>(null);
 
-    if (token && userStr) {
+  useEffect(() => {
+    const checkExistingAuth = async () => {
       try {
-        const user = JSON.parse(userStr);
-        setStoredUser(user);
-        setAuthToken(token);
-        if (source === 'desktop' && type === 'login') {
-          setIsContinuing(true);
+        const response = await authApi.verifyToken();
+        if (response.success && response.data?.user) {
+          const user = response.data.user;
+          setStoredUser(user);
+          setAuthToken('cookie'); // Placeholder since we use cookies now
+
+          if (source === 'desktop' && type === 'login') {
+            if (user.role !== 'ADMIN') {
+              console.warn("Non-admin user tried to connect to desktop");
+              setIsContinuing(false);
+              return;
+            }
+            setIsContinuing(true);
+            // Fetch sessions to get last active time
+            const sessionsRes = await authApi.getSessions();
+            if (sessionsRes.success && sessionsRes?.data?.length && sessionsRes?.data?.length > 0) {
+              // Find the current or most recent session
+              setSession(sessionsRes.data[0]);
+            }
+          }
         }
       } catch (e) {
-        console.error("Error parsing stored user", e);
+        console.error("Initial auth check failed", e);
       }
-    }
+    };
+
+    checkExistingAuth();
   }, [source, type]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -79,19 +96,23 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
       }
 
       if (response.success) {
-        if (response.data?.token) {
-          localStorage.setItem('token', response.data.token);
-        }
         if (response.data?.user) {
           localStorage.setItem('user', JSON.stringify(response.data.user));
         }
 
-        if (source === 'desktop' && response.data?.token) {
-          const token = response.data.token;
-          setAuthToken(token);
-          setIsSuccess(true);
-          window.location.href = `learningdeck://auth?token=${token}`;
-          return;
+        if (source === 'desktop') {
+          if (response.data?.user?.role !== 'ADMIN') {
+            setError('Only administrators can access the desktop application.');
+            setIsLoading(false);
+            return;
+          }
+          const codeResponse = await authApi.getDesktopCode();
+          if (codeResponse.success && codeResponse.data?.code) {
+            const code = codeResponse.data.code;
+            setIsSuccess(true);
+            window.location.href = `learningdeck://auth?code=${code}`;
+            return;
+          }
         }
 
         const user = response.data?.user;
@@ -107,15 +128,19 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
     }
   };
 
-  const handleContinue = () => {
-    if (authToken) {
-      window.location.href = `learningdeck://auth?token=${authToken}`;
+  const handleContinue = async () => {
+    try {
+      const codeResponse = await authApi.getDesktopCode();
+      if (codeResponse.success && codeResponse.data?.code) {
+        window.location.href = `learningdeck://auth?code=${codeResponse.data.code}`;
+      }
+    } catch (err) {
+      setError('Failed to connect to desktop app');
     }
   };
 
   const handleSwitchAccount = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    authApi.logout();
     setStoredUser(null);
     setAuthToken(null);
     setIsContinuing(false);
@@ -145,22 +170,28 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         </p>
 
         <button
-          onClick={() => window.location.href = `learningdeck://auth?token=${authToken}`}
+          onClick={handleContinue}
           className="w-full h-[44px] bg-blue-600 text-white text-[14px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
         >
           Open Desktop App <ChevronRight className="w-4 h-4" />
         </button>
 
         <p className="mt-8 text-[13px] text-gray-400">
-          Didn't see a prompt? <button onClick={() => window.location.href = `learningdeck://auth?token=${authToken}`} className="text-blue-600 hover:text-blue-700 transition-colors font-medium">Click here to try again</button>
+          Didn't see a prompt? <button onClick={handleContinue} className="text-blue-600 hover:text-blue-700 transition-colors font-medium">Click here to try again</button>
         </p>
       </div>
     );
   }
 
   if (isContinuing && storedUser) {
+    const displayName = storedUser.name || storedUser.user_name || 'User';
+    const email = storedUser.email || storedUser.user_email;
+    const lastActive = session?.lastUsedAt
+      ? `Last active ${formatDistanceToNow(new Date(session.lastUsedAt), { addSuffix: true })}`
+      : 'Recently active';
+
     return (
-      <div className="w-full max-w-[440px] bg-white rounded border border-gray-200 p-8 md:p-10 flex flex-col items-center">
+      <div className="w-full max-w-[440px] bg-white rounded border border-gray-200 p-8 md:p-10 flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
         <div className="flex items-center gap-3 mb-10">
           <Image
             src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
@@ -177,24 +208,28 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           <p className="text-[14px] text-gray-500">Continue with your account</p>
         </div>
 
-        <div className="w-full p-6  rounded-lg flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-blue-600">
-            <User className="w-8 h-8" />
+        <div className="w-full p-6 bg-[#F4F7FF] rounded-2xl flex flex-col items-center mb-8 border border-blue-50/50">
+          <div className="w-20 h-20 bg-white rounded-[24px]  flex items-center justify-center mb-4 text-blue-600 border border-blue-50">
+            <User className="w-10 h-10" />
           </div>
-          <span className="text-[16px] font-semibold text-gray-900">{storedUser.name || storedUser.user_name}</span>
-          <span className="text-[13px] text-gray-500">{storedUser.email || storedUser.user_email}</span>
+          <h3 className="text-[18px]  text-gray-900">{displayName}</h3>
+          <p className="text-[14px] text-gray-500 mb-2">{email}</p>
+          <div className="flex items-center gap-2 px-3 py-1 bg-white/50 rounded-full border border-blue-100/50">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-[12px] font-medium text-gray-400">{lastActive}</span>
+          </div>
         </div>
 
         <button
           onClick={handleContinue}
-          className="w-full h-[44px] bg-blue-600 text-white text-[14px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-4"
+          className="w-full h-[52px] bg-blue-600 text-white text-[15px]  rounded hover:bg-blue-700  shadow-blue-600/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-4"
         >
-          Continue as {storedUser.name || (storedUser.user_name?.split(' ')[0])} <ChevronRight className="w-4 h-4" />
+          Continue as {displayName.split(' ')[0]} <ChevronRight className="w-5 h-5" />
         </button>
 
         <button
           onClick={handleSwitchAccount}
-          className="w-full h-[44px] bg-white text-gray-700 border border-gray-200 text-[14px] font-medium rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          className="w-full h-[52px] bg-white text-gray-600 border border-gray-200 text-[14px]  rounded hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" /> Sign in to a different account
         </button>

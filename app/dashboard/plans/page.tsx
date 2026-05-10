@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Zap, Star, Crown, ArrowRight, RotateCcw, CreditCard, LucideIcon } from "lucide-react";
+import { Check, Zap, Star, Crown, Building2, ArrowRight, RotateCcw, CreditCard, LucideIcon } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface Plan {
     id: string;
     name: string;
-    price: number;
+    price: number | string;
     period: string;
     description: string;
     badge: string | null;
@@ -17,7 +17,6 @@ interface Plan {
     features: string[];
     color: string;
 }
-
 
 interface BillingRow {
     date: string;
@@ -37,76 +36,99 @@ interface ConfirmState {
 
 const plans: Plan[] = [
     {
-        id: "starter",
-        name: "Starter",
-        price: 0,
-        period: "Year",
-        description: "Perfect for small schools and evaluation.",
-        badge: null,
-        icon: Zap,
-        features: [
-            "Up to 25 students",
-            "2 active exams",
-            "5 AI requests/day",
-            "Basic templates",
-            "Watermarked exports",
-            "30-day result history",
-        ],
-        color: "#6b7280",
-    },
-    {
         id: "professional",
         name: "Professional",
-        price: 250000,
+        price: 99000,
         period: "Year",
-        description: "For tutors, coaching centers, and small schools.",
+        description: "For tutorial centers, coaching institutes, and small schools.",
         badge: "Current plan",
         icon: Star,
         featured: true,
         features: [
-            "Unlimited exams",
-            "Unlimited students",
-            "Up to 5 teachers",
-            "Higher AI limits",
-            "Custom branding",
-            "Hybrid workflow",
-            "Plugin access",
+            "Up to 100 students",
+            "Up to 15 teachers",
+            "Up to 20 active exams",
+            "Unlimited subjects & classes",
+            "Hybrid online/offline workflow",
+            "Unlimited offline exam sessions",
+            "AI-assisted exam generation",
+            "100 AI credits/month",
+            "1 workspace",
             "Email & WhatsApp support",
+            "1 local deployment environment",
+            "Result export system",
+            "1-year result history",
         ],
         color: "#3b82f6",
     },
     {
-        id: "school",
-        name: "Custom",
-        price: 500000,
+        id: "school_standard",
+        name: "School Standard",
+        price: 350000,
         period: "Year",
-        description: "For institutions requiring full-scale management.",
+        description: "For established schools and institutional examination management.",
         badge: null,
         icon: Crown,
         features: [
-            "Multi-teacher collaboration",
-            "Audit logs",
-            "Advanced permissions",
-            "Priority onboarding",
+            "Up to 500 students",
+            "Up to 50 teachers",
+            "Up to 50 active exams",
+            "Unlimited subjects & classes",
+            "Unlimited offline exam sessions",
+            "Advanced permissions & roles",
             "School branding",
-            "Real-time sync",
-            "Higher AI allocation",
-            "Dedicated support",
+            "Custom school domain",
+            "1000 AI credits/month",
+            "Deployment analytics",
+            "Local infrastructure synchronization",
+            "Audit logs",
+            "Priority support",
+            "Multi-user collaboration",
+            "Result analytics dashboard",
+            "3-year result history",
+            "Early access to beta features",
         ],
         color: "#8b5cf6",
     },
+    {
+        id: "enterprise",
+        name: "Enterprise",
+        price: "Custom",
+        period: "Year",
+        description: "For universities, enterprise deployments, and multi-campus institutions.",
+        badge: null,
+        icon: Building2,
+        features: [
+            "Multi-campus deployments",
+            "Unlimited students",
+            "Unlimited teachers",
+            "Dedicated deployment support",
+            "White-label infrastructure",
+            "Advanced analytics",
+            "Custom plugins & integrations",
+            "Multiple CBT environments",
+            "Priority infrastructure support",
+            "SLA agreements",
+            "Dedicated onboarding",
+            "Custom deployment architecture",
+        ],
+        color: "#f59e0b",
+    },
 ];
 
-
-
 const billingHistory: BillingRow[] = [
-    { date: "Jan 1, 2025", amount: "₦99,000", status: "Paid", plan: "Starter" },
-    { date: "Jan 1, 2024", amount: "₦99,000", status: "Paid", plan: "Starter" },
+    { date: "Jan 1, 2025", amount: "₦99,000", status: "Paid", plan: "Professional" },
+    { date: "Jan 1, 2024", amount: "₦99,000", status: "Paid", plan: "Professional" },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const fmt = (n: number): string => "₦" + n.toLocaleString("en-NG");
+
+const formatPrice = (plan: Plan): string => {
+    if (typeof plan.price === "string") return plan.price;
+    return fmt(plan.price);
+};
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -114,8 +136,6 @@ export default function PlanPage() {
     const [currentPlan, setCurrentPlan] = useState<string>("professional");
     const [showConfirm, setShowConfirm] = useState<ConfirmState | null>(null);
 
-    // Non-null assertion is safe here: "professional" always exists in plans.
-    // But we handle the edge case gracefully with a fallback.
     const activePlan = plans.find((p) => p.id === currentPlan) ?? plans[0];
 
     const handleAction = (plan: Plan): void => {
@@ -140,7 +160,6 @@ export default function PlanPage() {
 
                 {/* Header */}
                 <div>
-
                     <p className="text-sm mt-1">Manage your plan and payment details.</p>
                 </div>
 
@@ -158,7 +177,7 @@ export default function PlanPage() {
                                 </span>
                             </div>
                             <p className="text-xs">
-                                Renews Jan 1, 2026 · {fmt(activePlan.price)} / year
+                                Renews Jan 1, 2026 · {formatPrice(activePlan)}{typeof activePlan.price === "number" ? " / year" : " pricing"}
                             </p>
                         </div>
                     </div>
@@ -166,7 +185,6 @@ export default function PlanPage() {
                         <CreditCard size={14} /> Manage billing
                     </button>
                 </div>
-
 
                 {/* Plan Cards */}
                 <div className="space-y-3">
@@ -206,9 +224,11 @@ export default function PlanPage() {
                                     <div>
                                         <div className="flex items-baseline gap-1">
                                             <span className="text-2xl text-[#1a1a1a]">
-                                                {plan.price > 400000 ? fmt(500) + "k+" : fmt(plan.price)}
+                                                {formatPrice(plan)}
                                             </span>
-                                            <span className="text-xs">/ {plan.period}</span>
+                                            {typeof plan.price === "number" && (
+                                                <span className="text-xs">/ {plan.period}</span>
+                                            )}
                                         </div>
                                         <p className="text-xs mt-1 leading-relaxed">{plan.description}</p>
                                     </div>
@@ -231,6 +251,13 @@ export default function PlanPage() {
                                         >
                                             Manage plan
                                         </button>
+                                    ) : plan.id === "enterprise" ? (
+                                        <a
+                                            href="/contact"
+                                            className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] hover:bg-[#f0f0f0] transition-colors text-center"
+                                        >
+                                            Request Consultation
+                                        </a>
                                     ) : isUpgrade ? (
                                         <button
                                             onClick={() => handleAction(plan)}
@@ -265,7 +292,7 @@ export default function PlanPage() {
                         {billingHistory.map((row, i) => (
                             <div
                                 key={i}
-                                className={`grid grid-cols-4 px-4 py-4  items-center ${i < billingHistory.length - 1 ? "border-b border-[#ededed]" : ""
+                                className={`grid grid-cols-4 px-4 py-4 items-center ${i < billingHistory.length - 1 ? "border-b border-[#ededed]" : ""
                                     }`}
                             >
                                 <span>{row.date}</span>
@@ -304,12 +331,8 @@ export default function PlanPage() {
                             </h4>
                             <p className="text-sm leading-relaxed">
                                 {showConfirm.action === "upgrade"
-                                    ? `Your plan will change to ${showConfirm.plan.name} at ${fmt(
-                                        showConfirm.plan.price
-                                    )}/year. You'll be billed the difference immediately.`
-                                    : `Your plan will change to ${showConfirm.plan.name} at ${fmt(
-                                        showConfirm.plan.price
-                                    )}/year at your next billing cycle.`}
+                                    ? `Your plan will change to ${showConfirm.plan.name} at ${formatPrice(showConfirm.plan)}/year. You'll be billed the difference immediately.`
+                                    : `Your plan will change to ${showConfirm.plan.name} at ${formatPrice(showConfirm.plan)}/year at your next billing cycle.`}
                             </p>
                         </div>
                         <div className="flex gap-3">

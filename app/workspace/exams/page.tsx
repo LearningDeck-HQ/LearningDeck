@@ -360,10 +360,10 @@ export default function ExamsPage() {
                       {exam.exam_name}
                       {exam.status && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${exam.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                            exam.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                              exam.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                                exam.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                  'bg-red-100 text-red-700'
+                          exam.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                            exam.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                              exam.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                'bg-red-100 text-red-700'
                           }`}>
                           {exam.status}
                         </span>
@@ -432,7 +432,7 @@ export default function ExamsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-[#0e0f10] text-white rounded-sm hover:bg-zinc-700 transition-all"
+              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
             >
               Create First Exam
             </button>
@@ -503,7 +503,7 @@ export default function ExamsPage() {
             <button
               type="button"
               onClick={() => setFormData({ ...formData, visible: !formData.visible })}
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-[#0e0f10]' : 'bg-zinc-300'}`}
+              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-blue-500' : 'bg-zinc-300'}`}
             >
               <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.visible ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>

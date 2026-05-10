@@ -1,6 +1,6 @@
 "use client";
 
-import { TbHome, TbTemplate } from "react-icons/tb";
+import { TbHome, TbTemplate, TbVideoPlus } from "react-icons/tb";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -41,11 +41,11 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
       {/* Top Action Button */}
       <div className="p-4">
         <button className="w-full flex justify-center px-4 py-1.5 border border-[#ededed] rounded  font-medium text-[#0e0f10] hover:bg-[#ededed] transition-colors">
-          <BiPlus className="w-4 h-4 mr-2" />Invite
+          <TbVideoPlus className="w-4 h-4 mr-2" /> Tutorials
         </button>
       </div>
 
-      <nav className="flex flex-col flex-1 px-2 gap-0.5">
+      <nav className="flex flex-col  h-full px-2 gap-0.5">
         {/* Main Navigation - Following image_75fd16.png structure */}
         <Link href="/dashboard" className={getLinkStyles(pathname === '/dashboard')} onClick={onClose}>
           <TbHome className="text-sm" />
@@ -62,7 +62,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <Link href="/dashboard/plans" className={getLinkStyles(pathname === '/dashboard/plans')} onClick={onClose}>
           <BiCreditCard className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Plan</span>
+          <span className="text-[#6b6b6b]">Plan <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5">PRO</span> </span>
         </Link>
 
         <Link href="/dashboard/settings" className={getLinkStyles(pathname === '/dashboard/settings')} onClick={onClose}>
@@ -77,10 +77,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <span className="text-[#6b6b6b]">Agentic mode <span className="text-blue-500 ml-1 border border-blue-500 rounded text-[10px] px-1 py-0.5">BETA</span></span>
         </Link>
 
-        <Link href="/dashboard/environments" className={getLinkStyles(pathname === '/dashboard/environments')} onClick={onClose}>
-          <BiWorld className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Environments</span>
-        </Link>
+
 
         <Link href="/dashboard/templates" className={getLinkStyles(pathname === '/dashboard/templates')} onClick={onClose}>
           <TbTemplate className=" opacity-70" />

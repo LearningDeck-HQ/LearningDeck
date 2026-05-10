@@ -62,14 +62,29 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
         };
         fetchData();
     }, []);
-
     const handleLogout = async () => {
-        if (confirm('Are you sure you want to log out?')) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            await authApi.logout();
-            navigate.push('/login');
+
+
+        if (typeof window !== 'undefined') {
+            window.localStorage.removeItem('token');
+            window.localStorage.removeItem('user');
         }
+
+        try {
+            if (typeof window !== 'undefined' && (window as any).api?.clearAuthToken) {
+                await (window as any).api.clearAuthToken();
+            }
+        } catch (error) {
+            console.warn('Header: clearAuthToken failed', error);
+        }
+
+        try {
+            await authApi.logout();
+        } catch (error) {
+            console.warn('Header: authApi.logout failed', error);
+        }
+
+        navigate.push('/login');
     };
 
     const getLinkStyles = (isActive: boolean) =>

@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Workspace } from '@/types';
+import { workspaceApi } from '@/lib/api/workspaces';
+import { BiLoader } from 'react-icons/bi';
 
 const LearningdeckDashboard = () => {
   const [prompt, setPrompt] = useState('');
@@ -18,6 +21,22 @@ const LearningdeckDashboard = () => {
 
   const router = useRouter();
 
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await workspaceApi.list();
+        if (res.data) setWorkspaces(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   // Typewriter phrases
   const phrases = [
     "Create a science exam for JS1...",
@@ -56,6 +75,8 @@ const LearningdeckDashboard = () => {
     if (!prompt.trim()) return;
     router.push(`/dashboard/agentic-mode?q=${encodeURIComponent(prompt)}`);
   };
+
+  const WorkspaceName = workspaces[0]?.name;
 
   return (
     <div className="h-full text-[#6b6b6b] font-sans p-2 md:p-4">
@@ -108,23 +129,21 @@ const LearningdeckDashboard = () => {
                 <button className="flex items-center gap-1 px-3 py-1 bg-white rounded">
                   Recents
                 </button>
-                <button className="flex items-center gap-1 px-3 py-1">
-                  Favorites
-                </button>
+
               </div>
             </div>
 
             <div className="bg-white border border-[#ededed] rounded overflow-hidden">
               <div className="flex items-center gap-4 p-4 border-b border-[#ededed] hover:bg-[#fcfcfc] cursor-pointer group">
                 <Lock size={16} />
-                <span className="text-[#1a1a1a] group-hover:text-[#ff6b3d]">My Workspace</span>
+                <span className="text-[#1a1a1a] group-hover:text-[#ff6b3d]">{WorkspaceName || <BiLoader className='animate-spin' />}</span>
               </div>
               <div className="flex items-center gap-4 p-4 border-b border-[#ededed] hover:bg-[#fcfcfc] cursor-pointer group">
                 <Layers size={16} />
-                <div className="">
-                  <span className="text-[#1a1a1a] group-hover:text-[#ff6b3d]">Local Environment</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#1a1a1a] group-hover:text-[#ff6b3d]">Environment</span>
                   <span className="mx-2 opacity-50">•</span>
-                  <span>My Workspace</span>
+                  <span>{WorkspaceName || <BiLoader className='animate-spin' />}</span>
                 </div>
               </div>
               <div className="hidden flex items-center gap-4 p-4 hover:bg-[#fcfcfc] cursor-pointer group">
@@ -132,7 +151,7 @@ const LearningdeckDashboard = () => {
                 <div className="">
                   <span className="text-[#1a1a1a] group-hover:text-[#ff6b3d]">Identify the IP of an Incoming Request</span>
                   <span className="mx-2 opacity-50">•</span>
-                  <span>My Workspace</span>
+                  <span>{WorkspaceName}</span>
                 </div>
               </div>
             </div>

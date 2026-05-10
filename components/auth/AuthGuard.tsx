@@ -3,18 +3,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScaleLoader } from 'react-spinners';
+import { authApi } from '@/lib/api/auth';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-    } else {
-      setIsAuthorized(true);
-    }
+    const checkAuth = async () => {
+      try {
+        const response = await authApi.verifyToken();
+        if (response.success) {
+          setIsAuthorized(true);
+        } else {
+          // If verifyToken fails (and refresh fails), apiFetch redirects to /login
+          // But we can also handle it here if needed
+          router.push('/login');
+        }
+      } catch (err) {
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
   }, [router]);
 
   // Prevent flashing of protected content
