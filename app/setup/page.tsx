@@ -122,7 +122,13 @@ export default function SetupPage() {
         setIsLoading(true);
 
         try {
-            const amount = typeof plan.price === 'number' ? plan.price : 0;
+            console.log("Initializing billing with data:", {
+                workspaceId: user.workspaceId,
+                plan: plan.id.toUpperCase(),
+                amount: amount,
+                email: user.user_email
+            });
+
             const res = await billingApi.initialize({
                 workspaceId: user.workspaceId,
                 plan: plan.id.toUpperCase(),
