@@ -92,7 +92,7 @@ export default function WorkspacesPage() {
               <div className="flex items-center gap-4">
                 <Link
                   href={`/workspace`}
-                  target='_blank'
+                  // target='_blank'
                   className="h-11 px-6 bg-white text-gray-700 border border-gray-200   rounded hover:bg-white hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   Open Workspace

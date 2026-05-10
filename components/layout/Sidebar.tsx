@@ -65,7 +65,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <span className="text-[#6b6b6b]">Plan <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5">PRO</span> </span>
         </Link>
 
-        <Link href="/dashboard/settings" className={getLinkStyles(pathname === '/dashboard/settings')} onClick={onClose}>
+        <Link href="/dashboard/settings" className={getLinkStyles(pathname.startsWith('/dashboard/settings'))} onClick={onClose}>
           <MdSettings className=" opacity-70" />
           <span className="text-[#6b6b6b]">Settings</span>
         </Link>

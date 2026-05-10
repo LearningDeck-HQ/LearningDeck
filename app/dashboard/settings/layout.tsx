@@ -6,11 +6,11 @@ import { SettingsTabs } from '@/components/ui/SettingsTabs';
 import { FiActivity } from 'react-icons/fi';
 
 const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
-    const [activeTab, setActiveTab] = useState<'general' | 'sessions'>('general');
+    const [activeTab, setActiveTab] = useState<'settings' | 'sessions'>('settings');
 
     const settingsTabs = [
         {
-            id: 'general',
+            id: 'settings',
             label: 'General',
             href: '/dashboard/settings',
             icon: <LayoutDashboard size={18} />,
@@ -29,7 +29,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         }
     ];
 
-    const handleTabChange = (id: string) => setActiveTab(id as 'general' | 'sessions');
+    const handleTabChange = (id: string) => setActiveTab(id as 'settings' | 'sessions');
 
     return (
         <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full p-4 md:p-8">
