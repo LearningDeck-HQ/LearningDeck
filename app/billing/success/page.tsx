@@ -2,13 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, ArrowRight, Loader2, PartyPopper, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, PartyPopper, Sparkles } from "lucide-react";
 import { authApi } from "@/lib/api/auth";
-import { toast, Toaster } from "sonner";
+import { Toaster } from "sonner";
 import Image from "next/image";
 import { ScaleLoader } from "react-spinners";
 
-export default function BillingSuccessPage() {
+function SuccessContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const reference = searchParams.get("reference");
@@ -21,13 +21,11 @@ export default function BillingSuccessPage() {
                 // Give the webhook a moment to process the activation
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // Refresh the user token to get the updated hasSubscription status
                 const res = await authApi.verifyToken();
                 if (res.success && res.data?.user) {
                     localStorage.setItem('user', JSON.stringify(res.data.user));
                     setStatus("success");
-
-                    // Start countdown to redirect
+                    
                     const timer = setInterval(() => {
                         setCountdown((prev) => {
                             if (prev <= 1) {
@@ -50,15 +48,10 @@ export default function BillingSuccessPage() {
         verifyAndRefresh();
     }, [router]);
 
-    return (<Suspense fallback={<div className="text-[#1B2559] font-medium">
-        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-    </div>}>
-
-
+    return (
         <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center p-6 text-center">
             <Toaster />
-
-            {/* Background elements */}
+            
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
                 <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-50 rounded-full blur-3xl opacity-50" />
@@ -154,6 +147,21 @@ export default function BillingSuccessPage() {
             <footer className="mt-20 text-xs text-gray-400">
                 Transaction Ref: <span className="font-mono">{reference || "N/A"}</span>
             </footer>
-        </div> </Suspense>
+        </div>
+    );
+}
+
+export default function BillingSuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-4">
+                    <ScaleLoader color="#3b82f6" height={35} width={4} radius={2} margin={2} />
+                    <span className="text-sm font-medium text-gray-400">Loading payment details...</span>
+                </div>
+            </div>
+        }>
+            <SuccessContent />
+        </Suspense>
     );
 }

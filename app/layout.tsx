@@ -12,6 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.learningdeck.online'),
   title: {
     default: "LearningDeck | #1 Offline CBT & Hybrid Exam Manager",
     template: "%s | LearningDeck",
