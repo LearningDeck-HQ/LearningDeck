@@ -140,7 +140,7 @@ export default function SetupPage() {
             if (res.success && res.data?.authorization_url) {
                 window.location.href = res.data.authorization_url;
             } else {
-                toast.error(res.message || "Failed to initialize payment");
+                toast.error(res.message);
                 setIsLoading(false);
             }
         } catch (error) {
@@ -196,8 +196,8 @@ export default function SetupPage() {
                             <div
                                 key={plan.id}
                                 className={`group relative bg-white rounded-3xl p-8 flex flex-col gap-8 border transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both ${plan.id === "school_standard"
-                                        ? "border-blue-200 ring-4 ring-blue-50"
-                                        : "border-gray-100 hover:border-blue-200"
+                                    ? "border-blue-200 ring-4 ring-blue-50"
+                                    : "border-gray-100 hover:border-blue-200"
                                     }`}
                                 style={{ animationDelay: `${idx * 150}ms` }}
                             >
@@ -252,8 +252,8 @@ export default function SetupPage() {
                                     onClick={() => handleSelectPlan(plan)}
                                     disabled={isLoading}
                                     className={`w-full h-14 rounded-2xl text-[15px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${plan.id === "enterprise"
-                                            ? "bg-white border-2 border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200"
-                                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/10 hover:shadow-blue-600/20 active:scale-[0.98]"
+                                        ? "bg-white border-2 border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200"
+                                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/10 hover:shadow-blue-600/20 active:scale-[0.98]"
                                         } disabled:opacity-50`}
                                 >
                                     {isLoading && isSelected ? (
