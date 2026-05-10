@@ -47,6 +47,7 @@ export const apiFetch = async <T>(endpoint: string, options: RequestInit & { ski
   });
   
   if (response.status === 401 && !skipRefresh && endpoint !== '/auth/login' && endpoint !== '/auth/refresh') {
+    console.log(`[apiFetch] 401 Unauthorized on ${endpoint}. Attempting token refresh...`);
     if (typeof window !== 'undefined' && !isRefreshing) {
       isRefreshing = true;
       
@@ -58,22 +59,23 @@ export const apiFetch = async <T>(endpoint: string, options: RequestInit & { ski
         });
         
         const result = await refreshRes.json();
+        console.log(`[apiFetch] Refresh response:`, result);
         
         if (result.success && result.data?.accessToken) {
           accessToken = result.data.accessToken;
           isRefreshing = false;
-          // Retry original request
+          console.log(`[apiFetch] Refresh successful. Retrying ${endpoint}`);
           return apiFetch<T>(endpoint, options);
         }
       } catch (e) {
-        console.error("Token refresh failed", e);
+        console.error("[apiFetch] Token refresh failed error:", e);
       }
       
+      console.warn("[apiFetch] Token refresh failed or no token returned. Logging out.");
       isRefreshing = false;
       accessToken = null;
       localStorage.removeItem('user');
       
-      // Only redirect if allowed and we are not already on the login page
       if (redirectOnFailure && window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

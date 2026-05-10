@@ -38,7 +38,13 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         if (response.success && response.data?.user) {
           const user = response.data.user;
           setStoredUser(user);
-          setAuthToken('cookie'); // Placeholder since we use cookies now
+          setAuthToken('cookie'); 
+
+          // Determine redirect path
+          let redirectPath = user.role === 'TEACHER' ? '/workspace' : '/dashboard';
+          if (user.role === 'ADMIN' && !user.hasSubscription) {
+            redirectPath = '/setup';
+          }
 
           if (source === 'desktop' && type === 'login') {
             if (user.role !== 'ADMIN') {
@@ -47,12 +53,13 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
               return;
             }
             setIsContinuing(true);
-            // Fetch sessions to get last active time
             const sessionsRes = await authApi.getSessions();
             if (sessionsRes.success && sessionsRes?.data?.length && sessionsRes?.data?.length > 0) {
-              // Find the current or most recent session
               setSession(sessionsRes.data[0]);
             }
+          } else {
+            // Auto-redirect if not in desktop mode
+            router.push(redirectPath);
           }
         }
       } catch (e) {
