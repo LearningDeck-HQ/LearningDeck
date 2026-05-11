@@ -42,7 +42,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
 
           // Determine redirect path
           let redirectPath = user.role === 'TEACHER' ? '/workspace' : '/dashboard';
-          if (user.role === 'ADMIN' && !user.hasSubscription) {
+          if (user.role === 'ADMIN') {
             redirectPath = '/setup';
           }
 
@@ -125,7 +125,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         const user = response.data?.user;
         let redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
         
-        if (user?.role === 'ADMIN' && !user?.hasSubscription) {
+        if (user?.role === 'ADMIN') {
           redirectPath = '/setup';
         }
 
