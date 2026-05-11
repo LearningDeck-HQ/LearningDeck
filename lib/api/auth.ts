@@ -27,11 +27,15 @@ export const authApi = {
 
   async logout() {
     try {
-      await apiFetch('/auth/logout', { method: 'POST' });
+      await apiFetch('/auth/logout', { method: 'POST', skipRefresh: true });
+    } catch (error) {
+      console.error('Logout API call failed:', error);
     } finally {
       if (typeof window !== 'undefined') {
         setAccessToken(null);
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        // Clear any possible sensitive data
         window.location.href = '/login';
       }
     }

@@ -50,11 +50,6 @@ const Header = () => {
   const handleLogout = async () => {
     setIsProfilePopoverOpen(false);
 
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('token');
-      window.localStorage.removeItem('user');
-    }
-
     try {
       if (typeof window !== 'undefined' && (window as any).api?.clearAuthToken) {
         await (window as any).api.clearAuthToken();
@@ -63,13 +58,8 @@ const Header = () => {
       console.warn('Header: clearAuthToken failed', error);
     }
 
-    try {
-      await authApi.logout();
-    } catch (error) {
-      console.warn('Header: authApi.logout failed', error);
-    }
-
-    navigate.push('/login');
+    // authApi.logout() handles API call, localStorage cleanup, and redirect
+    await authApi.logout();
   };
 
   const profileName = user?.user_name || user?.name || 'Guest';

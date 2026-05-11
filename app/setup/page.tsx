@@ -6,6 +6,7 @@ import { Check, Star, Crown, Building2, ArrowRight, Loader2, Sparkles } from "lu
 import { billingApi } from "@/lib/api/billing";
 import { toast, Toaster } from "sonner";
 import Image from "next/image";
+import { authApi } from "@/lib/api/auth";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -151,6 +152,22 @@ export default function SetupPage() {
 
     if (!user) return null;
 
+    const handleLogout = async () => {
+
+
+        try {
+            if (typeof window !== 'undefined' && (window as any).api?.clearAuthToken) {
+                await (window as any).api.clearAuthToken();
+            }
+        } catch (error) {
+            console.warn('Header: clearAuthToken failed', error);
+        }
+
+        // authApi.logout() handles API call, localStorage cleanup, and redirect
+        await authApi.logout();
+    };
+
+
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
             {/* Nav */}
@@ -167,7 +184,7 @@ export default function SetupPage() {
                     <span className="text-[18px] tracking-tight text-gray-800 font-medium">LearningDeck</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-400 font-medium uppercase tracking-wider bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Setup Mode</span>
+                    <button onClick={handleLogout} className="text-xs text-gray-400 font-medium uppercase tracking-wider bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Logout</button>
                 </div>
             </nav>
 
