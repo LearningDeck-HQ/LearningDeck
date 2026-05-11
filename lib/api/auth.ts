@@ -25,6 +25,17 @@ export const authApi = {
     return res;
   },
 
+  async completeRegistration(data: any): Promise<ApiResponse<AuthData>> {
+    const res = await apiFetch<AuthData>('/auth/complete-registration', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (res.success && res.data?.accessToken) {
+      setAccessToken(res.data.accessToken);
+    }
+    return res;
+  },
+
   async logout() {
     try {
       await apiFetch('/auth/logout', { method: 'POST', skipRefresh: true });

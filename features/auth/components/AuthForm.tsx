@@ -94,11 +94,11 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           admin_password: password,
         });
       } else {
-        response = await authApi.register({
+        // Invite completion
+        response = await authApi.completeRegistration({
           user_name: name,
-          user_email: email,
-          user_password: password,
-          inviteToken: inviteToken,
+          password: password,
+          token: inviteToken,
         });
       }
 
@@ -125,7 +125,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         const user = response.data?.user;
         let redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
         
-        if (user?.role === 'ADMIN') {
+        if (user?.role === 'ADMIN' && type === 'signup') {
           redirectPath = '/setup';
         }
 

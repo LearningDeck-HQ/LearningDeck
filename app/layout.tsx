@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"; // Updated import
 import "./globals.css";
 import { SidebarProvider } from "@/context/SidebarContext";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { Toaster } from 'sonner';
 
 // Configure Inter with preferred weights and CSS variable
 const inter = Inter({
@@ -93,6 +94,7 @@ export default function RootLayout({
         <QueryProvider>
           <SidebarProvider>
             {children}
+            <Toaster richColors position="top-right" />
           </SidebarProvider>
         </QueryProvider>
       </body>

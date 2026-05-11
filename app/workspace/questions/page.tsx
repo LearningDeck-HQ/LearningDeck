@@ -39,7 +39,7 @@ export default function QuestionsPage() {
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
-  const [gridCols, setGridCols] = useState(2);
+  const [gridCols, setGridCols] = useState(1);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [user_name, setUser_Name] = useState<User | null>(null);
   useEffect(() => {
@@ -456,7 +456,7 @@ export default function QuestionsPage() {
             >
               <option value={1}>1 Column</option>
               <option value={2}>2 Columns</option>
-             
+
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
@@ -497,93 +497,93 @@ export default function QuestionsPage() {
           </div>
         ) : filteredQuestions.length > 0 ? (
           filteredQuestions.map(q => (
-      <div
-  key={q.id}
-  className="group relative border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200" // added relative
->
-  {/* Author badge — top right corner */}
-  {q.author && (
-    <button title='Author' className={`absolute top-[-1px] right-[-1px] text-[12px] sm:text-[10px] px-2 py-0.5 rounded-bl border-l  border-b  whitespace-nowrap transition-all  cursor-default ${getUserColor(q.author)}`}>
-   <div className= "flex items-center gap-1"> <FiUser className=" mr-1" />  {q.author}</div>
-    </button>
-  )}
-
-  <div className="flex flex-col md:flex-row items-start justify-between">
-    {/* Selection Checkbox */}
-    <div className=" my-6 ml-4 md:pt-0 md:h-full md:flex md:items-center">
-      <input
-        type="checkbox"
-        className="w-3.5 h-3.5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-        checked={selectedIds.includes(q.id)}
-        onChange={() => toggleSelectOne(q.id)}
-      />
-    </div>
-
-    <div className="px-4 py-6 flex flex-1 flex-col md:flex-row items-start justify-between gap-4 w-full">
-      {/* Left: question info */}
-      <div className="flex items-start gap-3 flex-1 w-full">
-        <span className="mt-0.5 flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-0.5">
-          {typeIcon(q.type)}
-        </span>
-        <div className="space-y-1 flex-1">
-          <div className="flex items-start gap-4"> {/* removed justify-between since author is gone */}
-            <h3 className="text-xs font-medium text-[#0e0f10]  tracking-tight leading-snug flex items-center gap-2">
-              {q.question}
-              {q.status && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${q.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                  q.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                    q.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                      q.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                        'bg-red-100 text-red-700'
-                  }`}>
-                  {q.status}
-                </span>
+            <div
+              key={q.id}
+              className="group relative border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200" // added relative
+            >
+              {/* Author badge — top right corner */}
+              {q.author && (
+                <button title='Author' className={`absolute top-[-1px] right-[-1px] text-[12px] sm:text-[10px] px-2 py-0.5 rounded-bl border-l  border-b  whitespace-nowrap transition-all  cursor-default ${getUserColor(q.author)}`}>
+                  <div className="flex items-center gap-1"> <FiUser className=" mr-1" />  {q.author}</div>
+                </button>
               )}
-            </h3>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
-            <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
-              {q.type.replace(/_/g, ' ')}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <BookOpen size={11} />
-              {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <GraduationCap size={11} />
-              {classes.find(c => c.id === q.classId)?.name || 'N/A'}
-            </span>
-            <span className="flex items-center gap-1.5 text-emerald-600">
-              <CheckCircle2 size={11} />
-              {q.correct_answer}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Right: exam tag + actions */}
-      <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-        <span className="mr-2 text-xs text-[#6b6b6b] bg-zinc-300/20 px-2 py-0.5 rounded-sm hidden md:block">
-          {exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}
-        </span>
-        <button
-          onClick={() => handleOpenModal(q)}
-          className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-          title="Edit"
-        >
-          <MdOutlineModeEditOutline size={15} />
-        </button>
-        <button
-          onClick={() => handleDelete(q.id)}
-          className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-          title="Delete"
-        >
-          <MdOutlineDelete size={15} />
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+              <div className="flex flex-col md:flex-row items-start justify-between">
+                {/* Selection Checkbox */}
+                <div className=" my-6 ml-4 md:pt-0 md:h-full md:flex md:items-center">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    checked={selectedIds.includes(q.id)}
+                    onChange={() => toggleSelectOne(q.id)}
+                  />
+                </div>
+
+                <div className="px-4 py-6 flex flex-1 flex-col md:flex-row items-start justify-between gap-4 w-full">
+                  {/* Left: question info */}
+                  <div className="flex items-start gap-3 flex-1 w-full">
+                    <span className="mt-0.5 flex items-center justify-center bg-zinc-300/20 text-[#0e0f10] rounded-sm px-1.5 py-0.5">
+                      {typeIcon(q.type)}
+                    </span>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-start gap-4"> {/* removed justify-between since author is gone */}
+                        <h3 className="text-xs font-medium text-[#0e0f10]  tracking-tight leading-snug flex items-center gap-2">
+                          {q.question}
+                          {q.status && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${q.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                              q.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                                q.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                  q.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                    'bg-red-100 text-red-700'
+                              }`}>
+                              {q.status}
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                          {q.type.replace(/_/g, ' ')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <BookOpen size={11} />
+                          {subjects.find(s => s.id === q.subjectId)?.name || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <GraduationCap size={11} />
+                          {classes.find(c => c.id === q.classId)?.name || 'N/A'}
+                        </span>
+                        <span className="flex items-center gap-1.5 text-emerald-600">
+                          <CheckCircle2 size={11} />
+                          {q.correct_answer}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: exam tag + actions */}
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <span className="mr-2 text-xs text-[#6b6b6b] bg-zinc-300/20 px-2 py-0.5 rounded-sm hidden md:block">
+                      {exams.find(e => e.id === q.examId)?.exam_name || 'N/A'}
+                    </span>
+                    <button
+                      onClick={() => handleOpenModal(q)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Edit"
+                    >
+                      <MdOutlineModeEditOutline size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(q.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <MdOutlineDelete size={15} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))
         ) : (
           <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">

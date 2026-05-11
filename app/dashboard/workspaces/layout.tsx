@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Briefcase, Home, Settings2, Activity, LayoutDashboard, Settings, BarChart3 } from 'lucide-react';
 import { AshardTabItem, AshardTabs } from '@/components/ui/AshardTabs';
+import { GrUserAdd } from 'react-icons/gr';
 
 const WorkspacesLayout = ({ children }: { children: React.ReactNode }) => {
-  const [activeTab, setActiveTab] = useState<'home' | 'manage' | 'usage'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'manage' | 'usage' | 'invitations'>('home');
 
   const workspaceTabs: AshardTabItem[] = [
     {
@@ -26,13 +27,19 @@ const WorkspacesLayout = ({ children }: { children: React.ReactNode }) => {
       href: '/dashboard/workspaces/usage',
       icon: <BarChart3 size={18} />,
     },
+    {
+      id: 'invitations',
+      label: 'Invitations',
+      href: '/dashboard/workspaces/invitations',
+      icon: <GrUserAdd size={18} />,
+    },
   ];
 
-  const handleTabChange = (id: string) => setActiveTab(id as 'home' | 'manage' | 'usage');
+  const handleTabChange = (id: string) => setActiveTab(id as 'home' | 'manage' | 'usage' | 'invitations');
 
   return (
-    <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full p-4 md:p-8">
-      <AshardTabs items={workspaceTabs} className="mb-4 max-w-[300px]" />
+    <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full  p-4 md:p-8">
+      <AshardTabs items={workspaceTabs} className="mb-4 max-w-[500px]" />
       {children}
     </div>
   );

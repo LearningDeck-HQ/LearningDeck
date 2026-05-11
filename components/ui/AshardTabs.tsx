@@ -42,7 +42,7 @@ export const AshardTabs = ({ items, className = '' }: AshardTabsProps) => {
   );
 
   return (
-    <nav className={`grid grid-cols-3 gap-2  rounded p-1 bg-[#f9f9f9] border border-[#ededed] w-full ${className}`}>
+    <nav className={`grid grid-cols-4 gap-2  rounded p-1 bg-[#f9f9f9] border border-[#ededed] w-full ${className}`}>
 
       {renderedItems}
     </nav>
