@@ -26,5 +26,13 @@ export const billingApi = {
 
   async getTransactions(workspaceId: string): Promise<ApiResponse<any[]>> {
     return apiFetch<any[]>(`/billing/transactions/${workspaceId}`);
+  },
+
+  async verifyTransaction(reference: string): Promise<ApiResponse<{
+    status: string;
+    isPaid: boolean;
+    subscriptionActive: boolean;
+  }>> {
+    return apiFetch(`/billing/verify/${reference}`);
   }
 };

@@ -16,37 +16,64 @@ function SuccessContent() {
     const [countdown, setCountdown] = useState(5);
 
     useEffect(() => {
-        const verifyAndRefresh = async () => {
+        const verifyAndRefresh = async (retries = 10) => {
             try {
-                // Give the webhook a moment to process the activation
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                const res = await authApi.verifyToken();
-                if (res.success && res.data?.user) {
-                    localStorage.setItem('user', JSON.stringify(res.data.user));
-                    setStatus("success");
-                    
-                    const timer = setInterval(() => {
-                        setCountdown((prev) => {
-                            if (prev <= 1) {
-                                clearInterval(timer);
-                                router.push("/dashboard");
-                                return 0;
-                            }
-                            return prev - 1;
-                        });
-                    }, 1000);
-                } else {
+                if (!reference) {
                     setStatus("error");
+                    return;
+                }
+
+                // Wait a bit for webhook
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                const verifyRes = await billingApi.verifyTransaction(reference);
+                
+                if (verifyRes.success && verifyRes.data) {
+                    const { isPaid, subscriptionActive } = verifyRes.data;
+
+                    // If paid but not active yet, retry
+                    if (isPaid && !subscriptionActive && retries > 0) {
+                        console.log(`Payment confirmed but subscription pending activation... retrying (${retries} left)`);
+                        return verifyAndRefresh(retries - 1);
+                    }
+
+                    if (isPaid && subscriptionActive) {
+                        // Finally refresh the token to get the user object updated
+                        const authRes = await authApi.verifyToken();
+                        if (authRes.success && authRes.data?.user) {
+                            localStorage.setItem('user', JSON.stringify(authRes.data.user));
+                            setStatus("success");
+                            
+                            const timer = setInterval(() => {
+                                setCountdown((prev) => {
+                                    if (prev <= 1) {
+                                        clearInterval(timer);
+                                        router.push("/dashboard");
+                                        return 0;
+                                    }
+                                    return prev - 1;
+                                });
+                            }, 1000);
+                            return;
+                        }
+                    }
+                }
+
+                // If no more retries or failed verification
+                if (retries === 0) {
+                    setStatus("error");
+                } else {
+                    return verifyAndRefresh(retries - 1);
                 }
             } catch (error) {
                 console.error("Verification failed", error);
+                if (retries > 0) return verifyAndRefresh(retries - 1);
                 setStatus("error");
             }
         };
 
         verifyAndRefresh();
-    }, [router]);
+    }, [router, reference]);
 
     return (
         <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center p-6 text-center">
