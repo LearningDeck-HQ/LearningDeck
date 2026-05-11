@@ -7,28 +7,33 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
 import { RiMenu5Line } from "react-icons/ri";
+import { userApi } from "@/lib/api/users";
+import { User } from "@/types";
 
 
 
 const Header = () => {
   const { toggleLeftSidebar } = useSidebar();
   const [isProfilePopoverOpen, setIsProfilePopoverOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const profilePopoverRef = React.useRef<HTMLDivElement>(null);
   const navigate = useRouter();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+   const [user_name, setUser_Name] = useState<User | null>(null);
+    useEffect(() => {
+      const fetchUser = async () => {
+        const res = await userApi.me();
+        if (res.success && res.data) {
+        
+          setUser_Name(res.data);
+        }
+      };
+      fetchUser();
+    }, []);
+  
 
-    const storedUser = window.localStorage.getItem('user');
-    if (!storedUser) return;
+     
+    
 
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (error) {
-      console.error('Header: Failed to parse stored user', error);
-    }
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -62,8 +67,9 @@ const Header = () => {
     await authApi.logout();
   };
 
-  const profileName = user?.user_name || user?.name || 'Guest';
-  const profileEmail = user?.user_email || user?.email || 'No email';
+  const profileName = user_name?.user_name || 'Guest';
+  const profileEmail = user_name?.user_email || 'No email';
+  const userRole = user_name?.role || 'User';
 
   return (
     <div className='flex justify-between w-full  bg-[#f9f9f9] border-b border-[#ededed] text-[#6b6b6b] py-2 '>
@@ -111,16 +117,16 @@ const Header = () => {
             <div className="p-4 bg-zinc-50 border-b border-zinc-200">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="text-sm text-zinc-900 font-medium truncate">
-                  {user?.user_name || user?.name || 'None'}
+                  {profileName}
                 </div>
-                {user?.role && (
+                {userRole && (
                   <span className="text-[10px] font-medium uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                    {user.role}
+                    {userRole}
                   </span>
                 )}
               </div>
               <div className="text-[11px] text-zinc-500 truncate">
-                {user?.user_email || user?.email || 'none'}
+                {profileEmail}
               </div>
             </div>
             <div className="flex flex-col gap-1 p-2">

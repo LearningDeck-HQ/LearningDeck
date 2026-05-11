@@ -6,27 +6,25 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Briefcase, Plus, Users, BookOpen, GraduationCap, FileText, ChevronRight } from 'lucide-react';
 import { workspaceApi } from '@/lib/api/workspaces';
-import { Workspace } from '@/types';
+import { User, Workspace } from '@/types';
 import Image from 'next/image';
 import { ScaleLoader } from 'react-spinners';
+import { userApi } from '@/lib/api/users';
 
 export default function WorkspacesPage() {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        const storedUser = window.localStorage.getItem('user');
-        if (!storedUser) return;
-
-        try {
-            setUser(JSON.parse(storedUser));
-        } catch (error) {
-            console.error('Header: Failed to parse stored user', error);
-        }
-    }, []);
+ const [user_name, setUser_Name] = useState<User | null>(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const res = await userApi.me();
+      if (res.success && res.data) {
+      
+        setUser_Name(res.data);
+      }
+    };
+    fetchUser();
+  }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -42,9 +40,8 @@ export default function WorkspacesPage() {
         fetchData();
     }, []);
     let WorkspaceName = workspaces[0]?.name || 'Workspace';
-    const profileName = user?.user_name || user?.name || 'Guest';
-    const profileEmail = user?.user_email || user?.email || 'No email';
-
+    const profileName = user_name?.user_name || 'Guest';
+   
     if (isLoading) return <div className='flex flex-col h-full w-full items-center justify-center'>
         <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
     </div>

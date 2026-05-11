@@ -22,5 +22,19 @@ export const userApi = {
     return apiFetch<any>(`/users/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  async me(): Promise<ApiResponse<User>> {
+    const res = await apiFetch<User>('/users/profile');
+    if (res.success && res.data) {
+      return {
+        success: true,
+        data: res.data as User
+      };
+    }
+    return {
+      success: false,
+      message: res.message || 'Failed to fetch user profile'
+    };
   }
 };

@@ -67,6 +67,7 @@ export interface Question {
   examId: string;
   subjectId: string;
   classId: string;
+  author?: string | null;
 }
 
 export interface SubjectScore {
