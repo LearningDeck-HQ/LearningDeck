@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         if (response.success && response.data?.user) {
           const user = response.data.user;
           if (user.role === 'ADMIN' && !user.hasSubscription) {
-            //   router.push('/setup');
+            router.push('/setup');
           } else {
             setIsAuthorized(true);
           }

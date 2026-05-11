@@ -7,6 +7,7 @@ import { authApi } from "@/lib/api/auth";
 import { Toaster } from "sonner";
 import Image from "next/image";
 import { ScaleLoader } from "react-spinners";
+import { billingApi } from "@/lib/api/billing";
 
 function SuccessContent() {
     const router = useRouter();
@@ -27,7 +28,7 @@ function SuccessContent() {
                 await new Promise(resolve => setTimeout(resolve, 3000));
 
                 const verifyRes = await billingApi.verifyTransaction(reference);
-                
+
                 if (verifyRes.success && verifyRes.data) {
                     const { isPaid, subscriptionActive } = verifyRes.data;
 
@@ -43,7 +44,7 @@ function SuccessContent() {
                         if (authRes.success && authRes.data?.user) {
                             localStorage.setItem('user', JSON.stringify(authRes.data.user));
                             setStatus("success");
-                            
+
                             const timer = setInterval(() => {
                                 setCountdown((prev) => {
                                     if (prev <= 1) {
@@ -78,7 +79,7 @@ function SuccessContent() {
     return (
         <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center p-6 text-center">
             <Toaster />
-            
+
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
                 <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-50 rounded-full blur-3xl opacity-50" />
