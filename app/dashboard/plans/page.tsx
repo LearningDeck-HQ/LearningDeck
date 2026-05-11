@@ -216,6 +216,17 @@ export default function PlanPage() {
 
     const ActiveIcon = activePlan.icon;
 
+    if (loadingData) {
+        return (
+            <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-[#ededed] border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-[#6b6b6b] text-sm">Loading billing information...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="h-full text-[#6b6b6b] font-sans p-2 md:p-4">
             <div className="mx-auto space-y-6">

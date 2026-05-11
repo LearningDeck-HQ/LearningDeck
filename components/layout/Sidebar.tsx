@@ -15,10 +15,32 @@ import {
 } from 'react-icons/md';
 import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
-import { BiBrain, BiCreditCard, BiPlus, BiWorld } from "react-icons/bi";
+import { BiBrain, BiCreditCard, BiLoader, BiPlus, BiWorld } from "react-icons/bi";
+import { useEffect, useState } from "react";
+import { billingApi } from "@/lib/api/billing";
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
+  const [currentPlan, setCurrentPlan] = useState<string>("Professional");
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          const res = await billingApi.getSubscription(user.workspaceId);
+          if (res.success && res.data?.plan) {
+            const planName = res.data.plan.charAt(0) + res.data.plan.slice(1).toLowerCase().replace(/_/g, " ");
+            setCurrentPlan(planName);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch current plan', error);
+      }
+    };
+    fetchPlan();
+  }, []);
 
   const handleLogout = async () => {
     if (confirm('Are you sure you want to log out?')) {
@@ -35,6 +57,8 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     }`;
 
   const footerLinkStyles = "flex items-center justify-between px-3 py-1.5 text-[#6b6b6b] hover:text-[#0e0f10] transition-colors group";
+  
+  const currentPlanName = currentPlan.split(' ')[0]
 
   return (
     <aside className="w-full h-full bg-[#f9f9f9] border-r border-[#ededed] flex flex-col font-sans text-xs">
@@ -62,7 +86,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <Link href="/dashboard/plans" className={getLinkStyles(pathname === '/dashboard/plans')} onClick={onClose}>
           <BiCreditCard className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Plan <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5">PRO</span> </span>
+          <span className="text-[#6b6b6b]">Plan <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5 uppercase">{currentPlanName || <BiLoader className="animate-spin"/>}</span> </span>
         </Link>
 
         <Link href="/dashboard/settings" className={getLinkStyles(pathname.startsWith('/dashboard/settings'))} onClick={onClose}>
