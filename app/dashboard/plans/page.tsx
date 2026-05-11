@@ -118,10 +118,7 @@ const plans: Plan[] = [
     },
 ];
 
-const billingHistory: BillingRow[] = [
-    { date: "Jan 1, 2025", amount: "₦99,000", status: "Paid", plan: "Professional" },
-    { date: "Jan 1, 2024", amount: "₦99,000", status: "Paid", plan: "Professional" },
-];
+const billingHistory: BillingRow[] = [];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -139,24 +136,39 @@ export default function PlanPage() {
     const [showConfirm, setShowConfirm] = useState<ConfirmState | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [subscription, setSubscription] = useState<any>(null);
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             const parsedUser = JSON.parse(storedUser);
             setUser(parsedUser);
-            fetchSubscription(parsedUser.workspaceId);
+            fetchData(parsedUser.workspaceId);
         }
     }, []);
 
-    const fetchSubscription = async (workspaceId: string) => {
+    const fetchData = async (workspaceId: string) => {
+        setLoadingData(true);
         try {
-            const res = await billingApi.getSubscription(workspaceId);
-            if (res.success && res.data) {
-                setCurrentPlan(res.data.plan.toLowerCase());
+            const [subRes, txRes] = await Promise.all([
+                billingApi.getSubscription(workspaceId),
+                billingApi.getTransactions(workspaceId)
+            ]);
+
+            if (subRes.success && subRes.data) {
+                setSubscription(subRes.data);
+                setCurrentPlan(subRes.data.plan.toLowerCase());
+            }
+
+            if (txRes.success && Array.isArray(txRes.data)) {
+                setTransactions(txRes.data);
             }
         } catch (error) {
-            console.error("Failed to fetch subscription", error);
+            console.error("Failed to fetch billing data", error);
+        } finally {
+            setLoadingData(false);
         }
     };
 
@@ -223,11 +235,13 @@ export default function PlanPage() {
                             <div className="flex items-center gap-2 mb-0.5">
                                 <span className="font-medium text-[#1a1a1a]">{activePlan.name} Plan</span>
                                 <span className="text-xs bg-blue-400/10 text-blue-600 px-2 py-0.5 rounded">
-                                    Active
+                                    {subscription?.status || "Active"}
                                 </span>
                             </div>
                             <p className="text-xs">
-                                Renews Jan 1, 2026 · {formatPrice(activePlan)}{typeof activePlan.price === "number" ? " / year" : " pricing"}
+                                {subscription?.expiresAt 
+                                    ? `Renews ${new Date(subscription.expiresAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}` 
+                                    : "No active subscription"} · {formatPrice(activePlan)}{typeof activePlan.price === "number" ? " / year" : " pricing"}
                             </p>
                         </div>
                     </div>
@@ -339,20 +353,36 @@ export default function PlanPage() {
                             <span>Amount</span>
                             <span>Status</span>
                         </div>
-                        {billingHistory.map((row, i) => (
-                            <div
-                                key={i}
-                                className={`grid grid-cols-4 px-4 py-4 items-center ${i < billingHistory.length - 1 ? "border-b border-[#ededed]" : ""
-                                    }`}
-                            >
-                                <span>{row.date}</span>
-                                <span>{row.plan}</span>
-                                <span className="text-[#1a1a1a] font-mono text-xs">{row.amount}</span>
-                                <span className="text-xs bg-green-50 text-green-600 border border-green-100 px-2 py-0.5 rounded w-fit">
-                                    {row.status}
-                                </span>
-                            </div>
-                        ))}
+                        {loadingData ? (
+                            <div className="px-4 py-8 text-center text-xs text-[#6b6b6b]">Loading transactions...</div>
+                        ) : transactions.length === 0 ? (
+                            <div className="px-4 py-8 text-center text-xs text-[#6b6b6b]">No transactions found</div>
+                        ) : (
+                            transactions.map((tx, i) => {
+                                const statusColorMap: Record<string, { bg: string; text: string }> = {
+                                    SUCCESS: { bg: "green-50", text: "green-600" },
+                                    PENDING: { bg: "yellow-50", text: "yellow-600" },
+                                    FAILED: { bg: "red-50", text: "red-600" },
+                                    REFUNDED: { bg: "gray-50", text: "gray-600" }
+                                };
+                                const statusStyle = statusColorMap[tx.status] || statusColorMap.PENDING;
+                                const planName = tx.plan.charAt(0) + tx.plan.slice(1).toLowerCase().replace(/_/g, " ");
+
+                                return (
+                                    <div
+                                        key={tx.id}
+                                        className={`grid grid-cols-4 px-4 py-4 items-center ${i < transactions.length - 1 ? "border-b border-[#ededed]" : ""}`}
+                                    >
+                                        <span>{new Date(tx.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                        <span>{planName}</span>
+                                        <span className="text-[#1a1a1a] font-mono text-xs">₦{(tx.amount ).toLocaleString("en-NG")}</span>
+                                        <span className={`text-xs bg-${statusStyle.bg} text-${statusStyle.text} border border-${statusStyle.text} px-2 py-0.5 rounded w-fit capitalize`}>
+                                            {tx.status.charAt(0) + tx.status.slice(1).toLowerCase()}
+                                        </span>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             </div>
