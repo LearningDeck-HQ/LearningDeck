@@ -13,6 +13,7 @@ import {
   MdLogout,
   MdSettings
 } from 'react-icons/md';
+import { GrDeploy } from "react-icons/gr";
 import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
 import { BiBrain, BiCreditCard, BiLoader, BiPlus, BiWorld } from "react-icons/bi";
@@ -21,7 +22,7 @@ import { billingApi } from "@/lib/api/billing";
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
-  const [currentPlan, setCurrentPlan] = useState<string>("Professional");
+  const [currentPlan, setCurrentPlan] = useState<string>('');
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -57,7 +58,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
     }`;
 
   const footerLinkStyles = "flex items-center justify-between px-3 py-1.5 text-[#6b6b6b] hover:text-[#0e0f10] transition-colors group";
-  
+
   const currentPlanName = currentPlan.split(' ')[0]
 
   return (
@@ -86,12 +87,17 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
         <Link href="/dashboard/plans" className={getLinkStyles(pathname === '/dashboard/plans')} onClick={onClose}>
           <BiCreditCard className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Plan <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5 uppercase">{currentPlanName || <BiLoader className="animate-spin"/>}</span> </span>
+          <span className="text-[#6b6b6b]">Plan  {currentPlanName !== '' && <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5 uppercase">{currentPlanName || ''}</span>} </span>
         </Link>
 
         <Link href="/dashboard/settings" className={getLinkStyles(pathname.startsWith('/dashboard/settings'))} onClick={onClose}>
           <MdSettings className=" opacity-70" />
           <span className="text-[#6b6b6b]">Settings</span>
+        </Link>
+
+        <Link href="/dashboard/deployments" className={getLinkStyles(pathname.startsWith('/dashboard/deployments'))} onClick={onClose}>
+          <GrDeploy className=" opacity-70" />
+          <span className="text-[#6b6b6b]">Deployments</span>
         </Link>
 
         <div className="my-2 border-t border-[#ededed]/60" />
@@ -136,8 +142,8 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
             }}
             className="mt-2 flex items-center gap-3 px-3 py-2  text-[#6b6b6b] hover:text-red-600 hover:bg-red-50 transition-all rounded-md group"
           >
-            <MdLogout className="text-lg group-hover:text-red-600" />
-            <span className="font-medium">Log Out</span>
+            <MdLogout className=" group-hover:text-red-600" />
+            <span className="">Log out</span>
           </button>
         </div>
       </nav>

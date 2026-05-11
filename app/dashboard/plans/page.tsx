@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Zap, Star, Crown, Building2, ArrowRight, RotateCcw, CreditCard, LucideIcon, Loader2 } from "lucide-react";
 import { billingApi } from "@/lib/api/billing";
 import { toast } from "sonner";
+import { ScaleLoader } from "react-spinners";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -184,11 +185,11 @@ export default function PlanPage() {
 
     const confirmChange = async (): Promise<void> => {
         if (!showConfirm || !user) return;
-        
+
         setIsLoading(true);
         try {
             const amount = typeof showConfirm.plan.price === 'number' ? showConfirm.plan.price : 0;
-            
+
             if (amount === 0) {
                 toast.error("Please contact support for enterprise pricing");
                 return;
@@ -220,8 +221,8 @@ export default function PlanPage() {
         return (
             <div className="h-full flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[#ededed] border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-[#6b6b6b] text-sm">Loading billing information...</p>
+                    <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+                    <p className="text-[#6b6b6b] text-sm mt-2">Loading billing information...</p>
                 </div>
             </div>
         );
@@ -250,8 +251,8 @@ export default function PlanPage() {
                                 </span>
                             </div>
                             <p className="text-xs">
-                                {subscription?.expiresAt 
-                                    ? `Renews ${new Date(subscription.expiresAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}` 
+                                {subscription?.expiresAt
+                                    ? `Renews ${new Date(subscription.expiresAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}`
                                     : "No active subscription"} · {formatPrice(activePlan)}{typeof activePlan.price === "number" ? " / year" : " pricing"}
                             </p>
                         </div>
@@ -386,7 +387,7 @@ export default function PlanPage() {
                                     >
                                         <span>{new Date(tx.createdAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                                         <span>{planName}</span>
-                                        <span className="text-[#1a1a1a] font-mono text-xs">₦{(tx.amount ).toLocaleString("en-NG")}</span>
+                                        <span className="text-[#1a1a1a] font-mono text-xs">₦{(tx.amount).toLocaleString("en-NG")}</span>
                                         <span className={`text-xs bg-${statusStyle.bg} text-${statusStyle.text} border border-${statusStyle.text} px-2 py-0.5 rounded w-fit capitalize`}>
                                             {tx.status.charAt(0) + tx.status.slice(1).toLowerCase()}
                                         </span>

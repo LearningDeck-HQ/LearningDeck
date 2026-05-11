@@ -153,8 +153,6 @@ export default function SetupPage() {
     if (!user) return null;
 
     const handleLogout = async () => {
-
-
         try {
             if (typeof window !== 'undefined' && (window as any).api?.clearAuthToken) {
                 await (window as any).api.clearAuthToken();
@@ -163,139 +161,136 @@ export default function SetupPage() {
             console.warn('Header: clearAuthToken failed', error);
         }
 
-        // authApi.logout() handles API call, localStorage cleanup, and redirect
         await authApi.logout();
     };
 
-
     return (
-        <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
-            {/* Nav */}
+        <div className="min-h-screen bg-white font-sans text-[#6b6b6b]">
             <Toaster />
-            <nav className="h-16 border-b border-gray-100 flex items-center justify-between px-6 md:px-12 sticky top-0 bg-white/80 backdrop-blur-md z-50">
-                <div className="flex items-center gap-3">
+
+            {/* Nav */}
+            <nav className="h-14 border-b border-[#ededed] flex items-center justify-between px-6 sticky top-0 bg-white z-50">
+                <div className="flex items-center gap-2.5">
                     <Image
                         src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
                         alt="LearningDeck Logo"
-                        width={28}
-                        height={28}
-                        className="rounded-md"
+                        width={24}
+                        height={24}
+                        className="rounded"
                     />
-                    <span className="text-[18px] tracking-tight text-gray-800 font-medium">LearningDeck</span>
+                    <span className="text-sm font-medium text-[#1a1a1a]">LearningDeck</span>
                 </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={handleLogout} className="text-xs text-gray-400 font-medium uppercase tracking-wider bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Logout</button>
-                </div>
+                <button
+                    onClick={handleLogout}
+                    className="text-xs border border-[#ededed] rounded px-3 py-1.5 hover:bg-[#f0f0f0] transition-colors text-[#6b6b6b]"
+                >
+                    Logout
+                </button>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-12 md:py-20">
-                {/* Hero Section */}
-                <div className="text-center mb-16 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-medium mb-4">
-                        <Sparkles size={14} /> Final Step: Choose Your Plan
+            <main className="max-w-5xl mx-auto px-4 py-10 md:py-16 space-y-8">
+
+                {/* Header */}
+                <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs text-blue-600 mb-3">
+                        <Sparkles size={13} />
+                        <span>Final Step: Choose Your Plan</span>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-gray-900">
-                        Power up your <span className="text-blue-600 italic">Workspace</span>
+                    <h1 className="text-xl font-medium text-[#1a1a1a]">
+                        Power up your workspace
                     </h1>
-                    <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                        Welcome, <span className="text-gray-900 font-medium">{user.user_name}</span>.
-                        Select a plan to activate your workspace and start managing examinations effectively.
+                    <p className="text-sm mt-1">
+                        Welcome, <span className="text-[#1a1a1a] font-medium">{user.user_name}</span>.
+                        Select a plan to activate your workspace and start managing examinations.
                     </p>
                 </div>
 
                 {/* Plan Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {plans.map((plan, idx) => {
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {plans.map((plan) => {
                         const PlanIcon = plan.icon;
                         const isSelected = selectedPlan === plan.id;
+                        const isFeatured = plan.id === "school_standard";
 
                         return (
                             <div
                                 key={plan.id}
-                                className={`group relative bg-white rounded-3xl p-8 flex flex-col gap-8 border transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both ${plan.id === "school_standard"
-                                    ? "border-blue-200 ring-4 ring-blue-50"
-                                    : "border-gray-100 hover:border-blue-200"
+                                className={`bg-[#f9f9f9] rounded p-5 flex flex-col gap-4 border transition-colors ${isFeatured
+                                        ? "border-blue-400"
+                                        : "border-[#ededed] hover:border-blue-200"
                                     }`}
-                                style={{ animationDelay: `${idx * 150}ms` }}
                             >
-                                {plan.id === "school_standard" && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-blue-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-full shadow-lg shadow-blue-600/20">
-                                        Most Popular
-                                    </div>
-                                )}
-
                                 {/* Top */}
-                                <div className="space-y-4">
-                                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-500">
-                                        <PlanIcon size={24} />
-                                    </div>
+                                <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed mt-1">{plan.description}</p>
+                                        <div className="p-2 bg-[#f0f0f0] rounded w-fit mb-3">
+                                            <PlanIcon size={16} className="text-blue-500" />
+                                        </div>
+                                        <p className="font-medium text-[#1a1a1a]">{plan.name}</p>
                                     </div>
+                                    {isFeatured && (
+                                        <span className="text-xs bg-blue-400/10 text-blue-600 px-2 py-0.5 rounded">
+                                            Most Popular
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Price */}
-                                <div className="space-y-1">
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-4xl font-bold tracking-tight text-gray-900">
+                                <div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl text-[#1a1a1a]">
                                             {formatPrice(plan)}
                                         </span>
                                         {typeof plan.price === "number" && (
-                                            <span className="text-sm text-gray-400 font-medium">/ {plan.period}</span>
+                                            <span className="text-xs">/ {plan.period}</span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400 font-medium italic">Billed annually in Nigerian Naira</p>
+                                    <p className="text-xs mt-1 leading-relaxed">{plan.description}</p>
                                 </div>
 
                                 {/* Features */}
-                                <div className="flex flex-col gap-4 flex-1">
-                                    <div className="h-[1px] bg-gray-50 w-full" />
-                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Included Features</p>
-                                    <div className="space-y-3">
-                                        {plan.features.map((f) => (
-                                            <div key={f} className="flex items-start gap-3 text-[13px] text-gray-600">
-                                                <div className="w-5 h-5 bg-blue-50 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                                                    <Check size={12} className="text-blue-600" />
-                                                </div>
-                                                <span>{f}</span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="flex flex-col gap-2 flex-1">
+                                    {plan.features.map((f) => (
+                                        <div key={f} className="flex items-start gap-2 text-xs">
+                                            <Check size={12} className="mt-0.5 shrink-0 text-blue-500" />
+                                            <span>{f}</span>
+                                        </div>
+                                    ))}
                                 </div>
 
                                 {/* CTA */}
-                                <button
-                                    onClick={() => handleSelectPlan(plan)}
-                                    disabled={isLoading}
-                                    className={`w-full h-14 rounded-2xl text-[15px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${plan.id === "enterprise"
-                                        ? "bg-white border-2 border-gray-100 text-gray-600 hover:bg-gray-50 hover:border-gray-200"
-                                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/10 hover:shadow-blue-600/20 active:scale-[0.98]"
-                                        } disabled:opacity-50`}
-                                >
-                                    {isLoading && isSelected ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            {plan.id === "enterprise" ? "Contact Support" : "Select Plan"}
-                                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                        </>
-                                    )}
-                                </button>
+                                {plan.id === "enterprise" ? (
+                                    <button
+                                        onClick={() => handleSelectPlan(plan)}
+                                        disabled={isLoading}
+                                        className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] hover:bg-[#f0f0f0] transition-colors disabled:opacity-50"
+                                    >
+                                        Contact Support
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleSelectPlan(plan)}
+                                        disabled={isLoading}
+                                        className="w-full text-sm bg-blue-400/10 text-blue-600 rounded py-2 px-4 hover:bg-blue-700/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isLoading && isSelected ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <>
+                                                Select Plan <ArrowRight size={13} />
+                                            </>
+                                        )}
+                                    </button>
+                                )}
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Footer Info */}
-                <div className="mt-20 text-center space-y-6">
-                    <div className="flex items-center justify-center gap-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                        <span className="text-sm font-medium">Trusted by leading educational institutions</span>
-                    </div>
-                    <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
-                        Secure payments processed via Paystack. Your data is encrypted and managed according to NITDA guidelines.
-                    </p>
-                </div>
+                {/* Footer */}
+                <p className="text-xs text-center text-[#6b6b6b] pb-8">
+                    Secure payments processed via Paystack. Your data is encrypted and managed according to NITDA guidelines.
+                </p>
             </main>
         </div>
     );

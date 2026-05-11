@@ -3,9 +3,6 @@ import React from 'react'
 import Sidebar from '@/components/layout/Sidebar'
 import Header from '@/components/layout/Header'
 import { useSidebar } from '@/context/SidebarContext'
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation'
-import ButtomBar from './ButtomBar'
 const DashContent = ({ children }: { children: React.ReactNode }) => {
   const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
@@ -43,7 +40,7 @@ const DashContent = ({ children }: { children: React.ReactNode }) => {
           {children}
         </main>
       </div>
-      <ButtomBar />
+
 
     </div>
   )

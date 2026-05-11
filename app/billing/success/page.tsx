@@ -77,104 +77,104 @@ function SuccessContent() {
     }, [router, reference]);
 
     return (
-        <div className="min-h-screen bg-white font-sans flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-screen bg-white font-sans text-[#6b6b6b] flex flex-col items-center justify-center p-6">
             <Toaster />
 
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-50" />
-                <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-50 rounded-full blur-3xl opacity-50" />
-            </div>
+            <div className="max-w-sm w-full space-y-6 relative">
 
-            <div className="max-w-md w-full space-y-8 relative animate-in fade-in zoom-in-95 duration-700">
-                <div className="flex justify-center mb-8">
-                    <div className="flex items-center gap-3">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                    <div className="flex items-center gap-2.5">
                         <Image
                             src="https://avatars.githubusercontent.com/u/225484805?s=200&v=4"
                             alt="LearningDeck Logo"
-                            width={32}
-                            height={32}
-                            className="rounded-md shadow-sm"
+                            width={24}
+                            height={24}
+                            className="rounded"
                         />
-                        <span className="text-xl tracking-tight text-gray-800 font-semibold">LearningDeck</span>
+                        <span className="text-sm font-medium text-[#1a1a1a]">LearningDeck</span>
                     </div>
                 </div>
 
+                {/* Verifying */}
                 {status === "verifying" && (
-                    <div className="space-y-6">
-                        <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto animate-pulse">
-                            <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                    <div className="bg-[#f9f9f9] border border-[#ededed] rounded p-8 flex flex-col items-center gap-5 text-center">
+                        <div className="p-3  rounded w-fit">
+                            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
                         </div>
-                        <div className="space-y-2">
-                            <h1 className="text-2xl font-bold text-gray-900">Activating Workspace</h1>
-                            <p className="text-gray-500">We're confirming your payment and setting up your environment. Please don't close this window.</p>
+                        <div className="space-y-1">
+
+                            <p className="text-xs leading-relaxed">
+                                We're confirming your payment and setting up your environment. Please don't close this window.
+                            </p>
                         </div>
                     </div>
                 )}
 
+                {/* Success */}
                 {status === "success" && (
-                    <div className="space-y-8">
-                        <div className="relative w-24 h-24 mx-auto">
-                            <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-25" />
-                            <div className="relative w-24 h-24 bg-green-50 rounded-full flex items-center justify-center border-2 border-green-100 shadow-xl shadow-green-500/10">
-                                <PartyPopper className="w-12 h-12 text-green-600" />
+                    <div className="space-y-4">
+                        <div className="bg-[#f9f9f9] border border-[#ededed] rounded p-8 flex flex-col items-center gap-5 text-center">
+                            <div className="p-3 bg-[#f0f0f0] rounded w-fit relative">
+                                <PartyPopper size={20} className="text-blue-500" />
+                                <div className="absolute -top-1.5 -right-1.5 bg-blue-400/10 text-blue-600 p-1 rounded">
+                                    <Sparkles size={10} />
+                                </div>
                             </div>
-                            <div className="absolute -top-2 -right-2 bg-blue-600 text-white p-1.5 rounded-lg shadow-lg rotate-12">
-                                <Sparkles size={16} />
+
+                            <div className="space-y-1">
+                                <h1 className="text-base font-medium text-[#1a1a1a]">Payment Successful!</h1>
+                                <p className="text-xs leading-relaxed">
+                                    Your subscription is now active. Your workspace has been upgraded and all features are unlocked.
+                                </p>
+                            </div>
+
+                            <div className="w-full border-t border-[#ededed] pt-4 space-y-3">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span>Status</span>
+                                    <span className="text-xs bg-blue-400/10 text-blue-600 px-2 py-0.5 rounded">Active</span>
+                                </div>
+                                <button
+                                    onClick={() => router.push("/dashboard")}
+                                    className="w-full text-sm bg-blue-400/10 text-blue-600 rounded py-2 px-4 hover:bg-blue-700/20 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    Go to Dashboard <ArrowRight size={13} />
+                                </button>
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Payment Successful!</h1>
-                            <p className="text-gray-500 leading-relaxed">
-                                Your subscription is now active. Your workspace has been upgraded and all features are unlocked.
-                            </p>
-                        </div>
-
-                        <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-6 space-y-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-400">Status</span>
-                                <span className="font-bold text-green-600 uppercase tracking-widest text-[10px]">Active</span>
-                            </div>
-                            <div className="h-[1px] bg-gray-100" />
-                            <button
-                                onClick={() => router.push("/dashboard")}
-                                className="w-full h-14 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition-all flex items-center justify-center gap-2 group"
-                            >
-                                Go to Dashboard
-                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </div>
-
-                        <p className="text-sm text-gray-400">
-                            Redirecting to your dashboard in <span className="text-gray-900 font-bold">{countdown}s</span>...
+                        <p className="text-xs text-center">
+                            Redirecting to your dashboard in <span className="text-[#1a1a1a] font-medium">{countdown}s</span>...
                         </p>
                     </div>
                 )}
 
+                {/* Error */}
                 {status === "error" && (
-                    <div className="space-y-6">
-                        <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto border border-red-100">
-                            <span className="text-4xl">⚠️</span>
+                    <div className="bg-[#f9f9f9] border border-[#ededed] rounded p-8 flex flex-col items-center gap-5 text-center">
+                        <div className="p-3 bg-[#f0f0f0] rounded w-fit">
+                            <span className="text-xl">⚠️</span>
                         </div>
-                        <div className="space-y-2">
-                            <h1 className="text-2xl font-bold text-gray-900">Verification Pending</h1>
-                            <p className="text-gray-500">
+                        <div className="space-y-1">
+                            <h1 className="text-base font-medium text-[#1a1a1a]">Verification Pending</h1>
+                            <p className="text-xs leading-relaxed">
                                 We couldn't verify your subscription immediately. Don't worry, your payment was processed. Please try refreshing or contact support if the issue persists.
                             </p>
                         </div>
                         <button
                             onClick={() => window.location.reload()}
-                            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                            className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] hover:bg-[#f0f0f0] transition-colors"
                         >
                             Refresh Status
                         </button>
                     </div>
                 )}
-            </div>
 
-            <footer className="mt-20 text-xs text-gray-400">
-                Transaction Ref: <span className="font-mono">{reference || "N/A"}</span>
-            </footer>
+                {/* Footer */}
+                <p className="text-xs text-center pt-2">
+                    Transaction Ref: <span className="font-mono text-[#1a1a1a]">{reference || "N/A"}</span>
+                </p>
+            </div>
         </div>
     );
 }
@@ -185,7 +185,7 @@ export default function BillingSuccessPage() {
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-4">
                     <ScaleLoader color="#3b82f6" height={35} width={4} radius={2} margin={2} />
-                    <span className="text-sm font-medium text-gray-400">Loading payment details...</span>
+                    <span className="text-sm text-[#6b6b6b]">Loading payment details...</span>
                 </div>
             </div>
         }>
