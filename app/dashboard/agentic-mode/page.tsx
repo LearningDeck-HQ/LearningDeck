@@ -592,6 +592,7 @@ const ChatInterface = () => {
                         type: q.type || 'MULTIPLE_CHOICE',
                         question: q.question || q.text,
                         correct_answer: correctAnswer,
+                        author: 'LearningDeck AI Agent',
                         incorrect_answers:
                             (q.type === 'MULTIPLE_CHOICE' || !q.type) && Array.isArray(incorrectAnswers)
                                 ? incorrectAnswers.filter((a: any) => a && String(a).trim() !== '')
