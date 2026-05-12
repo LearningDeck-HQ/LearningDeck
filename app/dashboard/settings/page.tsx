@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, ChangeEvent, MouseEvent, ReactNode } from "react";
 import { TbHome, TbTemplate, TbVideoPlus } from "react-icons/tb";
 import {
   MdWorkspaces, MdSettings, MdLogout,
@@ -10,10 +10,36 @@ import { FiArrowUpRight, FiEye, FiEyeOff } from "react-icons/fi";
 import { BiBrain, BiCreditCard } from "react-icons/bi";
 import SessionsPage from "./sessions/page";
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+interface InputProps {
+  label?: string;
+  desc?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  showToggle?: boolean;
+  show?: boolean;
+  onToggle?: () => void;
+}
 
+interface BtnProps {
+  children: ReactNode;
+  disabled?: boolean;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+  variant?: "primary" | "ghost";
+}
 
 // ── Reusable input ────────────────────────────────────────────────────────────
-const Input = ({ label, desc, value, onChange, type = "text", showToggle, show, onToggle }) => (
+const Input = ({
+  label,
+  desc,
+  value,
+  onChange,
+  type = "text",
+  showToggle,
+  show,
+  onToggle
+}: InputProps) => (
   <div className="flex flex-col gap-1">
     {label && <label className="text-xs font-medium text-[#0e0f10]">{label}</label>}
     {desc && <p className="text-[11px] text-[#6b6b6b]">{desc}</p>}
@@ -38,12 +64,12 @@ const Input = ({ label, desc, value, onChange, type = "text", showToggle, show, 
 );
 
 // ── Btn ───────────────────────────────────────────────────────────────────────
-const Btn = ({ children, disabled, onClick, variant = "primary" }) => {
+const Btn = ({ children, disabled, onClick, variant = "primary" }: BtnProps) => {
   const base = "px-4 py-1.5 rounded text-xs font-medium transition-colors";
   const styles = {
     primary: disabled
       ? `${base} bg-[#c0c0c0] text-white cursor-not-allowed`
-      : `${base} bg-[#8b3a2a] hover:bg-[#7a3223] text-white cursor-pointer`,
+      : `${base} bg-[#1e40af] hover:bg-[#1e3a8a] text-white cursor-pointer`,
     ghost: `${base} border border-[#ededed] text-[#0e0f10] hover:bg-[#f0f0f0] cursor-pointer`,
   };
   return (
@@ -60,29 +86,26 @@ const Divider = () => <div className="border-t border-[#ededed] my-6" />;
 const ProfileSection = () => {
   const [name, setName] = useState("Prutotech");
   const [username, setUsername] = useState("payload-cosmonaut-29181288");
-  const [isPublic, setIsPublic] = useState(false);
 
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="  text-[#0e0f10]">Profile details</h2>
+        <h2 className="text-[#0e0f10]">Profile details</h2>
       </div>
 
       <Input
         label="Name"
         desc="Your name as you'd like it to be displayed."
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
       />
 
       <Input
         label="Username"
         desc="Your username can be used to sign in and to identify you."
         value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
       />
-
-
 
       <div>
         <Btn>Update Profile</Btn>
@@ -106,11 +129,16 @@ const AccountSection = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="  text-[#0e0f10]">Account</h2>
+      <h2 className="text-[#0e0f10]">Account</h2>
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <Input label="Email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
+        <Input
+          label="Email"
+          value={email}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+          type="email"
+        />
         <div><Btn>Update Email Address</Btn></div>
       </div>
 
@@ -120,7 +148,7 @@ const AccountSection = () => {
       <Input
         label="Current password"
         value={currentPw}
-        onChange={(e) => setCurrentPw(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setCurrentPw(e.target.value)}
         showToggle
         show={showCurrent}
         onToggle={() => setShowCurrent((v) => !v)}
@@ -128,7 +156,7 @@ const AccountSection = () => {
       <Input
         label="New password"
         value={newPw}
-        onChange={(e) => setNewPw(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPw(e.target.value)}
         showToggle
         show={showNew}
         onToggle={() => setShowNew((v) => !v)}
@@ -136,7 +164,7 @@ const AccountSection = () => {
       <Input
         label="Confirm new password"
         value={confirmPw}
-        onChange={(e) => setConfirmPw(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPw(e.target.value)}
         showToggle
         show={showConfirm}
         onToggle={() => setShowConfirm((v) => !v)}
@@ -146,7 +174,7 @@ const AccountSection = () => {
         <input
           type="checkbox"
           checked={signOutOthers}
-          onChange={(e) => setSignOutOthers(e.target.checked)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setSignOutOthers(e.target.checked)}
           className="accent-[#8b3a2a]"
         />
         <span className="text-xs text-[#0e0f10]">Sign out from all other sessions</span>
@@ -160,21 +188,19 @@ const AccountSection = () => {
 };
 
 // ── Tab nav ───────────────────────────────────────────────────────────────────
-const TABS = ["Profile", "Account", "Sessions", "Integrations"];
+const TABS = ["Profile", "Account", "Sessions", "Integrations"] as const;
+type TabType = (typeof TABS)[number];
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  const [tab, setTab] = useState("Profile");
+  const [tab, setTab] = useState<TabType>("Profile");
 
   return (
     <div className="flex h-full w-full bg-white rounded font-sans overflow-hidden">
-
-
       {/* Content */}
       <main className="flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="border-b border-[#ededed] px-6 pt-2  pb-0">
-
+        <div className="border-b border-[#ededed] px-6 pt-2 pb-0">
           <div className="flex gap-0">
             {TABS.map((t) => (
               <button

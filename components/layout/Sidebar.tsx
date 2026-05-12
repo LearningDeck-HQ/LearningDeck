@@ -95,10 +95,7 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
           <span className="text-[#6b6b6b]">Settings</span>
         </Link>
 
-        <Link href="/dashboard/deployments" className={getLinkStyles(pathname.startsWith('/dashboard/deployments'))} onClick={onClose}>
-          <GrDeploy className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Deployments</span>
-        </Link>
+
 
         <div className="my-2 border-t border-[#ededed]/60" />
 
