@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { authApi } from '@/lib/api/auth';
+import { ScaleLoader } from 'react-spinners';
 
 const menuItems = [
 
@@ -195,16 +196,15 @@ const Header = () => {
 
         {/* Auth/CTA Buttons */}
         <div className="flex items-center gap-4">
-          {!isLoading && (
-            isAuthenticated && (
-              <Link
-                href={redirectPath}
-                className="bg-gray-300/20  text-black border-2 border-zinc-400 text-[14px] font-medium px-4 py-2 rounded hover:bg-gray-300/50 transition-colors flex items-center gap-1 "
-              >
-                Contact us <ChevronRight className="w-4 h-4" />
-              </Link>
-            )
-          )}
+          {!isLoading && isAuthenticated ? (
+            <Link
+              href={redirectPath}
+              className="bg-gray-300/20  text-black border-2 border-zinc-400 text-[14px] font-medium px-4 py-2 rounded hover:bg-gray-300/50 transition-colors flex items-center gap-1 "
+            >
+              Contact us <ChevronRight className="w-4 h-4" />
+            </Link>
+
+          ) : (<span className='text-black'> Loading....</span>)}
           {!isLoading && (
             isAuthenticated ? (
               <Link

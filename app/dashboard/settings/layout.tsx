@@ -33,7 +33,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className="  animate-in fade-in slide-in-from-bottom-2 duration-500 selection:bg-blue-100 h-full p-4 md:p-8">
-            <SettingsTabs items={settingsTabs} className="mb-4 w-fit" />
+
             {children}
         </div>
     );
