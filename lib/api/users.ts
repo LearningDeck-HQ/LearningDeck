@@ -36,5 +36,12 @@ export const userApi = {
       success: false,
       message: res.message || 'Failed to fetch user profile'
     };
+  },
+
+  async changePassword(data: any): Promise<ApiResponse<any>> {
+    return apiFetch<any>('/users/profile/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 };

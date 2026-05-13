@@ -9,6 +9,11 @@ import { GrDeploy } from "react-icons/gr";
 import { FiArrowUpRight, FiEye, FiEyeOff } from "react-icons/fi";
 import { BiBrain, BiCreditCard } from "react-icons/bi";
 import SessionsPage from "./sessions/page";
+import { toast, Toaster } from "sonner";
+import { userApi } from "@/lib/api/users";
+import { User } from "@/types";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface InputProps {
@@ -83,9 +88,26 @@ const Btn = ({ children, disabled, onClick, variant = "primary" }: BtnProps) => 
 const Divider = () => <div className="border-t border-[#ededed] my-6" />;
 
 // ── Profile Section ───────────────────────────────────────────────────────────
-const ProfileSection = () => {
-  const [name, setName] = useState("Prutotech");
-  const [username, setUsername] = useState("payload-cosmonaut-29181288");
+const ProfileSection = ({ user, onUpdate }: { user: User; onUpdate: () => void }) => {
+  const [name, setName] = useState(user.user_name);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleUpdate = async () => {
+    setIsLoading(true);
+    try {
+      const res = await userApi.update(user.id, { user_name: name });
+      if (res.success) {
+        toast.success("Profile updated successfully");
+        onUpdate();
+      } else {
+        toast.error(res.message || "Failed to update profile");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -101,22 +123,24 @@ const ProfileSection = () => {
       />
 
       <Input
-        label="Username"
-        desc="Your username can be used to sign in and to identify you."
-        value={username}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+        label="Username (Read-only)"
+        desc="Your username identifier."
+        value={user.user_email}
+        onChange={() => { }}
       />
 
       <div>
-        <Btn>Update Profile</Btn>
+        <Btn onClick={handleUpdate} disabled={isLoading || name === user.user_name}>
+          {isLoading ? "Updating..." : "Update Profile"}
+        </Btn>
       </div>
     </div>
   );
 };
 
 // ── Account Section ───────────────────────────────────────────────────────────
-const AccountSection = () => {
-  const [email, setEmail] = useState("prutotech@gmail.com");
+const AccountSection = ({ user, onUpdate }: { user: User; onUpdate: () => void }) => {
+  const [email, setEmail] = useState(user.user_email);
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -124,8 +148,50 @@ const AccountSection = () => {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(false);
+  const [isLoadingPw, setIsLoadingPw] = useState(false);
 
-  const pwReady = currentPw && newPw && confirmPw;
+  const pwReady = currentPw && newPw && confirmPw && newPw === confirmPw;
+
+  const handleUpdateEmail = async () => {
+    setIsLoadingEmail(true);
+    try {
+      const res = await userApi.update(user.id, { user_email: email });
+      if (res.success) {
+        toast.success("Email updated successfully");
+        onUpdate();
+      } else {
+        toast.error(res.message || "Failed to update email");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
+    } finally {
+      setIsLoadingEmail(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    setIsLoadingPw(true);
+    try {
+      const res = await userApi.changePassword({
+        currentPassword: currentPw,
+        newPassword: newPw,
+        signOutOthers
+      });
+      if (res.success) {
+        toast.success("Password updated successfully");
+        setCurrentPw("");
+        setNewPw("");
+        setConfirmPw("");
+      } else {
+        toast.error(res.message || "Failed to update password");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
+    } finally {
+      setIsLoadingPw(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -139,7 +205,11 @@ const AccountSection = () => {
           onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           type="email"
         />
-        <div><Btn>Update Email Address</Btn></div>
+        <div>
+          <Btn onClick={handleUpdateEmail} disabled={isLoadingEmail || email === user.user_email}>
+            {isLoadingEmail ? "Updating..." : "Update Email Address"}
+          </Btn>
+        </div>
       </div>
 
       <Divider />
@@ -175,28 +245,66 @@ const AccountSection = () => {
           type="checkbox"
           checked={signOutOthers}
           onChange={(e: ChangeEvent<HTMLInputElement>) => setSignOutOthers(e.target.checked)}
-          className="accent-[#8b3a2a]"
+          className="accent-[#1e40af]"
         />
         <span className="text-xs text-[#0e0f10]">Sign out from all other sessions</span>
       </label>
 
       <div>
-        <Btn disabled={!pwReady}>Update Password</Btn>
+        <Btn onClick={handleUpdatePassword} disabled={!pwReady || isLoadingPw}>
+          {isLoadingPw ? "Updating..." : "Update Password"}
+        </Btn>
       </div>
     </div>
   );
 };
 
 // ── Tab nav ───────────────────────────────────────────────────────────────────
-const TABS = ["Profile", "Account", "Sessions", "Integrations"] as const;
+const TABS = ["Profile", /*"Account",*/, "Sessions", "Integrations"] as const;
 type TabType = (typeof TABS)[number];
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const [tab, setTab] = useState<TabType>("Profile");
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await userApi.me();
+      if (res.success && res.data) {
+        setUser(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch profile", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#1e40af]" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-white">
+        <p className="text-sm text-[#6b6b6b]">Failed to load settings. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full w-full bg-white rounded font-sans overflow-hidden">
+    <div className="flex h-full w-full bg-white rounded font-sans overflow-hidden relative">
+      <Toaster position="top-right" />
       {/* Content */}
       <main className="flex-1 overflow-y-auto">
         {/* Header */}
@@ -219,8 +327,8 @@ export default function SettingsPage() {
 
         {/* Tab content */}
         <div className="px-8 py-8 ">
-          {tab === "Profile" && <ProfileSection />}
-          {tab === "Account" && <AccountSection />}
+          {tab === "Profile" && <ProfileSection user={user} onUpdate={fetchProfile} />}
+          {/* {tab === "Account" && <AccountSection user={user} onUpdate={fetchProfile} />} */}
           {tab === "Sessions" && (
             <SessionsPage />
           )}

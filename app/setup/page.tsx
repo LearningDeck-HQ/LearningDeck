@@ -94,21 +94,31 @@ export default function SetupPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            if (parsedUser.role !== 'ADMIN') {
-                router.push('/dashboard');
-                return;
+        const checkAuth = async () => {
+            try {
+                const res = await authApi.verifyToken();
+                if (res.success && res.data?.user) {
+                    const user = res.data.user;
+                    if (user.role !== 'ADMIN') {
+                        router.push('/dashboard');
+                        return;
+                    }
+                    if (user.hasSubscription) {
+                        router.push('/dashboard');
+                        return;
+                    }
+                    setUser(user);
+                    // Update localStorage to keep it in sync
+                    localStorage.setItem('user', JSON.stringify(user));
+                } else {
+                    router.push('/login');
+                }
+            } catch (err) {
+                router.push('/login');
             }
-            if (parsedUser.hasSubscription) {
-                router.push('/dashboard');
-                return;
-            }
-            setUser(parsedUser);
-        } else {
-            router.push('/login');
-        }
+        };
+
+        checkAuth();
     }, [router]);
 
     const handleSelectPlan = async (plan: Plan) => {

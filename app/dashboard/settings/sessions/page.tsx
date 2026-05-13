@@ -10,10 +10,17 @@ import { ScaleLoader } from "react-spinners";
 const SessionsPage = () => {
     const [sessions, setSessions] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [revokingId, setRevokingId] = useState<string | null>(null);
 
     const fetchSessions = async () => {
         try {
+            // First verify token to get current sessionId
+            const authRes = await authApi.verifyToken();
+            if (authRes.success && authRes.data?.user?.sessionId) {
+                setCurrentSessionId(authRes.data.user.sessionId);
+            }
+
             const response = await authApi.getSessions();
             if (response.success) {
                 setSessions(response.data || []);
@@ -30,12 +37,22 @@ const SessionsPage = () => {
     }, []);
 
     const handleRevoke = async (id: string) => {
-        if (!confirm("Are you sure you want to revoke this session? You will be logged out on that device.")) return;
+        const isCurrent = id === currentSessionId;
+        const confirmMsg = isCurrent 
+            ? "Are you sure you want to revoke your CURRENT session? You will be logged out immediately."
+            : "Are you sure you want to revoke this session? You will be logged out on that device.";
+
+        if (!confirm(confirmMsg)) return;
+        
         setRevokingId(id);
         try {
             const response = await authApi.revokeSession(id);
             if (response.success) {
-                setSessions(sessions.filter((s) => s.id !== id));
+                if (isCurrent) {
+                    await authApi.logout();
+                } else {
+                    setSessions(sessions.filter((s) => s.id !== id));
+                }
             }
         } catch (err) {
             console.error("Failed to revoke session:", err);
@@ -93,6 +110,11 @@ const SessionsPage = () => {
                                                     {session.deviceName ||
                                                         (isDesktop ? "LearningDeck Desktop" : "Web Browser")}
                                                 </span>
+                                                {session.id === currentSessionId && (
+                                                    <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded border border-green-100 font-medium">
+                                                        Current Session
+                                                    </span>
+                                                )}
                                             </div>
 
                                             <div className="flex items-center gap-3 text-[11px] text-[#6b6b6b]">
@@ -128,7 +150,7 @@ const SessionsPage = () => {
                                         ) : (
                                             <>
                                                 <Trash2 size={12} />
-                                                Revoke
+                                                {session.id === currentSessionId ? "Logout" : "Revoke"}
                                             </>
                                         )}
                                     </button>

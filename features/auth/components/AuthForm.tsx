@@ -18,6 +18,16 @@ interface AuthFormProps {
   role?: 'TEACHER' | 'STUDENT' | 'ADMIN';
 }
 
+const getDeviceId = () => {
+  if (typeof window === 'undefined') return '';
+  let id = localStorage.getItem('ld_device_id');
+  if (!id) {
+    id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('ld_device_id', id);
+  }
+  return id;
+};
+
 export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -82,9 +92,12 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
     const workspaceId = formData.get('workspaceId') as string;
 
     try {
+      const deviceId = getDeviceId();
+      const deviceName = "Web Browser";
+
       let response;
       if (type === 'login') {
-        response = await authApi.login(email, password);
+        response = await authApi.login(email, password, deviceId, deviceName);
       } else if (type === 'signup') {
         const workspaceName = formData.get('workspaceName') as string;
         response = await workspaceApi.setup({
@@ -99,6 +112,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           user_name: name,
           password: password,
           token: inviteToken,
+          deviceId
         });
       }
 

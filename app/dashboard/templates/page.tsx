@@ -1,7 +1,7 @@
 const TemplatesPage = () => {
     return (
         <div className="flex flex-col h-full w-full items-center justify-center">
-            <h1 className="text-black">Templates is under development</h1>
+            <button className="px-4 py-2 rounded bg-[#1e40af] hover:bg-[#1e3a8a] text-white cursor-pointer">Request for a Plugin / Templates</button>
         </div>
     );
 };

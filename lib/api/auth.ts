@@ -3,10 +3,15 @@ import { AuthData } from "@/types/auth";
 import { apiFetch, setAccessToken } from "./client";
 
 export const authApi = {
-  async login(email: string, password: string): Promise<ApiResponse<AuthData>> {
+  async login(email: string, password: string, deviceId?: string, deviceName?: string): Promise<ApiResponse<AuthData>> {
     const res = await apiFetch<AuthData>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ user_email: email, user_password: password }),
+      body: JSON.stringify({ 
+        user_email: email, 
+        user_password: password,
+        deviceId,
+        deviceName
+      }),
     });
     if (res.success && res.data?.accessToken) {
       setAccessToken(res.data.accessToken);
