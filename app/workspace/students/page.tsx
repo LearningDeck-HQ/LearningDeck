@@ -22,6 +22,7 @@ import { User, Class } from '@/types';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 
 type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -29,6 +30,9 @@ export default function StudentsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: usageData } = useWorkspaceUsage();
+  const isStudentLimitReached = usageData ? usageData.usage.students >= usageData.limits.students : false;
 
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['students'],
@@ -245,7 +249,13 @@ export default function StudentsPage() {
       >
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+          disabled={isStudentLimitReached}
+          className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${
+            isStudentLimitReached 
+              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
+              : "bg-blue-500 text-white hover:bg-zinc-700"
+          }`}
+          title={isStudentLimitReached ? "Student limit reached for your plan" : "Enroll New Student"}
         >
           <Plus size={14} />
           Enroll New Student
@@ -369,9 +379,14 @@ export default function StudentsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
+              disabled={isStudentLimitReached}
+              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${
+                isStudentLimitReached 
+                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
+                  : "bg-blue-500 text-white hover:bg-zinc-700"
+              }`}
             >
-              Enroll First Student
+              {isStudentLimitReached ? "Limit Reached" : "Enroll First Student"}
             </button>
           </div>
         )}

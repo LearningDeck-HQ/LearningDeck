@@ -26,6 +26,7 @@ import { ScaleLoader } from 'react-spinners';
 import { useSearchParams } from 'next/navigation';
 import { SiGoogleclassroom } from 'react-icons/si';
 import { MdQuiz } from 'react-icons/md';
+import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -369,6 +370,10 @@ const ChatInterface = () => {
     useEffect(() => {
         wsRef.current = { classes: availableClasses, exams: availableExams, subjects: availableSubjects };
     }, [availableClasses, availableExams, availableSubjects]);
+    
+    const { data: usageData } = useWorkspaceUsage();
+    const isAICreditReached = usageData ? usageData.usage.aiCredits >= usageData.limits.aiCredits : false;
+    const isExamLimitReached = usageData ? usageData.usage.exams >= usageData.limits.exams : false;
 
     // ── Init ──────────────────────────────────────────────────────────────
 
@@ -540,6 +545,7 @@ const ChatInterface = () => {
             }
 
             if (action.type === 'CREATE_EXAM') {
+                if (isExamLimitReached) return { success: false, errorMsg: 'Exam limit reached for your current plan. Please upgrade to create more exams.' };
                 if (!data.classId) return { success: false, errorMsg: 'A class must be selected.' };
                 const examName = data.exam_name || data.name;
                 const res = await examApi.create({
@@ -670,6 +676,10 @@ const ChatInterface = () => {
     // ── Send message ──────────────────────────────────────────────────────
 
     const handleSendMessage = async (overrideText?: string) => {
+        if (isAICreditReached) {
+            await addSystemMessage('⚠️ AI Credit limit reached for your current plan. Please upgrade to continue using Agentic Mode.');
+            return;
+        }
         const textToSend = overrideText || inputText;
         if (!textToSend.trim() && selectedContext.length === 0) return;
 
@@ -830,7 +840,13 @@ const ChatInterface = () => {
                 <div className="p-4 border-b border-[#ededed] ">
                     <button
                         onClick={startNewChat}
-                        className="w-full flex items-center justify-center gap-2 border border-[#ededed] rounded py-2 text-[#1a1a1a] hover:border-blue-400 hover:text-blue-500 transition-colors  font-medium bg-[#f9f9f9]"
+                        disabled={isAICreditReached}
+                        className={`w-full flex items-center justify-center gap-2 border border-[#ededed] rounded py-2 transition-colors font-medium ${
+                            isAICreditReached 
+                                ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
+                                : 'text-[#1a1a1a] hover:border-blue-400 hover:text-blue-500 bg-[#f9f9f9]'
+                        }`}
+                        title={isAICreditReached ? "AI Credit limit reached" : "Start New Chat"}
                     >
                         <Plus size={14} /> New Chat
                     </button>
@@ -1215,12 +1231,14 @@ const ChatInterface = () => {
                                         </div>
                                     )}
                                     <button
-                                        disabled={isStreaming || (!inputText && selectedContext.length === 0)}
+                                        disabled={isStreaming || isAICreditReached || (!inputText && selectedContext.length === 0)}
                                         onClick={() => handleSendMessage()}
-                                        className={`py-2 px-4 rounded  font-medium transition-colors ${inputText || selectedContext.length > 0
+                                        className={`py-2 px-4 rounded  font-medium transition-colors ${
+                                            (inputText || selectedContext.length > 0) && !isAICreditReached && !isStreaming
                                             ? 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20'
                                             : 'bg-[#f0f0f0] text-[#6b6b6b]/40 cursor-not-allowed'
                                             }`}
+                                        title={isAICreditReached ? "AI Credit limit reached" : "Send Message"}
                                     >
                                         <SendHorizontal size={16} />
                                     </button>

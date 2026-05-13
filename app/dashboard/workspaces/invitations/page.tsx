@@ -18,6 +18,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { ScaleLoader } from 'react-spinners';
+import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 
 interface Invite {
   id: string;
@@ -35,6 +36,9 @@ const Invitations = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ email: '', role: 'TEACHER' });
+
+  const { data: usageData } = useWorkspaceUsage();
+  const isTeacherLimitReached = usageData ? usageData.usage.teachers >= usageData.limits.teachers : false;
 
   useEffect(() => { fetchInvites(); }, []);
 
@@ -128,7 +132,13 @@ const Invitations = () => {
             <div />
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors border-none ring-0"
+              disabled={isTeacherLimitReached}
+              className={`flex items-center gap-2 px-4 py-2 rounded transition-colors border-none ring-0 ${
+                isTeacherLimitReached 
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+              title={isTeacherLimitReached ? "Teacher limit reached for your plan" : "Invite Member"}
             >
               <UserPlus className="w-4 h-4" /> Invite Member
             </Button>
@@ -204,9 +214,14 @@ const Invitations = () => {
           </p>
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 text-white px-8 h-10 rounded hover:bg-blue-700 transition-colors border-none ring-0"
+            disabled={isTeacherLimitReached}
+            className={`px-8 h-10 rounded transition-colors border-none ring-0 ${
+              isTeacherLimitReached 
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            }`}
           >
-            Send Invite
+            {isTeacherLimitReached ? "Limit Reached" : "Send Invite"}
           </Button>
         </div>
       )}

@@ -66,6 +66,10 @@ export const workspaceApi = {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments/${assignmentId}`, {
       method: 'DELETE',
     });
+  },
+
+  async getUsage(workspaceId: string): Promise<ApiResponse<{ usage: any; limits: any }>> {
+    return apiFetch<{ usage: any; limits: any }>(`/workspaces/${workspaceId}/usage`);
   }
 };
 

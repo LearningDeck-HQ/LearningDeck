@@ -28,6 +28,7 @@ import { subjectApi } from '@/lib/api/subjects';
 import { userApi } from '@/lib/api/users';
 import { resultApi } from '@/lib/api/results';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 
 type ExamWithStatus = Exam & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -36,6 +37,9 @@ export default function ExamsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const { data: usageData } = useWorkspaceUsage();
+  const isExamLimitReached = usageData ? usageData.usage.exams >= usageData.limits.exams : false;
 
   const { data: exams = [], isLoading: isLoadingExams } = useQuery({
     queryKey: ['exams'],
@@ -283,7 +287,13 @@ export default function ExamsPage() {
         {/* ── Create button: sidebar-style rounded-sm, zinc bg ── */}
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+          disabled={isExamLimitReached}
+          className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${
+            isExamLimitReached 
+              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
+              : "bg-blue-500 text-white hover:bg-zinc-700"
+          }`}
+          title={isExamLimitReached ? "Exam limit reached for your plan" : "Create New Exam"}
         >
           <Plus size={14} />
           Create New Exam
@@ -404,8 +414,13 @@ export default function ExamsPage() {
                   </button>
                   <button
                     onClick={() => handleDuplicate(exam)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="Duplicate"
+                    disabled={isExamLimitReached}
+                    className={`px-2 py-1 text-xs rounded-sm transition-all ${
+                      isExamLimitReached 
+                        ? "text-zinc-300 cursor-not-allowed" 
+                        : "text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10]"
+                    }`}
+                    title={isExamLimitReached ? "Exam limit reached" : "Duplicate"}
                   >
                     <MdOutlineControlPointDuplicate size={15} />
                   </button>
@@ -432,9 +447,14 @@ export default function ExamsPage() {
             </p>
             <button
               onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
+              disabled={isExamLimitReached}
+              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${
+                isExamLimitReached 
+                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
+                  : "bg-blue-500 text-white hover:bg-zinc-700"
+              }`}
             >
-              Create First Exam
+              {isExamLimitReached ? "Limit Reached" : "Create First Exam"}
             </button>
           </div>
         )}
