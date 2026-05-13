@@ -721,8 +721,10 @@ const ChatInterface = () => {
 
         let aiContent = '';
         const aiMsgId = uuidv4();
+        const workspaceId = getWorkspaceId();
 
         await openRouterService.streamChat(
+            workspaceId,
             aiMessages,
             (chunk) => {
                 aiContent += chunk;

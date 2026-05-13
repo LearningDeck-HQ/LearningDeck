@@ -14,6 +14,7 @@ import { userApi } from "@/lib/api/users";
 import { User } from "@/types";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { ScaleLoader } from "react-spinners";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface InputProps {
@@ -289,7 +290,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full w-full bg-white">
-        <Loader2 className="w-6 h-6 animate-spin text-[#1e40af]" />
+        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
       </div>
     );
   }

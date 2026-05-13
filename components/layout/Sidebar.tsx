@@ -19,6 +19,7 @@ import { authApi } from '@/lib/api/auth';
 import { BiBrain, BiCreditCard, BiLoader, BiPlus, BiWorld } from "react-icons/bi";
 import { useEffect, useState } from "react";
 import { billingApi } from "@/lib/api/billing";
+import { userApi } from '@/lib/api/users';
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
@@ -27,12 +28,12 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          const res = await billingApi.getSubscription(user.workspaceId);
-          if (res.success && res.data?.plan) {
-            const planName = res.data.plan.charAt(0) + res.data.plan.slice(1).toLowerCase().replace(/_/g, " ");
+        const res = await userApi.me();
+        if (res.success && res.data) {
+          const workspaceId = res.data.workspaceId;
+          const subRes = await billingApi.getSubscription(workspaceId);
+          if (subRes.success && subRes.data?.plan) {
+            const planName = subRes.data.plan.charAt(0) + subRes.data.plan.slice(1).toLowerCase().replace(/_/g, " ");
             setCurrentPlan(planName);
           }
         }

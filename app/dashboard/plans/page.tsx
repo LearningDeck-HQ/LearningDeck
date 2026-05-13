@@ -5,6 +5,7 @@ import { Check, Zap, Star, Crown, Building2, ArrowRight, RotateCcw, CreditCard, 
 import { billingApi } from "@/lib/api/billing";
 import { toast } from "sonner";
 import { ScaleLoader } from "react-spinners";
+import { userApi } from "@/lib/api/users";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -144,12 +145,19 @@ export default function PlanPage() {
     const [loadingData, setLoadingData] = useState(true);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-            fetchData(parsedUser.workspaceId);
-        }
+        const fetchUser = async () => {
+            try {
+                const res = await userApi.me();
+                if (res.success && res.data) {
+                    setUser(res.data);
+                    fetchData(res.data.workspaceId);
+                }
+            } catch (error) {
+                console.error("Failed to fetch user profile", error);
+                setLoadingData(false);
+            }
+        };
+        fetchUser();
     }, []);
 
     const fetchData = async (workspaceId: string) => {
@@ -260,7 +268,7 @@ export default function PlanPage() {
                         </div>
                     </div>
                     <button className="flex items-center gap-2 text-sm border border-[#ededed] rounded px-4 py-2 hover:bg-[#f0f0f0] transition-colors text-[#1a1a1a]">
-                        <CreditCard size={14} /> Manage billing
+                        <Star size={14} /> Current plan
                     </button>
                 </div>
 
@@ -327,7 +335,7 @@ export default function PlanPage() {
                                             className="w-full text-sm border border-[#ededed] rounded py-2 px-4 text-[#6b6b6b] bg-[#f0f0f0] cursor-default"
                                             disabled
                                         >
-                                            Manage plan
+                                            Current plan
                                         </button>
                                     ) : plan.id === "enterprise" ? (
                                         <a

@@ -1,3 +1,5 @@
+import { apiFetch } from "../api/client";
+
 export interface ChatMessage {
     role: 'user' | 'assistant' | 'system';
     content: string;
@@ -140,6 +142,7 @@ The user's message contains a \`<workspace_context>\` block with real IDs for cl
 
 export const openRouterService = {
     async streamChat(
+        workspaceId: string,
         messages: ChatMessage[],
         onChunk: (chunk: string) => void,
         model = 'qwen/qwen-2.5-7b-instruct',
@@ -147,6 +150,16 @@ export const openRouterService = {
         if (!OPENROUTER_API_KEY) {
             onChunk('⚠️ Error: API key is not configured. Set `NEXT_PUBLIC_OPENROUTER_API_KEY` in your environment.');
             return;
+        }
+
+        // Check plan limits first
+        const usageRes = await apiFetch<any>(`/workspaces/${workspaceId}/usage`);
+        if (usageRes.success && usageRes.data) {
+            const { usage, limits } = usageRes.data;
+            if (usage.aiCredits >= limits.aiCredits) {
+                onChunk('⚠️ Plan limit reached: You have exhausted your AI credits for this plan. Please upgrade to continue using the AI assistant.');
+                return;
+            }
         }
 
         try {
@@ -185,6 +198,7 @@ export const openRouterService = {
             }
 
             let buffer = '';
+            let fullContent = '';
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -199,12 +213,15 @@ export const openRouterService = {
                     const trimmed = line.trim();
                     if (!trimmed || !trimmed.startsWith('data: ')) continue;
                     const data = trimmed.slice(6);
-                    if (data === '[DONE]') return;
+                    if (data === '[DONE]') break;
 
                     try {
                         const json    = JSON.parse(data);
                         const content = json.choices?.[0]?.delta?.content ?? '';
-                        if (content) onChunk(content);
+                        if (content) {
+                            fullContent += content;
+                            onChunk(content);
+                        }
                     } catch {
                         // Malformed chunk — skip silently
                     }
@@ -218,10 +235,22 @@ export const openRouterService = {
                     if (data !== '[DONE]') {
                         const json    = JSON.parse(data);
                         const content = json.choices?.[0]?.delta?.content ?? '';
-                        if (content) onChunk(content);
+                        if (content) {
+                            fullContent += content;
+                            onChunk(content);
+                        }
                     }
                 } catch { /* ignore */ }
             }
+
+            // After successful stream, increment AI usage in backend
+            if (fullContent) {
+                await apiFetch(`/workspaces/${workspaceId}/usage/ai`, {
+                    method: 'POST',
+                    body: JSON.stringify({ amount: 1 })
+                });
+            }
+
         } catch (error) {
             console.error('OpenRouter stream error:', error);
             onChunk(`⚠️ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
