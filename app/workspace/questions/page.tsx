@@ -28,6 +28,7 @@ import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiUser } from 'react-icons/fi';
+import { useSidebar } from '@/context/SidebarContext';
 
 type QuestionWithStatus = Question & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -38,10 +39,12 @@ export default function QuestionsPage() {
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
   const [gridCols, setGridCols] = useState(1);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [user_name, setUser_Name] = useState<User | null>(null);
+  const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
   useEffect(() => {
     const fetchUser = async () => {
       const res = await userApi.me();
@@ -53,13 +56,24 @@ export default function QuestionsPage() {
     fetchUser();
   }, []);
 
-  const { data: questions = [], isLoading: isLoadingQuestions } = useQuery({
-    queryKey: ['questions'],
+  const { data: questionResponse, isLoading: isLoadingQuestions } = useQuery({
+    queryKey: ['questions', page, limit, searchTerm, selectedExam, selectedSubject, selectedClass],
     queryFn: async () => {
-      const res = await questionApi.list();
-      return (res.data || []) as QuestionWithStatus[];
+      const res = await questionApi.list({
+        page,
+        limit,
+        searchTerm,
+        examId: selectedExam === 'all' ? undefined : selectedExam,
+        subjectId: selectedSubject === 'all' ? undefined : selectedSubject,
+        classId: selectedClass === 'all' ? undefined : selectedClass,
+      });
+      return res;
     },
   });
+
+  const questions = (questionResponse?.data || []) as QuestionWithStatus[];
+  const totalQuestions = questionResponse?.meta?.total || 0;
+  const totalPages = Math.ceil(totalQuestions / limit);
 
   const { data: exams = [] } = useQuery({
     queryKey: ['exams'],
@@ -104,15 +118,7 @@ export default function QuestionsPage() {
   });
 
 
-  const filteredQuestions = useMemo(() => {
-    return questions.filter(q => {
-      const matchesSearch = q?.question?.toLowerCase()?.includes(searchTerm?.toLowerCase());
-      const matchesExam = selectedExam === 'all' || q.examId === selectedExam;
-      const matchesSubject = selectedSubject === 'all' || q.subjectId === selectedSubject;
-      const matchesClass = selectedClass === 'all' || q.classId === selectedClass;
-      return matchesSearch && matchesExam && matchesSubject && matchesClass;
-    });
-  }, [questions, searchTerm, selectedExam, selectedSubject, selectedClass]);
+  const filteredQuestions = questions;
 
   const handleOpenModal = (q: Question | null = null) => {
     if (q) {
@@ -345,6 +351,7 @@ export default function QuestionsPage() {
     const index = Math.abs(hash) % colors.length;
     return colors[index];
   };
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
@@ -362,21 +369,22 @@ export default function QuestionsPage() {
           </div>
         </div>
       )}
-      <DashboardHeader
-        title="Question Bank"
-        description="Manage your collection of questions across exams, subjects, and classes."
-      >
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Question Bank"
+          description="Manage your collection of questions."
         >
-          <Plus size={14} />
-          Add Question
-        </button>
-      </DashboardHeader>
-
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+          >
+            <Plus size={14} />
+            Add Question
+          </button>
+        </DashboardHeader>
+      </div>
       {/* ── Filter Section ── */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4  border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -447,6 +455,24 @@ export default function QuestionsPage() {
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
 
+          {/* Limit selector */}
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={limit}
+              onChange={e => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+          </div>
+
           {/* Grid columns */}
           <div className="relative">
             <select
@@ -465,7 +491,7 @@ export default function QuestionsPage() {
 
       {/* ── Selection Actions ── */}
       {filteredQuestions.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 border border-zinc-400/20 rounded-sm">
+        <div className="flex items-center justify-between px-4 py-2 bg-zinc-50 border-y border-zinc-400/20 ">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -490,6 +516,7 @@ export default function QuestionsPage() {
       )}
 
       {/* ── Question List ── */}
+
       <div className={`grid gap-3 grid-cols-${gridCols}`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -499,7 +526,7 @@ export default function QuestionsPage() {
           filteredQuestions.map(q => (
             <div
               key={q.id}
-              className="group relative border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200" // added relative
+              className={`group relative ${gridCols === 1 ? 'border-y' : 'border'} border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200`}
             >
               {/* Author badge — top right corner */}
               {q.author && (
@@ -590,7 +617,7 @@ export default function QuestionsPage() {
             <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
               <HelpCircle size={28} className="text-[#6b6b6b]" />
             </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No questions yet</h3>
+            <h3 className=" font-medium text-[#0e0f10] mb-2">No questions yet</h3>
             <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
               Build your question bank by adding multiple choice, true/false, or fill-in-the-blank questions.
             </p>
@@ -603,6 +630,52 @@ export default function QuestionsPage() {
           </div>
         )}
       </div>
+
+
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="fixed z-10 bottom-0 left-0 w-full flex items-center justify-between px-4 py-3 bg-white border border-zinc-400/20 rounded-sm">
+          <div className="text-xs text-[#6b6b6b]">
+            Showing <span className="font-medium text-[#0e0f10]">{(page - 1) * limit + 1}</span> to <span className="font-medium text-[#0e0f10]">{Math.min(page * limit, totalQuestions)}</span> of <span className="font-medium text-[#0e0f10]">{totalQuestions}</span> questions
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const p = i + 1;
+                // Only show first, last, and pages around current
+                if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-7 h-7 flex items-center justify-center text-xs font-medium rounded-sm transition-all ${page === p ? 'bg-blue-500 text-white' : 'hover:bg-zinc-100 text-[#0e0f10]'}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                } else if (p === page - 2 || p === page + 2) {
+                  return <span key={p} className="text-[#6b6b6b]">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Modal ── */}
       <Modal

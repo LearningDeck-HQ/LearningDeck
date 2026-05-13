@@ -2,8 +2,24 @@ import { ApiResponse, Question } from "@/types";
 import { apiFetch } from "./client";
 
 export const questionApi = {
-  async list(params?: { workspaceId?: string; examId?: string; subjectId?: string; classId?: string }): Promise<ApiResponse<Question[]>> {
-    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : '';
+  async list(params?: { 
+    workspaceId?: string; 
+    examId?: string; 
+    subjectId?: string; 
+    classId?: string;
+    limit?: number;
+    page?: number;
+    searchTerm?: string;
+  }): Promise<ApiResponse<Question[]>> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) {
+          queryParams.append(k, String(v));
+        }
+      });
+    }
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
     return apiFetch<Question[]>(`/questions${query}`);
   },
 

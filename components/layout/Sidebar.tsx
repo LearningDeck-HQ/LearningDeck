@@ -16,10 +16,19 @@ import {
 import { GrDeploy } from "react-icons/gr";
 import { FiArrowUpRight } from 'react-icons/fi';
 import { authApi } from '@/lib/api/auth';
-import { BiBrain, BiCreditCard, BiLoader, BiPlus, BiWorld } from "react-icons/bi";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { billingApi } from "@/lib/api/billing";
 import { userApi } from '@/lib/api/users';
+import { BiBrain, BiCreditCard } from "react-icons/bi";
+
+export const dashboardNavItems = [
+  { label: 'Home', href: '/dashboard', icon: TbHome },
+  { label: 'Workspace', href: '/dashboard/workspaces', icon: MdWorkspaces, startsWith: true },
+  { label: 'Plan', href: '/dashboard/plans', icon: BiCreditCard },
+  { label: 'Settings', href: '/dashboard/settings', icon: MdSettings, startsWith: true },
+  { label: 'Agentic mode', href: '/dashboard/agentic-mode', icon: BiBrain, badge: 'BETA' },
+  { label: 'Plugins & Templates', href: '/dashboard/templates', icon: TbTemplate },
+];
 
 const Sidebar = ({ onClose }: { onClose?: () => void }) => {
   const pathname = usePathname();
@@ -73,44 +82,44 @@ const Sidebar = ({ onClose }: { onClose?: () => void }) => {
 
       <nav className="flex flex-col  h-full px-2 gap-0.5">
         {/* Main Navigation - Following image_75fd16.png structure */}
-        <Link href="/dashboard" className={getLinkStyles(pathname === '/dashboard')} onClick={onClose}>
-          <TbHome className="text-sm" />
+        {dashboardNavItems.map((item, index) => {
+          const isActive = item.startsWith ? pathname.startsWith(item.href) : pathname === item.href;
+          const Icon = item.icon;
 
-          <span>Home</span>
-        </Link>
+          // Special case for dividers
+          const showDivider = index === 2 || index === 4;
 
-        <Link href="/dashboard/workspaces" className={getLinkStyles(pathname.startsWith('/dashboard/workspaces'))} onClick={onClose}>
-          <MdWorkspaces className="" />
-          <span>Workspace</span>
-        </Link>
-
-        <div className="my-2 border-t border-[#ededed]/60" />
-
-        <Link href="/dashboard/plans" className={getLinkStyles(pathname === '/dashboard/plans')} onClick={onClose}>
-          <BiCreditCard className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Plan  {currentPlanName !== '' && <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5 uppercase">{currentPlanName || ''}</span>} </span>
-        </Link>
-
-        <Link href="/dashboard/settings" className={getLinkStyles(pathname.startsWith('/dashboard/settings'))} onClick={onClose}>
-          <MdSettings className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Settings</span>
-        </Link>
-
-
-
-        <div className="my-2 border-t border-[#ededed]/60" />
-
-        <Link href="/dashboard/agentic-mode" className={getLinkStyles(pathname === '/dashboard/agentic-mode')} onClick={onClose}>
-          <BiBrain className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Agentic mode <span className="text-blue-500 ml-1 border border-blue-500 rounded text-[10px] px-1 py-0.5">BETA</span></span>
-        </Link>
-
-
-
-        <Link href="/dashboard/templates" className={getLinkStyles(pathname === '/dashboard/templates')} onClick={onClose}>
-          <TbTemplate className=" opacity-70" />
-          <span className="text-[#6b6b6b]">Plugins & Templates </span>
-        </Link>
+          return (
+            <React.Fragment key={item.href}>
+              <Link
+                href={item.href}
+                className={getLinkStyles(isActive)}
+                onClick={onClose}
+              >
+                <Icon className={isActive ? "text-sm" : "opacity-70"} />
+                {item.label === 'Plan' ? (
+                  <span className="text-[#6b6b6b]">
+                    Plan {currentPlanName !== '' && (
+                      <span className="text-green-500 ml-1 border border-green-500 rounded text-[10px] px-1 py-0.5 uppercase">
+                        {currentPlanName}
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className={isActive ? "" : "text-[#6b6b6b]"}>
+                    {item.label}
+                    {item.badge && (
+                      <span className="text-blue-500 ml-1 border border-blue-500 rounded text-[10px] px-1 py-0.5">
+                        {item.badge}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </Link>
+              {showDivider && <div className="my-2 border-t border-[#ededed]/60" />}
+            </React.Fragment>
+          );
+        })}
 
         {/* Bottom External Links Section */}
         <div className="mt-auto mb-4 flex flex-col gap-1 pt-4 border-t border-[#ededed] text-xs">

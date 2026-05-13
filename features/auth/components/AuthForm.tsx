@@ -11,6 +11,7 @@ import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 import { ChevronRight, Check, User, LogOut } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ScaleLoader } from 'react-spinners';
 
 interface AuthFormProps {
   type: 'login' | 'signup' | 'invite';
@@ -48,7 +49,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
         if (response.success && response.data?.user) {
           const user = response.data.user;
           setStoredUser(user);
-          setAuthToken('cookie'); 
+          setAuthToken('cookie');
 
           // Determine redirect path
           let redirectPath = user.role === 'TEACHER' ? '/workspace' : '/dashboard';
@@ -138,7 +139,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
 
         const user = response.data?.user;
         let redirectPath = user?.role === 'TEACHER' ? '/workspace' : '/dashboard';
-        
+
         if (user?.role === 'ADMIN' && type === 'signup') {
           redirectPath = '/setup';
         }
@@ -360,7 +361,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           className="w-full h-[44px] bg-blue-600 text-white text-[14px] font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
           disabled={isLoading}
         >
-          {isLoading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+          {isLoading && <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />}
           {type === 'login' ? 'Sign In' : type === 'invite' ? 'Complete Registration' : 'Get Started'}
         </button>
       </form>

@@ -16,6 +16,7 @@ import { classApi } from '@/lib/api/classes';
 import { Class } from '@/types';
 import { ScaleLoader } from 'react-spinners';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
+import { useSidebar } from '@/context/SidebarContext';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -56,6 +57,7 @@ export default function ClassesPage() {
     }
     setIsModalOpen(true);
   };
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) return;
@@ -93,21 +95,24 @@ export default function ClassesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-      <DashboardHeader
-        title="Classes"
-        description="Manage your student groups and academic year structures."
-      >
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Classes"
+          description="Manage your student groups and academic year structures."
         >
-          <Plus size={14} />
-          Add New Class
-        </button>
-      </DashboardHeader>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+          >
+            <Plus size={14} />
+            Add New Class
+          </button>
+        </DashboardHeader>
+
+      </div>
 
       {/* ── Filter Section ── */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -143,7 +148,7 @@ export default function ClassesPage() {
           filteredClasses.map(cls => (
             <div
               key={cls.id}
-              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Class info */}

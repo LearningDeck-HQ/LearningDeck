@@ -11,7 +11,7 @@ import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 
-const navItems = [
+export const navItems = [
     { label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
     { label: 'Questions', href: '/workspace/questions', icon: MdQuiz },
     { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
@@ -21,7 +21,7 @@ const navItems = [
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 
-const TeacherNavItems = [
+export const TeacherNavItems = [
     //{ label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
     { label: 'Questions', href: '/workspace/questions', icon: MdQuiz },
     //  { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
@@ -103,7 +103,7 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
     }
 
     return (
-        <aside className="w-full h-full text-sm bg-white border-r border-zinc-400/20 flex flex-col px-4 py-2 text-[#6b6b6b]">
+        <aside className="w-full h-full text-sm bg-white border-r border-zinc-400/20 flex flex-col px-4 py-2 text-[#6b6b6b] z-100">
             <nav className="flex flex-col flex-1">
                 {currentNavItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/workspace' && pathname.startsWith(item.href));
@@ -122,7 +122,7 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
                     );
                 })}
 
-                <div className="mt-auto pt-6 border-t border-zinc-400/20">
+                <div className="mt-auto sticky pt-6 border-t border-zinc-400/20">
                     {!isTeacher && <button
                         onClick={() => navigate.push('/dashboard')}
                         className="w-full flex items-center gap-3 px-3 py-1 text-xs text-[#6b6b6b] hover:text-red-500 hover:bg-red-50 transition-all rounded-sm group mb-2"

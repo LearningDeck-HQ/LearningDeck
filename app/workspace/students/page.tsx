@@ -23,26 +23,41 @@ import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
+import { useSidebar } from '@/context/SidebarContext';
 
 type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
 export default function StudentsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [selectedClass, setSelectedClass] = useState<string>('all');
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
 
   const { data: usageData } = useWorkspaceUsage();
   const isStudentLimitReached = usageData ? usageData.usage.students >= usageData.limits.students : false;
 
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['students'],
+  const { data: studentResponse, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['students', page, limit, searchTerm, selectedClass],
     queryFn: async () => {
       const userStr = localStorage.getItem('user');
       const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
-      const res = await userApi.list({ role: 'STUDENT', workspaceId });
-      return (res.data || []) as UserWithStatus[];
+      const res = await userApi.list({
+        role: 'STUDENT',
+        workspaceId,
+        page,
+        limit,
+        searchTerm,
+        classId: selectedClass === 'all' ? undefined : selectedClass
+      });
+      return res;
     },
   });
+
+  const users = (studentResponse?.data || []) as UserWithStatus[];
+  const totalStudents = studentResponse?.meta?.total || 0;
+  const totalPages = Math.ceil(totalStudents / limit);
 
   const { data: classes = [] } = useQuery({
     queryKey: ['classes'],
@@ -70,13 +85,7 @@ export default function StudentsPage() {
   });
 
 
-  const filteredUsers = useMemo(() => {
-    return users.filter(
-      (u) =>
-        u.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.user_email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [users, searchTerm]);
+  const filteredUsers = users;
 
   const handleOpenModal = (u: User | null = null) => {
     if (u) {
@@ -226,6 +235,7 @@ export default function StudentsPage() {
     }
     setIsModalOpen(false);
   };
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
@@ -243,27 +253,29 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-      <DashboardHeader
-        title="Students"
-        description="Manage student enrollments and account access."
-      >
-        <button
-          onClick={() => handleOpenModal()}
-          disabled={isStudentLimitReached}
-          className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${
-            isStudentLimitReached 
-              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
-              : "bg-blue-500 text-white hover:bg-zinc-700"
-          }`}
-          title={isStudentLimitReached ? "Student limit reached for your plan" : "Enroll New Student"}
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Students"
+          description="Manage student enrollments and account access."
         >
-          <Plus size={14} />
-          Enroll New Student
-        </button>
-      </DashboardHeader>
+          <button
+            onClick={() => handleOpenModal()}
+            disabled={isStudentLimitReached}
+            className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${isStudentLimitReached
+              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+              : "bg-blue-500 text-white hover:bg-zinc-700"
+              }`}
+            title={isStudentLimitReached ? "Student limit reached for your plan" : "Enroll New Student"}
+          >
+            <Plus size={14} />
+            Enroll New Student
+          </button>
+        </DashboardHeader>
+      </div>
+
 
       {/* Filter Section */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -277,8 +289,8 @@ export default function StudentsPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-3 relative">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="md:col-span-2 relative">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]"
               size={13}
@@ -288,7 +300,50 @@ export default function StudentsPage() {
               placeholder="Search by name or email..."
               className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={selectedClass}
+              onChange={(e) => {
+                setSelectedClass(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="all">All Classes</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <ChevronDown
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none"
+              size={13}
+            />
+          </div>
+
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
+            <ChevronDown
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none"
+              size={13}
             />
           </div>
 
@@ -311,7 +366,7 @@ export default function StudentsPage() {
           filteredUsers.map((student) => (
             <div
               key={student.id}
-              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              className="group border-y border-zinc-400/20 bg-white  overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 w-full">
@@ -320,10 +375,10 @@ export default function StudentsPage() {
                       {student.user_name}
                       {student.status && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                            student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                              student.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                                student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                  'bg-red-100 text-red-700'
+                          student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                            student.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                              student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                'bg-red-100 text-red-700'
                           }`}>
                           {student.status}
                         </span>
@@ -380,17 +435,60 @@ export default function StudentsPage() {
             <button
               onClick={() => handleOpenModal()}
               disabled={isStudentLimitReached}
-              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${
-                isStudentLimitReached 
-                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
-                  : "bg-blue-500 text-white hover:bg-zinc-700"
-              }`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isStudentLimitReached
+                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-zinc-700"
+                }`}
             >
               {isStudentLimitReached ? "Limit Reached" : "Enroll First Student"}
             </button>
           </div>
         )}
       </div>
+
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex sticky items-center justify-between px-4 py-3 bg-white border border-zinc-400/20 rounded-sm">
+          <div className="text-xs text-[#6b6b6b]">
+            Showing <span className="font-medium text-[#0e0f10]">{(page - 1) * limit + 1}</span> to <span className="font-medium text-[#0e0f10]">{Math.min(page * limit, totalStudents)}</span> of <span className="font-medium text-[#0e0f10]">{totalStudents}</span> students
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const p = i + 1;
+                if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-7 h-7 flex items-center justify-center text-xs font-medium rounded-sm transition-all ${page === p ? 'bg-blue-500 text-white' : 'hover:bg-zinc-100 text-[#0e0f10]'}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                } else if (p === page - 2 || p === page + 2) {
+                  return <span key={p} className="text-[#6b6b6b]">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       <Modal

@@ -29,6 +29,7 @@ import { userApi } from '@/lib/api/users';
 import { resultApi } from '@/lib/api/results';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
+import { useSidebar } from '@/context/SidebarContext';
 
 type ExamWithStatus = Exam & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -264,6 +265,7 @@ export default function ExamsPage() {
     setIsModalOpen(false);
   };
 
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
       {deleteProgress && (
@@ -280,28 +282,31 @@ export default function ExamsPage() {
           </div>
         </div>
       )}
-      <DashboardHeader
-        title="Exams"
-        description="Create and manage your exams or tests here."
-      >
-        {/* ── Create button: sidebar-style rounded-sm, zinc bg ── */}
-        <button
-          onClick={() => handleOpenModal()}
-          disabled={isExamLimitReached}
-          className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${
-            isExamLimitReached 
-              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
-              : "bg-blue-500 text-white hover:bg-zinc-700"
-          }`}
-          title={isExamLimitReached ? "Exam limit reached for your plan" : "Create New Exam"}
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Exams"
+          description="Create and manage your exams or tests here."
         >
-          <Plus size={14} />
-          Create New Exam
-        </button>
-      </DashboardHeader>
+          {/* ── Create button: sidebar-style rounded-sm, zinc bg ── */}
+          <button
+            onClick={() => handleOpenModal()}
+            disabled={isExamLimitReached}
+            className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${isExamLimitReached
+              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+              : "bg-blue-500 text-white hover:bg-zinc-700"
+              }`}
+            title={isExamLimitReached ? "Exam limit reached for your plan" : "Create New Exam"}
+          >
+            <Plus size={14} />
+            Create New Exam
+          </button>
+        </DashboardHeader>
+
+      </div>
+
 
       {/* ── Filter Section ── */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -360,7 +365,7 @@ export default function ExamsPage() {
           filteredExams.map((exam) => (
             <div
               key={exam.id}
-              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Exam info */}
@@ -415,11 +420,10 @@ export default function ExamsPage() {
                   <button
                     onClick={() => handleDuplicate(exam)}
                     disabled={isExamLimitReached}
-                    className={`px-2 py-1 text-xs rounded-sm transition-all ${
-                      isExamLimitReached 
-                        ? "text-zinc-300 cursor-not-allowed" 
-                        : "text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10]"
-                    }`}
+                    className={`px-2 py-1 text-xs rounded-sm transition-all ${isExamLimitReached
+                      ? "text-zinc-300 cursor-not-allowed"
+                      : "text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10]"
+                      }`}
                     title={isExamLimitReached ? "Exam limit reached" : "Duplicate"}
                   >
                     <MdOutlineControlPointDuplicate size={15} />
@@ -448,11 +452,10 @@ export default function ExamsPage() {
             <button
               onClick={() => handleOpenModal()}
               disabled={isExamLimitReached}
-              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${
-                isExamLimitReached 
-                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed" 
-                  : "bg-blue-500 text-white hover:bg-zinc-700"
-              }`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isExamLimitReached
+                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-zinc-700"
+                }`}
             >
               {isExamLimitReached ? "Limit Reached" : "Create First Exam"}
             </button>

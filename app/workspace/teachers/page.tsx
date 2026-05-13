@@ -29,6 +29,7 @@ import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md
 import { ScaleLoader } from 'react-spinners';
 import { BiCopy, BiUserPlus } from 'react-icons/bi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSidebar } from '@/context/SidebarContext';
 
 type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -272,7 +273,7 @@ export default function TeacherPage() {
       alert(err.message);
     }
   };
-
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
 
   return (
@@ -291,15 +292,19 @@ export default function TeacherPage() {
           </div>
         </div>
       )}
-      <DashboardHeader
-        title="Teachers"
-        description="Manage faculty members, subject assignments, and access permissions."
-      >
 
-      </DashboardHeader>
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Teachers"
+          description="Manage faculty members, subject assignments, and access permissions."
+        >
+
+        </DashboardHeader>
+      </div>
+
 
       {/* ── Filter Section ── */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4  border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -346,7 +351,7 @@ export default function TeacherPage() {
           filteredTeachers.map((teacher) => (
             <div
               key={teacher.id}
-              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Teacher info */}

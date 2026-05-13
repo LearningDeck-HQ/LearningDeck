@@ -20,23 +20,42 @@ import { questionApi } from '@/lib/api/questions';
 import { subjectApi } from '@/lib/api/subjects';
 import { ScaleLoader } from 'react-spinners';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { examApi } from '@/lib/api/exams';
+import { classApi } from '@/lib/api/classes';
+import { ChevronDown } from 'lucide-react';
+import { useSidebar } from '@/context/SidebarContext';
 
 export default function ResultsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [selectedClass, setSelectedClass] = useState<string>('all');
+  const [selectedExam, setSelectedExam] = useState<string>('all');
 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const workspaceId = useMemo(() => userStr ? JSON.parse(userStr).workspaceId : '1', [userStr]);
 
-  const { data: results = [], isLoading: isLoadingResults, isFetching: isFetchingResults } = useQuery({
-    queryKey: ['results', workspaceId],
+  const { data: resultResponse, isLoading: isLoadingResults, isFetching: isFetchingResults } = useQuery({
+    queryKey: ['results', workspaceId, page, limit, searchTerm, selectedClass, selectedExam],
     queryFn: async () => {
-      const res = await resultApi.list({ workspaceId });
-      return res.data || [];
+      const res = await resultApi.list({
+        workspaceId,
+        page,
+        limit,
+        searchTerm,
+        classId: selectedClass === 'all' ? undefined : selectedClass,
+        examId: selectedExam === 'all' ? undefined : selectedExam
+      });
+      return res;
     },
   });
+
+  const results = resultResponse?.data || [];
+  const totalResults = resultResponse?.meta?.total || 0;
+  const totalPages = Math.ceil(totalResults / limit);
 
   const { data: subjects = [], isFetching: isFetchingSubjects } = useQuery({
     queryKey: ['subjects', workspaceId],
@@ -46,15 +65,23 @@ export default function ResultsPage() {
     },
   });
 
-  const { data: allQuestions = [], isFetching: isFetchingQuestions } = useQuery({
-    queryKey: ['questions', workspaceId],
+  const { data: classes = [] } = useQuery({
+    queryKey: ['classes', workspaceId],
     queryFn: async () => {
-      const res = await questionApi.list({ workspaceId });
+      const res = await classApi.list(workspaceId);
       return res.data || [];
     },
   });
 
-  const isLoading = isLoadingResults || isFetchingResults || isFetchingSubjects || isFetchingQuestions;
+  const { data: exams = [] } = useQuery({
+    queryKey: ['exams', workspaceId],
+    queryFn: async () => {
+      const res = await examApi.list(workspaceId);
+      return res.data || [];
+    },
+  });
+
+  const isLoading = isLoadingResults || isFetchingResults || isFetchingSubjects;
 
 
   const fetchResultDetails = async (result: Result) => {
@@ -74,13 +101,7 @@ export default function ResultsPage() {
     queryClient.invalidateQueries({ queryKey: ['questions', workspaceId] });
   };
 
-  const filteredResults = useMemo(() => {
-    return results.filter(
-      (r) =>
-        r.user?.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.exam?.exam_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [results, searchTerm]);
+  const filteredResults = results;
 
   const deleteResultMutation = useMutation({
     mutationFn: (id: string) => resultApi.delete(id),
@@ -166,24 +187,30 @@ export default function ResultsPage() {
       return <span className="text-xs text-red-400">Data parsing error</span>;
     }
   };
+  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-      <DashboardHeader
-        title="Results"
-        description="Monitor student performance, scores, and examination outcomes."
-      >
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
+
+      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+        <DashboardHeader
+          title="Results"
+          description="Monitor student performance, scores, and examination outcomes."
         >
-          <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
-      </DashboardHeader>
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
+          >
+            <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </DashboardHeader>
+
+
+      </div>
 
       {/* ── Filter Section ── */}
-      <div className="bg-white p-4 rounded-sm border border-zinc-400/20 space-y-4">
+      <div className="bg-white p-4  border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2 text-[#6b6b6b]">
             <Filter size={13} />
@@ -197,20 +224,75 @@ export default function ResultsPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="md:col-span-3 relative">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="md:col-span-1 relative">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]"
               size={13}
             />
             <input
               type="text"
-              placeholder="Search by student name or exam title..."
+              placeholder="Search..."
               className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
+
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={selectedExam}
+              onChange={(e) => {
+                setSelectedExam(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="all">All Exams</option>
+              {exams.map((e) => (
+                <option key={e.id} value={e.id}>{e.exam_name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+          </div>
+
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={selectedClass}
+              onChange={(e) => {
+                setSelectedClass(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="all">All Classes</option>
+              {classes.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+          </div>
+
+          <div className="relative">
+            <select
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              <option value={10}>10 per page</option>
+              <option value={20}>20 per page</option>
+              <option value={50}>50 per page</option>
+              <option value={100}>100 per page</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+          </div>
+
           <button
             onClick={fetchData}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
@@ -230,7 +312,7 @@ export default function ResultsPage() {
           filteredResults.map((result) => (
             <div
               key={result.id}
-              className="group border border-zinc-400/20 bg-white rounded-sm overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Result info */}
@@ -300,6 +382,50 @@ export default function ResultsPage() {
           </div>
         )}
       </div>
+
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex sticky items-center justify-between px-4 py-3 bg-white border border-zinc-400/20 rounded-sm">
+          <div className="text-xs text-[#6b6b6b]">
+            Showing <span className="font-medium text-[#0e0f10]">{(page - 1) * limit + 1}</span> to <span className="font-medium text-[#0e0f10]">{Math.min(page * limit, totalResults)}</span> of <span className="font-medium text-[#0e0f10]">{totalResults}</span> records
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Previous
+            </button>
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => {
+                const p = i + 1;
+                if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-7 h-7 flex items-center justify-center text-xs font-medium rounded-sm transition-all ${page === p ? 'bg-blue-500 text-white' : 'hover:bg-zinc-100 text-[#0e0f10]'}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                } else if (p === page - 2 || p === page + 2) {
+                  return <span key={p} className="text-[#6b6b6b]">...</span>;
+                }
+                return null;
+              })}
+            </div>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Detail Modal ── */}
       <Modal
