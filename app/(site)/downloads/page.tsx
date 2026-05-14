@@ -24,7 +24,7 @@ const Downloads = () => {
             {/* The LearningDeck App */}
             <section className="flex flex-col w-full items-center justify-center">
 
-              <Link href="https://github.com/LearningDeck-HQ/LearningDeck-CBT-Exam-Manager/releases/download/v1.0.0/learningdeck-exam-manager-1.0.0-setup.exe" className="bg-[#ff6c37] hover:bg-[#e05a2b] text-white  py-2 px-6 rounded flex items-center transition-colors">
+              <Link href="https://github.com/LearningDeck-HQ/LearningDeck-CBT-Exam-Manager/releases/download/v1.0.1/learningdeck-desktop-agent-1.0.0-setup.exe" className="bg-[#ff6c37] hover:bg-[#e05a2b] text-white  py-2 px-6 rounded flex items-center transition-colors">
                 <Monitor className="w-5 h-5 mr-2" />
                 Windows x64
               </Link>
