@@ -7,6 +7,7 @@ import { Workspace } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ScaleLoader } from 'react-spinners';
+import { useUser } from '@/hooks/useUser';
 
 const ManageWorkspacePage = () => {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -18,17 +19,14 @@ const ManageWorkspacePage = () => {
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  const { data: user } = useUser();
+  const workspaceId = user?.workspaceId;
+
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        setIsLoading(true);
-        const userStr = localStorage.getItem('user');
-        if (!userStr) return;
-
-        const user = JSON.parse(userStr);
-        const workspaceId = user.workspaceId;
-
         if (!workspaceId) return;
+        setIsLoading(true);
 
         const response = await workspaceApi.getById(workspaceId);
         if (response.success && response.data) {
@@ -45,8 +43,10 @@ const ManageWorkspacePage = () => {
       }
     };
 
-    fetchWorkspace();
-  }, []);
+    if (workspaceId) {
+      fetchWorkspace();
+    }
+  }, [workspaceId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();

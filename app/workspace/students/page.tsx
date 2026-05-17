@@ -24,6 +24,7 @@ import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 import { useSidebar } from '@/context/SidebarContext';
+import { useUser } from '@/hooks/useUser';
 
 type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -38,11 +39,13 @@ export default function StudentsPage() {
   const { data: usageData } = useWorkspaceUsage();
   const isStudentLimitReached = usageData ? usageData.usage.students >= usageData.limits.students : false;
 
+  const { data: user } = useUser();
+  const workspaceId = user?.workspaceId;
+
   const { data: studentResponse, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['students', page, limit, searchTerm, selectedClass],
+    queryKey: ['students', workspaceId, page, limit, searchTerm, selectedClass],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) return { data: [], meta: { total: 0, page: 1, limit: 10 } };
       const res = await userApi.list({
         role: 'STUDENT',
         workspaceId,
@@ -53,6 +56,7 @@ export default function StudentsPage() {
       });
       return res;
     },
+    enabled: !!workspaceId,
   });
 
   const users = (studentResponse?.data || []) as UserWithStatus[];
@@ -60,13 +64,13 @@ export default function StudentsPage() {
   const totalPages = Math.ceil(totalStudents / limit);
 
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) return [];
       const res = await classApi.list(workspaceId);
       return res.data || [];
     },
+    enabled: !!workspaceId,
   });
 
   const isLoading = isLoadingUsers;
@@ -114,8 +118,7 @@ export default function StudentsPage() {
 
   const createStudentMutation = useMutation({
     mutationFn: (payload: any) => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) throw new Error('Workspace not found');
       return workspaceApi.createStudent(workspaceId, payload);
     },
     onMutate: async (newStudent) => {

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -17,6 +18,7 @@ import {
   BookOpen,
   GraduationCap,
   Check,
+  ArrowRight,
 } from 'lucide-react';
 import { questionApi } from '@/lib/api/questions';
 import { examApi } from '@/lib/api/exams';
@@ -24,16 +26,27 @@ import { subjectApi } from '@/lib/api/subjects';
 import { classApi } from '@/lib/api/classes';
 import { userApi } from '@/lib/api/users';
 import { Question, Exam, Subject, Class, QuestionType, User } from '@/types';
-import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
+import { MdOutlineDelete, MdOutlineModeEditOutline, MdArrowBack } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiUser } from 'react-icons/fi';
 import { useSidebar } from '@/context/SidebarContext';
+import { useUser } from '@/hooks/useUser';
+import { workspaceApi } from '@/lib/api/workspaces';
 
 type QuestionWithStatus = Question & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
-export default function QuestionsPage() {
+function QuestionsPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+
+  // Retrieve route locking parameters if they exist
+  const paramExamId = searchParams.get('examId') || '';
+  const paramSubjectId = searchParams.get('subjectId') || '';
+  const paramClassId = searchParams.get('classId') || '';
+  const isLocked = !!(paramExamId && paramSubjectId && paramClassId);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -42,24 +55,25 @@ export default function QuestionsPage() {
   const [gridCols, setGridCols] = useState(1);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [user_name, setUser_Name] = useState<User | null>(null);
+  const { data: currentUser, isLoading: isLoadingUser } = useUser();
+  const workspaceId = currentUser?.workspaceId;
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
+
+  // Sync filter values with URL query parameters when locked
   useEffect(() => {
-    const fetchUser = async () => {
-      const res = await userApi.me();
-      if (res.success && res.data) {
-        setCurrentUser(res.data);
-        setUser_Name(res.data);
-      }
-    };
-    fetchUser();
-  }, []);
+    if (isLocked) {
+      setSelectedExam(paramExamId);
+      setSelectedSubject(paramSubjectId);
+      setSelectedClass(paramClassId);
+    }
+  }, [isLocked, paramExamId, paramSubjectId, paramClassId]);
 
   const { data: questionResponse, isLoading: isLoadingQuestions } = useQuery({
-    queryKey: ['questions', page, limit, searchTerm, selectedExam, selectedSubject, selectedClass],
+    queryKey: ['questions', workspaceId, page, limit, searchTerm, selectedExam, selectedSubject, selectedClass],
     queryFn: async () => {
+      if (!workspaceId) return { data: [], meta: { total: 0, page: 1, limit: 10 } };
       const res = await questionApi.list({
+        workspaceId,
         page,
         limit,
         searchTerm,
@@ -69,6 +83,7 @@ export default function QuestionsPage() {
       });
       return res;
     },
+    enabled: !!workspaceId,
   });
 
   const questions = (questionResponse?.data || []) as QuestionWithStatus[];
@@ -99,10 +114,31 @@ export default function QuestionsPage() {
     },
   });
 
+  const { data: assignments = [] } = useQuery({
+    queryKey: ['my-assignments', currentUser?.id],
+    queryFn: async () => {
+      if (!workspaceId || !currentUser?.id) return [];
+      const res = await workspaceApi.getAssignments(workspaceId, currentUser.id);
+      return res.data || [];
+    },
+    enabled: !!workspaceId && !!currentUser?.id && currentUser?.role === 'TEACHER',
+  });
+
+  const filteredSubjects = useMemo(() => {
+    if (currentUser?.role !== 'TEACHER') return subjects;
+    const assignedSubjectIds = new Set(assignments.map((a: any) => a.subjectId));
+    return subjects.filter((s: Subject) => assignedSubjectIds.has(s.id));
+  }, [subjects, assignments, currentUser]);
+
+  const filteredClasses = useMemo(() => {
+    if (currentUser?.role !== 'TEACHER') return classes;
+    const assignedClassIds = new Set(assignments.map((a: any) => a.classId));
+    return classes.filter((c: Class) => assignedClassIds.has(c.id));
+  }, [classes, assignments, currentUser]);
+
   const isLoading = isLoadingQuestions;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [formData, setFormData] = useState({
     type: 'MULTIPLE_CHOICE' as QuestionType,
@@ -116,7 +152,6 @@ export default function QuestionsPage() {
     img: null as string | null,
     author: '' as string | null,
   });
-
 
   const filteredQuestions = questions;
 
@@ -143,9 +178,9 @@ export default function QuestionsPage() {
         correct_answer: '',
         incorrect_answers: ['', '', ''],
         explanation: '',
-        examId: exams[0]?.id || '',
-        subjectId: subjects[0]?.id || '',
-        classId: classes[0]?.id || '',
+        examId: isLocked ? paramExamId : (exams[0]?.id || ''),
+        subjectId: isLocked ? paramSubjectId : (filteredSubjects[0]?.id || ''),
+        classId: isLocked ? paramClassId : (filteredClasses[0]?.id || ''),
         img: null,
         author: currentUser?.user_name || '',
       });
@@ -283,27 +318,14 @@ export default function QuestionsPage() {
     setSelectedIds([]);
   };
 
-
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const storedUser = window.localStorage.getItem('user');
-    if (!storedUser) return;
-
-    try {
-      setUser_Name(JSON.parse(storedUser));
-    } catch (error) {
-      console.error('Header: Failed to parse stored user', error);
-    }
-  }, []);
-
-  const profileName = user_name?.user_name || 'Guest';
+  const profileName = currentUser?.user_name || 'Guest';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userStr = localStorage.getItem('user');
-    const workspaceId = currentUser?.workspaceId || (userStr ? JSON.parse(userStr).workspaceId : '1');
+    if (!workspaceId) {
+      alert('Workspace not found');
+      return;
+    }
     const payload = {
       ...formData,
       workspaceId,
@@ -351,10 +373,11 @@ export default function QuestionsPage() {
     const index = Math.abs(hash) % colors.length;
     return colors[index];
   };
-  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
+
+  const { isLeftSidebarCollapsed } = useSidebar();
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative p-4">
       {deleteProgress && (
         <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
           <div className="flex items-center justify-between mb-1.5">
@@ -369,10 +392,21 @@ export default function QuestionsPage() {
           </div>
         </div>
       )}
+
+      {/* Back to Classes hierarchy link */}
+      {isLocked && (
+        <button
+          onClick={() => router.push(`/workspace/classes/${paramClassId}/exams/${paramExamId}/subjects`)}
+          className="flex items-center gap-1.5 text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors mb-1 active:scale-95"
+        >
+          <MdArrowBack size={14} /> Back to Subjects
+        </button>
+      )}
+
       <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
         <DashboardHeader
           title="Question Bank"
-          description="Manage your collection of questions."
+          description={isLocked ? "Manage and author questions strictly mapped to this assessment context." : "Manage your collection of questions."}
         >
           <button
             onClick={() => handleOpenModal()}
@@ -383,6 +417,27 @@ export default function QuestionsPage() {
           </button>
         </DashboardHeader>
       </div>
+
+      {/* ── Locked Context Banner ── */}
+      {isLocked && (
+        <div className="bg-blue-50/50 border border-blue-200 text-blue-700 px-4 py-2.5 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-300">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold uppercase tracking-wider text-[9px] bg-blue-500 px-1.5 py-0.5 rounded text-white font-mono">Exam Flow Active</span>
+            <span className="leading-relaxed">
+              Exam: <strong className="text-zinc-900">{exams.find(e => e.id === paramExamId)?.exam_name || '...'}</strong> •
+              Subject: <strong className="text-zinc-900">{subjects.find(s => s.id === paramSubjectId)?.name || '...'}</strong> •
+              Class: <strong className="text-zinc-900">{classes.find(c => c.id === paramClassId)?.name || '...'}</strong>
+            </span>
+          </div>
+          <button
+            onClick={() => router.push(`/workspace/classes/${paramClassId}/exams/${paramExamId}/subjects`)}
+            className="flex items-center gap-1 hover:underline text-blue-800 font-semibold active:scale-95 text-[11px] shrink-0"
+          >
+            Change Assessment Context <ArrowRight size={12} />
+          </button>
+        </div>
+      )}
+
       {/* ── Filter Section ── */}
       <div className="bg-white p-4  border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
@@ -390,17 +445,19 @@ export default function QuestionsPage() {
             <Filter size={13} />
             <span className="text-xs font-medium text-[#0e0f10]">Filter</span>
           </div>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedExam('all');
-              setSelectedSubject('all');
-              setSelectedClass('all');
-            }}
-            className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
-          >
-            Reset
-          </button>
+          {!isLocked && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedExam('all');
+                setSelectedSubject('all');
+                setSelectedClass('all');
+              }}
+              className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
+            >
+              Reset
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -419,9 +476,10 @@ export default function QuestionsPage() {
           {/* Exam filter */}
           <div className="relative">
             <select
-              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               value={selectedExam}
               onChange={e => setSelectedExam(e.target.value)}
+              disabled={isLocked}
             >
               <option value="all">All Exams</option>
               {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
@@ -432,12 +490,13 @@ export default function QuestionsPage() {
           {/* Subject filter */}
           <div className="relative">
             <select
-              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               value={selectedSubject}
               onChange={e => setSelectedSubject(e.target.value)}
+              disabled={isLocked}
             >
               <option value="all">All Subjects</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {filteredSubjects.map((s: Subject) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
@@ -445,12 +504,13 @@ export default function QuestionsPage() {
           {/* Class filter */}
           <div className="relative">
             <select
-              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
+              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               value={selectedClass}
               onChange={e => setSelectedClass(e.target.value)}
+              disabled={isLocked}
             >
               <option value="all">All Classes</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {filteredClasses.map((c: Class) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
@@ -469,20 +529,6 @@ export default function QuestionsPage() {
               <option value={20}>20 per page</option>
               <option value={50}>50 per page</option>
               <option value={100}>100 per page</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
-          </div>
-
-          {/* Grid columns */}
-          <div className="relative">
-            <select
-              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
-              value={gridCols}
-              onChange={e => setGridCols(Number(e.target.value))}
-            >
-              <option value={1}>1 Column</option>
-              <option value={2}>2 Columns</option>
-
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
@@ -516,7 +562,6 @@ export default function QuestionsPage() {
       )}
 
       {/* ── Question List ── */}
-
       <div className={`grid gap-3 grid-cols-${gridCols}`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -553,7 +598,7 @@ export default function QuestionsPage() {
                       {typeIcon(q.type)}
                     </span>
                     <div className="space-y-1 flex-1">
-                      <div className="flex items-start gap-4"> {/* removed justify-between since author is gone */}
+                      <div className="flex items-start gap-4">
                         <h3 className="text-xs font-medium text-[#0e0f10]  tracking-tight leading-snug flex items-center gap-2">
                           {q.question}
                           {q.status && (
@@ -619,7 +664,10 @@ export default function QuestionsPage() {
             </div>
             <h3 className=" font-medium text-[#0e0f10] mb-2">No questions yet</h3>
             <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Build your question bank by adding multiple choice, true/false, or fill-in-the-blank questions.
+              {isLocked
+                ? "No questions matching this specific exam, subject, and class combination. Click above to add one!"
+                : "Build your question bank by adding multiple choice, true/false, or fill-in-the-blank questions."
+              }
             </p>
             <button
               onClick={() => handleOpenModal()}
@@ -630,7 +678,6 @@ export default function QuestionsPage() {
           </div>
         )}
       </div>
-
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
@@ -649,7 +696,6 @@ export default function QuestionsPage() {
             <div className="flex items-center gap-1">
               {[...Array(totalPages)].map((_, i) => {
                 const p = i + 1;
-                // Only show first, last, and pages around current
                 if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
                   return (
                     <button
@@ -705,13 +751,14 @@ export default function QuestionsPage() {
               <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Subject</label>
               <div className="relative">
                 <select
-                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                   value={formData.subjectId}
                   onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
                   required
+                  disabled={isLocked}
                 >
                   <option value="">Select Subject</option>
-                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {filteredSubjects.map((s: Subject) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
               </div>
@@ -781,10 +828,11 @@ export default function QuestionsPage() {
               <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Exam</label>
               <div className="relative">
                 <select
-                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                   value={formData.examId}
                   onChange={e => setFormData({ ...formData, examId: e.target.value })}
                   required
+                  disabled={isLocked}
                 >
                   <option value="">Select Exam</option>
                   {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
@@ -796,18 +844,26 @@ export default function QuestionsPage() {
               <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class</label>
               <div className="relative">
                 <select
-                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
                   value={formData.classId}
                   onChange={e => setFormData({ ...formData, classId: e.target.value })}
                   required
+                  disabled={isLocked}
                 >
                   <option value="">Select Class</option>
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {filteredClasses.map((c: Class) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
               </div>
             </div>
           </div>
+
+          {/* Locked fields notice */}
+          {isLocked && (
+            <div className="text-[10px] text-zinc-500 bg-zinc-100/50 p-2.5 rounded border border-zinc-200">
+              <strong>Assessment Flow Locking active:</strong> The Exam, Subject, and Class properties are locked because you are creating a question via the hierarchical flow.
+            </div>
+          )}
 
           {/* Explanation */}
           <div className="hidden space-y-1.5">
@@ -844,5 +900,17 @@ export default function QuestionsPage() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+export default function QuestionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-full w-full items-center justify-center py-20 bg-[#FAFBFF]">
+        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+      </div>
+    }>
+      <QuestionsPageContent />
+    </Suspense>
   );
 }

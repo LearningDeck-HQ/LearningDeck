@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -16,48 +16,55 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react';
+import { MdArrowBack, MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
-import { Exam, Class, Subject, User, Result } from '@/types';
-import { MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
-import { workspaceApi } from '@/lib/api/workspaces';
-import { ScaleLoader } from 'react-spinners';
 import { questionApi } from '@/lib/api/questions';
-import { Question } from '@/types';
 import { subjectApi } from '@/lib/api/subjects';
 import { userApi } from '@/lib/api/users';
 import { resultApi } from '@/lib/api/results';
+import { Exam, Class, Subject } from '@/types';
+import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
 import { useSidebar } from '@/context/SidebarContext';
-
+import { useUser } from '@/hooks/useUser';
 type ExamWithStatus = Exam & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
-
-export default function ExamsPage() {
+interface ClassExamsPageProps {
+  params: Promise<{
+    classId: string;
+  }>;
+}
+export default function ClassExamsPage({ params }: ClassExamsPageProps) {
+  const { classId } = React.use(params);
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClass, setSelectedClass] = useState<string>('all');
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
-
+  const { data: user } = useUser();
+  const workspaceId = user?.workspaceId;
   const { data: usageData } = useWorkspaceUsage();
   const isExamLimitReached = usageData ? usageData.usage.exams >= usageData.limits.exams : false;
-
-  const { data: exams = [], isLoading: isLoadingExams } = useQuery({
-    queryKey: ['exams'],
+  // Fetch Class details
+  const { data: currentClass } = useQuery<Class | null>({
+    queryKey: ['class', classId, workspaceId],
     queryFn: async () => {
-      const res = await examApi.list();
+      if (!workspaceId || !classId) return null;
+      const res = await classApi.list(workspaceId);
+      return res.data?.find(c => c.id === classId) || null;
+    },
+    enabled: !!workspaceId && !!classId,
+  });
+  // Fetch Exams under this specific Class
+  const { data: exams = [], isLoading: isLoadingExams } = useQuery({
+    queryKey: ['exams', workspaceId, classId],
+    queryFn: async () => {
+      if (!workspaceId || !classId) return [];
+      const res = await examApi.list({ workspaceId, classId });
       return (res.data || []) as ExamWithStatus[];
     },
+    enabled: !!workspaceId && !!classId,
   });
-
-  const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
-    queryFn: async () => {
-      const res = await classApi.list();
-      return res.data || [];
-    },
-  });
-
   const { data: questions = [] } = useQuery({
     queryKey: ['questions'],
     queryFn: async () => {
@@ -65,7 +72,6 @@ export default function ExamsPage() {
       return res.data || [];
     },
   });
-
   const { data: subjects = [] } = useQuery({
     queryKey: ['subjects'],
     queryFn: async () => {
@@ -73,7 +79,6 @@ export default function ExamsPage() {
       return res.data || [];
     },
   });
-
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
@@ -81,7 +86,6 @@ export default function ExamsPage() {
       return res.data || [];
     },
   });
-
   const { data: results = [] } = useQuery({
     queryKey: ['results'],
     queryFn: async () => {
@@ -89,36 +93,26 @@ export default function ExamsPage() {
       return res.data || [];
     },
   });
-
   const isLoading = isLoadingExams;
-
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [formData, setFormData] = useState({
     exam_name: '',
     minutes: 60,
-    classId: '',
     visible: true
   });
-
-
   const filteredExams = useMemo(() => {
     return exams.filter(exam => {
-      const matchesSearch = exam.exam_name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesClass = selectedClass === 'all' || exam.classId === selectedClass;
-      return matchesSearch && matchesClass;
+      return exam.exam_name.toLowerCase().includes(searchTerm.toLowerCase());
     });
-  }, [exams, searchTerm, selectedClass]);
-
+  }, [exams, searchTerm]);
   const handleOpenModal = (exam: Exam | null = null) => {
     if (exam) {
       setEditingExam(exam);
       setFormData({
         exam_name: exam.exam_name,
         minutes: exam.minutes,
-        classId: exam.classId,
         visible: exam.visible ?? true
       });
     } else {
@@ -126,137 +120,121 @@ export default function ExamsPage() {
       setFormData({
         exam_name: '',
         minutes: 60,
-        classId: classes[0]?.id.toString() || '',
         visible: true
       });
     }
     setIsModalOpen(true);
   };
-
   const createExamMutation = useMutation({
     mutationFn: (payload: any) => examApi.create(payload),
     onMutate: async (newExam) => {
-      await queryClient.cancelQueries({ queryKey: ['exams'] });
-      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
+      await queryClient.cancelQueries({ queryKey: ['exams', workspaceId, classId] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams', workspaceId, classId]);
       const tempId = Math.random().toString(36).substring(7);
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) => [
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) => [
         { ...newExam, id: tempId, status: 'saving' } as ExamWithStatus,
         ...old,
       ]);
       return { previousExams, tempId };
     },
     onError: (err, newExam, context) => {
-      queryClient.setQueryData(['exams'], context?.previousExams);
+      queryClient.setQueryData(['exams', workspaceId, classId], context?.previousExams);
       alert('Failed to create exam');
     },
     onSuccess: (data, newExam, context) => {
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
         old.map((exam) =>
           exam.id === context?.tempId ? { ...data.data, status: 'saved' } : exam
         )
       );
       setTimeout(() => {
-        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
           old.map((exam) => (exam.id === data?.data?.id ? { ...exam, status: undefined } : exam))
         );
       }, 3000);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['exams', workspaceId, classId] });
     },
   });
-
   const updateExamMutation = useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: any }) => examApi.update(id, payload),
     onMutate: async ({ id, payload }) => {
-      await queryClient.cancelQueries({ queryKey: ['exams'] });
-      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+      await queryClient.cancelQueries({ queryKey: ['exams', workspaceId, classId] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams', workspaceId, classId]);
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
         old.map((exam) => (exam.id === id ? { ...exam, ...payload, status: 'saving' } : exam))
       );
       return { previousExams };
     },
     onError: (err, { id }, context) => {
-      queryClient.setQueryData(['exams'], context?.previousExams);
+      queryClient.setQueryData(['exams', workspaceId, classId], context?.previousExams);
       alert('Failed to update exam');
     },
     onSuccess: (data, { id }) => {
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
         old.map((exam) => (exam.id === id ? { ...exam, status: 'saved' } : exam))
       );
       setTimeout(() => {
-        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
           old.map((exam) => (exam.id === id ? { ...exam, status: undefined } : exam))
         );
       }, 3000);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['exams', workspaceId, classId] });
     },
   });
-
   const deleteExamMutation = useMutation({
     mutationFn: (id: string) => examApi.delete(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['exams'] });
-      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams']);
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+      await queryClient.cancelQueries({ queryKey: ['exams', workspaceId, classId] });
+      const previousExams = queryClient.getQueryData<ExamWithStatus[]>(['exams', workspaceId, classId]);
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
         old.map((exam) => (exam.id === id ? { ...exam, status: 'deleting' } : exam))
       );
       return { previousExams };
     },
     onSuccess: (data, id) => {
-      queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+      queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
         old.map((exam) => (exam.id === id ? { ...exam, status: 'done' } : exam))
       );
       setTimeout(() => {
-        queryClient.setQueryData(['exams'], (old: ExamWithStatus[] = []) =>
+        queryClient.setQueryData(['exams', workspaceId, classId], (old: ExamWithStatus[] = []) =>
           old.filter((exam) => exam.id !== id)
         );
       }, 1000);
     },
     onError: (err, id, context) => {
-      queryClient.setQueryData(['exams'], context?.previousExams);
+      queryClient.setQueryData(['exams', workspaceId, classId], context?.previousExams);
       alert('Failed to delete exam');
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['exams'] });
+      queryClient.invalidateQueries({ queryKey: ['exams', workspaceId, classId] });
     },
   });
-
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this exam?')) return;
     deleteExamMutation.mutate(id);
   };
-
   const handleDuplicate = async (exam: Exam) => {
     const payload = {
       exam_name: `${exam.exam_name} (Copy)`,
       minutes: exam.minutes,
-      classId: exam.classId,
+      classId,
       workspaceId: exam.workspaceId
     };
     createExamMutation.mutate(payload);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    let workspaceId = formData.classId
-      ? classes.find(c => c.id === formData.classId)?.workspaceId
-      : null;
-
-    if (!workspaceId) {
-      const userStr = localStorage.getItem('user');
-      if (userStr) workspaceId = JSON.parse(userStr).workspaceId;
-    }
-
+    if (!workspaceId) return;
     const payload = {
       ...formData,
-      workspaceId: workspaceId || '1',
-      classId: formData.classId,
+      workspaceId,
+      classId, // Automatically bound to this class context!
       minutes: Number(formData.minutes)
     };
-
     if (editingExam) {
       updateExamMutation.mutate({ id: editingExam.id, payload });
     } else {
@@ -264,30 +242,22 @@ export default function ExamsPage() {
     }
     setIsModalOpen(false);
   };
+  const { isLeftSidebarCollapsed } = useSidebar();
 
-  const { isLeftSidebarCollapsed, toggleLeftSidebar } = useSidebar();
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 relative">
-      {deleteProgress && (
-        <div className="sticky top-0 z-50 bg-white border-b border-red-100 p-2 mb-4 animate-in slide-in-from-top duration-300">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">Deleting Exams...</span>
-            <span className="text-[10px] font-bold text-red-600">{deleteProgress.current} / {deleteProgress.total}</span>
-          </div>
-          <div className="w-full h-1 bg-red-50 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-red-500 transition-all duration-300 ease-out"
-              style={{ width: `${(deleteProgress.current / deleteProgress.total) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
-      <div className={`${isLeftSidebarCollapsed ? 'sticky  z-50' : ''} flex  bg-[#f9f9f9]  top-0  h-full w-full border-b border-[#ededed]  `}>
+      {/* Back button */}
+      <button
+        onClick={() => router.push('/workspace')}
+        className="flex items-center gap-1.5 m-4 text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors mb-1 active:scale-95"
+      >
+        <MdArrowBack size={14} /> Back to Classes
+      </button>
+      <div className={`${isLeftSidebarCollapsed ? 'sticky z-50' : ''} flex bg-[#f9f9f9] top-0 h-full w-full border-b border-[#ededed]`}>
         <DashboardHeader
-          title="Exams"
-          description="Create and manage your exams or tests here."
+          title={`Exams under ${currentClass?.name || '...'}`}
+          description={`Class Group Context Locked. Manage assessment papers specifically for this group.`}
         >
-          {/* ── Create button: sidebar-style rounded-sm, zinc bg ── */}
           <button
             onClick={() => handleOpenModal()}
             disabled={isExamLimitReached}
@@ -298,13 +268,10 @@ export default function ExamsPage() {
             title={isExamLimitReached ? "Exam limit reached for your plan" : "Create New Exam"}
           >
             <Plus size={14} />
-            Create New Exam
+            Create Exam
           </button>
         </DashboardHeader>
-
       </div>
-
-
       {/* ── Filter Section ── */}
       <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">
@@ -313,48 +280,31 @@ export default function ExamsPage() {
             <span className="text-xs font-medium text-[#0e0f10]">Filter</span>
           </div>
           <button
-            onClick={() => { setSearchTerm(''); setSelectedClass('all'); }}
+            onClick={() => setSearchTerm('')}
             className="text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors"
           >
             Reset
           </button>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {/* Search */}
-          <div className="md:col-span-2 relative">
+          <div className="md:col-span-3 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
             <input
               type="text"
-              placeholder="Search by exam name..."
+              placeholder="Search exams under this class..."
               className="w-full pl-8 pr-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none transition-all placeholder:text-[#6b6b6b]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          {/* Class filter */}
-          <div className="relative">
-            <select
-              className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer"
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="all">All Classes</option>
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
-          </div>
-
           <button
-            onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['exams', workspaceId, classId] })}
             className="px-3 py-1 text-xs rounded-sm bg-zinc-100 text-[#0e0f10] hover:bg-zinc-200 transition-colors border border-zinc-400/20"
           >
             Apply
           </button>
         </div>
       </div>
-
       {/* ── Exam List ── */}
       <div className="grid grid-cols-1 gap-3">
         {isLoading ? (
@@ -369,9 +319,12 @@ export default function ExamsPage() {
             >
               <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Exam info */}
-                <div className="flex items-center gap-4 flex-1 w-full">
+                <div
+                  className="flex items-center gap-4 flex-1 w-full cursor-pointer"
+                  onClick={() => router.push(`/workspace/classes/${classId}/exams/${exam.id}/subjects`)}
+                >
                   <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2 hover:text-blue-500 transition-colors">
                       {exam.exam_name}
                       {exam.status && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${exam.status === 'saving' ? 'bg-amber-100 text-amber-700' :
@@ -390,7 +343,7 @@ export default function ExamsPage() {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <GraduationCap size={13} />
-                        {classes.find(c => c.id === exam.classId)?.name || `ID: ${exam.classId}`}
+                        {currentClass?.name || 'Loading class...'}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Layers size={13} /> Questions: {questions.filter(q => q.examId === exam.id).length}
@@ -407,7 +360,6 @@ export default function ExamsPage() {
                     </div>
                   </div>
                 </div>
-
                 {/* Actions */}
                 <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
                   <button
@@ -445,9 +397,9 @@ export default function ExamsPage() {
             <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
               <FileText size={28} className="text-[#6b6b6b]" />
             </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No exams yet</h3>
+            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No exams yet under this class</h3>
             <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Start creating your first digital assessment. Add multiple choice, true/false, or fill-in-the-blank questions.
+              Create assessment papers under this group context to assign questions.
             </p>
             <button
               onClick={() => handleOpenModal()}
@@ -457,12 +409,11 @@ export default function ExamsPage() {
                 : "bg-blue-500 text-white hover:bg-zinc-700"
                 }`}
             >
-              {isExamLimitReached ? "Limit Reached" : "Create First Exam"}
+              {isExamLimitReached ? "Limit Reached" : "Create Exam"}
             </button>
           </div>
         )}
       </div>
-
       {/* ── Modal ── */}
       <Modal
         isOpen={isModalOpen}
@@ -481,7 +432,6 @@ export default function ExamsPage() {
               className="text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] placeholder:text-[#6b6b6b]"
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             {/* Duration */}
             <div className="space-y-1.5">
@@ -498,40 +448,19 @@ export default function ExamsPage() {
                 <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b]" size={13} />
               </div>
             </div>
-
-            {/* Class */}
+            {/* Locked Class Context Alert */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Class</label>
-              <div className="relative">
-                <select
-                  className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 text-[#0e0f10] outline-none appearance-none cursor-pointer"
-                  value={formData.classId}
-                  onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                  required
-                >
-                  <option value="" disabled>Select a class</option>
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
+              <label className="text-xs font-medium text-[#6b6b6b] ml-0.5">Assigned Class Category</label>
+              <div className="w-full px-3 py-1.5 text-xs rounded-sm bg-zinc-100 border border-zinc-400/10 text-zinc-600 font-semibold flex items-center gap-1">
+                <GraduationCap size={13} />
+                {currentClass?.name || 'Class context active'}
               </div>
             </div>
           </div>
-
-          {/* Visibility toggle */}
-          <div className="hidden flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
-            <div>
-              <p className="text-xs font-medium text-[#0e0f10]">Visible to students</p>
-              <p className="text-[11px] text-[#6b6b6b] mt-0.5">Students can see and take this exam</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, visible: !formData.visible })}
-              className={`w-10 h-5 rounded-full relative transition-colors duration-200 focus:outline-none ${formData.visible ? 'bg-blue-500' : 'bg-zinc-300'}`}
-            >
-              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${formData.visible ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
+          {/* Locked Assignment Notice */}
+          <div className="text-[11px] p-2.5 bg-blue-50/50 border border-blue-200 text-blue-700 rounded-sm leading-relaxed">
+            <strong>Note:</strong> This exam will be automatically mapped to <strong>{currentClass?.name || 'this class group'}</strong> to prevent any human errors.
           </div>
-
           {/* Footer buttons */}
           <div className="flex gap-3 pt-2">
             <button

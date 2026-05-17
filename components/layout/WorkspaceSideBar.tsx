@@ -12,19 +12,14 @@ import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
 
 export const navItems = [
-    { label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
-    { label: 'Questions', href: '/workspace/questions', icon: MdQuiz },
-    { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
-    { label: 'Classes', href: '/workspace/classes', icon: SiGoogleclassroom },
+    { label: 'Classes', href: '/workspace', icon: BiBookOpen },
     { label: 'Teachers', href: '/workspace/teachers', icon: GiTeacher },
     { label: 'Students', href: '/workspace/students', icon: BiUser },
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 
 export const TeacherNavItems = [
-    //{ label: 'Exams', href: '/workspace/exams', icon: BiBookOpen },
-    { label: 'Questions', href: '/workspace/questions', icon: MdQuiz },
-    //  { label: 'Subjects', href: '/workspace/subjects', icon: BiSolidShapes },
+    { label: 'Classes', href: '/workspace', icon: BiBookOpen },
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 
@@ -106,7 +101,9 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
         <aside className="w-full h-full text-sm bg-white border-r border-zinc-400/20 flex flex-col px-4 py-2 text-[#6b6b6b] z-100">
             <nav className="flex flex-col flex-1">
                 {currentNavItems.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== '/workspace' && pathname.startsWith(item.href));
+                    const isActive = pathname === item.href ||
+                        (item.href === '/workspace' && pathname.startsWith('/workspace/classes')) ||
+                        (item.href !== '/workspace' && pathname.startsWith(item.href));
                     const Icon = item.icon;
 
                     return (

@@ -17,6 +17,7 @@ import { Class } from '@/types';
 import { ScaleLoader } from 'react-spinners';
 import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
 import { useSidebar } from '@/context/SidebarContext';
+import { useUser } from '@/hooks/useUser';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -28,10 +29,14 @@ export default function ClassesPage() {
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [formData, setFormData] = useState({ name: '' });
 
+  const { data: user } = useUser();
+  const workspaceId = user?.workspaceId;
+
   const fetchClasses = async () => {
+    if (!workspaceId) return;
     try {
       setIsLoading(true);
-      const res = await classApi.list();
+      const res = await classApi.list(workspaceId);
       if (res.data) setClasses(res.data);
     } catch (err) {
       console.error(err);
@@ -40,7 +45,9 @@ export default function ClassesPage() {
     }
   };
 
-  useEffect(() => { fetchClasses(); }, []);
+  useEffect(() => {
+    if (workspaceId) fetchClasses();
+  }, [workspaceId]);
 
   const filteredClasses = useMemo(() =>
     classes.filter(cls => cls.name.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -76,8 +83,7 @@ export default function ClassesPage() {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) throw new Error('Workspace not found');
       const payload = { ...formData, workspaceId };
       const response = editingClass
         ? await classApi.update(editingClass.id, payload)

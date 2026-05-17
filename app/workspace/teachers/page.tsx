@@ -27,9 +27,10 @@ import { workspaceApi } from '@/lib/api/workspaces';
 import { User, Class, Subject } from '@/types';
 import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
-import { BiCopy, BiUserPlus } from 'react-icons/bi';
+import { BiCopy, BiPlus, BiUserPlus } from 'react-icons/bi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSidebar } from '@/context/SidebarContext';
+import { useUser } from '@/hooks/useUser';
 
 type UserWithStatus = User & { status?: 'saving' | 'saved' | 'failed' | 'deleting' | 'done' };
 
@@ -38,34 +39,37 @@ export default function TeacherPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteProgress, setDeleteProgress] = useState<{ current: number; total: number } | null>(null);
 
+  const { data: user } = useUser();
+  const workspaceId = user?.workspaceId;
+
   const { data: teachers = [], isLoading: isLoadingTeachers } = useQuery({
-    queryKey: ['teachers'],
+    queryKey: ['teachers', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) return [];
       const res = await userApi.list({ role: 'TEACHER', workspaceId });
       return (res.data || []) as UserWithStatus[];
     },
+    enabled: !!workspaceId,
   });
 
   const { data: classes = [] } = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) return [];
       const res = await classApi.list(workspaceId);
       return res.data || [];
     },
+    enabled: !!workspaceId,
   });
 
   const { data: subjects = [] } = useQuery({
-    queryKey: ['subjects'],
+    queryKey: ['subjects', workspaceId],
     queryFn: async () => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) return [];
       const res = await subjectApi.list(workspaceId);
       return res.data || [];
     },
+    enabled: !!workspaceId,
   });
 
   const isLoading = isLoadingTeachers;
@@ -87,7 +91,7 @@ export default function TeacherPage() {
 
   const fetchAssignments = async (teacherId: string) => {
     try {
-      const workspaceId = '1';
+      if (!workspaceId) return;
       const res = await workspaceApi.getAssignments(workspaceId, teacherId);
       if (res.data) setTeacherAssignments(res.data);
     } catch (err) {
@@ -98,12 +102,12 @@ export default function TeacherPage() {
   const filteredTeachers = useMemo(() => {
     return teachers.filter(
       (t) =>
-        t.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.user_email.toLowerCase().includes(searchTerm.toLowerCase())
+        (t.user_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (t.user_email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
   }, [teachers, searchTerm]);
 
-  const handleOpenModal = async (t: User | null = null) => {
+  const handleOpenModal = (t: User | null = null) => {
     if (t) {
       setEditingTeacher(t);
       setFormData({
@@ -112,7 +116,7 @@ export default function TeacherPage() {
         user_password: '',
         active: t.active,
       });
-      await fetchAssignments(t.id);
+      fetchAssignments(t.id);
     } else {
       setEditingTeacher(null);
       setFormData({ user_name: '', user_email: '', user_password: 'password123', active: true });
@@ -127,8 +131,7 @@ export default function TeacherPage() {
 
   const createTeacherMutation = useMutation({
     mutationFn: (payload: any) => {
-      const userStr = localStorage.getItem('user');
-      const workspaceId = userStr ? JSON.parse(userStr).workspaceId : '1';
+      if (!workspaceId) throw new Error('Workspace not found');
       return workspaceApi.createTeacher(workspaceId, payload);
     },
     onMutate: async (newTeacher) => {
@@ -146,6 +149,12 @@ export default function TeacherPage() {
       alert('Failed to add teacher');
     },
     onSuccess: (data, newTeacher, context) => {
+      if (!data.success || !data.data) {
+        queryClient.setQueryData(['teachers'], context?.previousTeachers);
+        alert(data.message || 'Failed to add teacher');
+        return;
+      }
+
       queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
         old.map((t) =>
           t.id === context?.tempId ? { ...data.data, status: 'saved' } : t
@@ -155,7 +164,7 @@ export default function TeacherPage() {
       setTeacherAssignments([]);
       setTimeout(() => {
         queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
-          old.map((t) => (t.id === data.data.id ? { ...t, status: undefined } : t))
+          old.map((t) => (t.id === data.data?.id ? { ...t, status: undefined } : t))
         );
       }, 3000);
     },
@@ -178,7 +187,12 @@ export default function TeacherPage() {
       queryClient.setQueryData(['teachers'], context?.previousTeachers);
       alert('Failed to update teacher');
     },
-    onSuccess: (data, { id }) => {
+    onSuccess: (data, { id }, context) => {
+      if (!data.success) {
+        queryClient.setQueryData(['teachers'], context?.previousTeachers);
+        alert(data.message || 'Failed to update teacher');
+        return;
+      }
       queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
         old.map((t) => (t.id === id ? { ...t, status: 'saved' } : t))
       );
@@ -203,7 +217,12 @@ export default function TeacherPage() {
       );
       return { previousTeachers };
     },
-    onSuccess: (data, id) => {
+    onSuccess: (data, id, context) => {
+      if (!data.success) {
+        queryClient.setQueryData(['teachers'], context?.previousTeachers);
+        alert(data.message || 'Failed to delete teacher');
+        return;
+      }
       queryClient.setQueryData(['teachers'], (old: UserWithStatus[] = []) =>
         old.map((t) => (t.id === id ? { ...t, status: 'done' } : t))
       );
@@ -250,26 +269,72 @@ export default function TeacherPage() {
   };
 
   const handleAddAssignment = async () => {
-    if (!editingTeacher || !newAssignment.subjectId || !newAssignment.classId) return;
+    if (!editingTeacher || !newAssignment.subjectId || !newAssignment.classId || !workspaceId) return;
+
+    const duplicate = teacherAssignments.some(
+      (assignment) =>
+        assignment.subjectId === newAssignment.subjectId &&
+        assignment.classId === newAssignment.classId
+    );
+
+    if (duplicate) {
+      alert('This subject and class are already assigned to the teacher.');
+      return;
+    }
+    
+    // Optimistic update
+    const selectedSubject = subjects.find(s => s.id === newAssignment.subjectId);
+    const selectedClass = classes.find(c => c.id === newAssignment.classId);
+    const tempId = Math.random().toString(36).substring(7);
+    
+    const optimisticAssignment = {
+      id: tempId,
+      subjectId: newAssignment.subjectId,
+      classId: newAssignment.classId,
+      subject: selectedSubject,
+      class: selectedClass,
+      isOptimistic: true
+    };
+
+    setTeacherAssignments(prev => [...prev, optimisticAssignment]);
+
     try {
-      const workspaceId = '1';
       const res = await workspaceApi.addAssignment(workspaceId, editingTeacher.id, {
         subjectId: newAssignment.subjectId,
         classId: newAssignment.classId,
       });
-      if (res.success) await fetchAssignments(editingTeacher.id);
+      if (res.success) {
+        // Replace optimistic with real data
+        setTeacherAssignments(prev => prev.map(a => a.id === tempId ? res.data : a));
+      } else {
+        // Rollback
+        setTeacherAssignments(prev => prev.filter(a => a.id !== tempId));
+        alert(res.message);
+      }
     } catch (err: any) {
+      // Rollback
+      setTeacherAssignments(prev => prev.filter(a => a.id !== tempId));
       alert(err.message);
     }
   };
 
   const handleDeleteAssignment = async (assignmentId: string) => {
-    if (!editingTeacher) return;
+    if (!editingTeacher || !workspaceId) return;
+    
+    // Optimistic update
+    const previousAssignments = [...teacherAssignments];
+    setTeacherAssignments(prev => prev.filter(a => a.id !== assignmentId));
+
     try {
-      const workspaceId = '1';
       const res = await workspaceApi.deleteAssignment(workspaceId, editingTeacher.id, assignmentId);
-      if (res.success) await fetchAssignments(editingTeacher.id);
+      if (!res.success) {
+        // Rollback
+        setTeacherAssignments(previousAssignments);
+        alert(res.message);
+      }
     } catch (err: any) {
+      // Rollback
+      setTeacherAssignments(previousAssignments);
       alert(err.message);
     }
   };
@@ -298,6 +363,13 @@ export default function TeacherPage() {
           title="Teachers"
           description="Manage faculty members, subject assignments, and access permissions."
         >
+            <button
+                      onClick={() => handleOpenModal()}
+                      className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+                    >
+                      <Plus size={14} />
+                      Add Teacher
+                    </button>
 
         </DashboardHeader>
       </div>
@@ -390,7 +462,7 @@ export default function TeacherPage() {
                 <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
                   <button
                     onClick={() => handleOpenModal(teacher)}
-                    className="hidden px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                    className=" px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
                     title="Edit"
                   >
                     <MdOutlineModeEditOutline size={15} />
@@ -578,7 +650,7 @@ export default function TeacherPage() {
               {editingTeacher ? (
                 <span className="flex items-center justify-center gap-1.5"><Check size={13} /> Save Changes</span>
               ) : (
-                <span className="flex items-center justify-center gap-1.5"><BiUserPlus size={13} /> Invite</span>
+                <span className="flex items-center justify-center gap-1.5"><BiPlus size={13} /> Create</span>
               )}
             </Button>
           </div>
