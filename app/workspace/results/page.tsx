@@ -34,6 +34,23 @@ export default function ResultsPage() {
   const [limit, setLimit] = useState(10);
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedExam, setSelectedExam] = useState<string>('all');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadActiveFilters = async () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).api?.getFilterSubjects) {
+          const filters = await (window as any).api.getFilterSubjects();
+          if (Array.isArray(filters)) {
+            setActiveFilters(filters);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load active filters:', err);
+      }
+    };
+    loadActiveFilters();
+  }, []);
 
   const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
   const workspaceId = useMemo(() => userStr ? JSON.parse(userStr).workspaceId : '1', [userStr]);
@@ -139,24 +156,28 @@ export default function ResultsPage() {
       if (mode === 'table') {
         return (
           <div className="flex flex-wrap gap-1.5">
-            {Object.entries(scores).map(([subId, stats]: [string, SubjectScore]) => {
-              const subName = subjects.find((s) => s.id === subId)?.name || 'General';
-              return (
-                <span
-                  key={subId}
-                  className="inline-flex items-center gap-1 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[10px] text-[#0e0f10]"
-                >
-                  {subName}: {stats.correct}/{stats.total}
-                </span>
-              );
-            })}
+            {Object.entries(scores)
+              .filter(([subId]) => activeFilters.length === 0 || activeFilters.includes(subId))
+              .map(([subId, stats]: [string, SubjectScore]) => {
+                const subName = subjects.find((s) => s.id === subId)?.name || 'General';
+                return (
+                  <span
+                    key={subId}
+                    className="inline-flex items-center gap-1 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[10px] text-[#0e0f10]"
+                  >
+                    {subName}: {stats.correct}/{stats.total}
+                  </span>
+                );
+              })}
           </div>
         );
       } else {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {Object.entries(scores).map(([subId, stats]: [string, SubjectScore]) => {
-              const subName = subjects.find((s) => s.id === subId)?.name || 'General';
+            {Object.entries(scores)
+              .filter(([subId]) => activeFilters.length === 0 || activeFilters.includes(subId))
+              .map(([subId, stats]: [string, SubjectScore]) => {
+                const subName = subjects.find((s) => s.id === subId)?.name || 'General';
               const percentage = Math.round((stats.correct / stats.total) * 100);
               return (
                 <div
@@ -331,7 +352,7 @@ export default function ResultsPage() {
                           : 'bg-red-50 text-red-500'
                           }`}
                       >
-                        {result.overallScore >= 50 ? 'Passed' : 'Failed'}
+                        {result.overallScore >= 40 ? 'Passed' : 'Failed'}
                       </span>
                       <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
                         Score: {result.overallScore}%
