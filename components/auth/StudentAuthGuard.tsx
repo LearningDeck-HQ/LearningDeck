@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ScaleLoader } from 'react-spinners';
 import { authApi } from '@/lib/api/auth';
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function StudentAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -16,17 +15,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         if (response.success && response.data?.user) {
           const user = response.data.user;
           if (user.role === 'STUDENT') {
-            router.push('/student-portal/dashboard');
-          } else if (user.role === 'ADMIN' && !user.hasSubscription) {
-            router.push('/setup');
-          } else {
             setIsAuthorized(true);
+          } else {
+            // Logged in as admin/teacher. Redirect to standard workspace or dashboard.
+            router.push(user.role === 'TEACHER' ? '/workspace' : '/dashboard');
           }
         } else {
-          router.push('/login');
+          router.push('/student-portal');
         }
       } catch (err) {
-        router.push('/login');
+        router.push('/student-portal');
       }
     };
 
@@ -37,7 +35,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!isAuthorized) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FAFBFF]">
-
+        
       </div>
     );
   }

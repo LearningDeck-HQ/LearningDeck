@@ -306,113 +306,115 @@ export default function ClassExamsPage({ params }: ClassExamsPageProps) {
         </div>
       </div>
       {/* ── Exam List ── */}
-      <div className="grid grid-cols-1 gap-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-          </div>
-        ) : filteredExams.length > 0 ? (
-          filteredExams.map((exam) => (
-            <div
-              key={exam.id}
-              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
-            >
-              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Exam info */}
-                <div
-                  className="flex items-center gap-4 flex-1 w-full cursor-pointer"
-                  onClick={() => router.push(`/workspace/classes/${classId}/exams/${exam.id}/subjects`)}
-                >
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2 hover:text-blue-500 transition-colors">
-                      {exam.exam_name}
-                      {exam.status && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${exam.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                          exam.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                            exam.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                              exam.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                'bg-red-100 text-red-700'
-                          }`}>
-                          {exam.status}
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 370px)' }}>
+        <div className="grid grid-cols-1 gap-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+            </div>
+          ) : filteredExams.length > 0 ? (
+            filteredExams.map((exam) => (
+              <div
+                key={exam.id}
+                className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              >
+                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                  {/* Exam info */}
+                  <div
+                    className="flex items-center gap-4 flex-1 w-full cursor-pointer"
+                    onClick={() => router.push(`/workspace/classes/${classId}/exams/${exam.id}/subjects`)}
+                  >
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2 hover:text-blue-500 transition-colors">
+                        {exam.exam_name}
+                        {exam.status && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${exam.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            exam.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              exam.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                exam.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
+                            {exam.status}
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                          <Clock size={11} /> {exam.minutes} min
                         </span>
-                      )}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
-                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
-                        <Clock size={11} /> {exam.minutes} min
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <GraduationCap size={13} />
-                        {currentClass?.name || 'Loading class...'}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Layers size={13} /> Questions: {questions.filter(q => q.examId === exam.id).length}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Layers size={13} /> Subjects: {subjects.filter(s => s.classes?.find(c => c.id === exam.classId)).length}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Layers size={13} /> Users: {users.filter(u => u.classId === exam.classId).length}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Layers size={13} /> Results: {results.filter(r => r.examId === exam.id).length}
-                      </span>
+                        <span className="flex items-center gap-1.5">
+                          <GraduationCap size={13} />
+                          {currentClass?.name || 'Loading class...'}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Layers size={13} /> Questions: {questions.filter(q => q.examId === exam.id).length}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Layers size={13} /> Subjects: {subjects.filter(s => s.classes?.find(c => c.id === exam.classId)).length}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Layers size={13} /> Users: {users.filter(u => u.classId === exam.classId).length}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Layers size={13} /> Results: {results.filter(r => r.examId === exam.id).length}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Actions */}
-                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                  <button
-                    onClick={() => handleOpenModal(exam)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="Edit"
-                  >
-                    <MdOutlineModeEditOutline size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDuplicate(exam)}
-                    disabled={isExamLimitReached}
-                    className={`px-2 py-1 text-xs rounded-sm transition-all ${isExamLimitReached
-                      ? "text-zinc-300 cursor-not-allowed"
-                      : "text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10]"
-                      }`}
-                    title={isExamLimitReached ? "Exam limit reached" : "Duplicate"}
-                  >
-                    <MdOutlineControlPointDuplicate size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exam.id)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                    title="Delete"
-                  >
-                    <MdOutlineDeleteOutline size={15} />
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <button
+                      onClick={() => handleOpenModal(exam)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Edit"
+                    >
+                      <MdOutlineModeEditOutline size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(exam)}
+                      disabled={isExamLimitReached}
+                      className={`px-2 py-1 text-xs rounded-sm transition-all ${isExamLimitReached
+                        ? "text-zinc-300 cursor-not-allowed"
+                        : "text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10]"
+                        }`}
+                      title={isExamLimitReached ? "Exam limit reached" : "Duplicate"}
+                    >
+                      <MdOutlineControlPointDuplicate size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(exam.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <MdOutlineDeleteOutline size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            /* ── Empty state ── */
+            <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+              <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+                <FileText size={28} className="text-[#6b6b6b]" />
+              </div>
+              <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No exams yet under this class</h3>
+              <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+                Create assessment papers under this group context to assign questions.
+              </p>
+              <button
+                onClick={() => handleOpenModal()}
+                disabled={isExamLimitReached}
+                className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isExamLimitReached
+                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-zinc-700"
+                  }`}
+              >
+                {isExamLimitReached ? "Limit Reached" : "Create Exam"}
+              </button>
             </div>
-          ))
-        ) : (
-          /* ── Empty state ── */
-          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
-              <FileText size={28} className="text-[#6b6b6b]" />
-            </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No exams yet under this class</h3>
-            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Create assessment papers under this group context to assign questions.
-            </p>
-            <button
-              onClick={() => handleOpenModal()}
-              disabled={isExamLimitReached}
-              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isExamLimitReached
-                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                : "bg-blue-500 text-white hover:bg-zinc-700"
-                }`}
-            >
-              {isExamLimitReached ? "Limit Reached" : "Create Exam"}
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       {/* ── Modal ── */}
       <Modal

@@ -281,12 +281,12 @@ export default function TeacherPage() {
       alert('This subject and class are already assigned to the teacher.');
       return;
     }
-    
+
     // Optimistic update
     const selectedSubject = subjects.find(s => s.id === newAssignment.subjectId);
     const selectedClass = classes.find(c => c.id === newAssignment.classId);
     const tempId = Math.random().toString(36).substring(7);
-    
+
     const optimisticAssignment = {
       id: tempId,
       subjectId: newAssignment.subjectId,
@@ -320,7 +320,7 @@ export default function TeacherPage() {
 
   const handleDeleteAssignment = async (assignmentId: string) => {
     if (!editingTeacher || !workspaceId) return;
-    
+
     // Optimistic update
     const previousAssignments = [...teacherAssignments];
     setTeacherAssignments(prev => prev.filter(a => a.id !== assignmentId));
@@ -363,13 +363,13 @@ export default function TeacherPage() {
           title="Teachers"
           description="Manage faculty members, subject assignments, and access permissions."
         >
-            <button
-                      onClick={() => handleOpenModal()}
-                      className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
-                    >
-                      <Plus size={14} />
-                      Add Teacher
-                    </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98]"
+          >
+            <Plus size={14} />
+            Add Teacher
+          </button>
 
         </DashboardHeader>
       </div>
@@ -414,88 +414,90 @@ export default function TeacherPage() {
       </div>
 
       {/* ── Teacher List ── */}
-      <div className="grid grid-cols-1 gap-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-          </div>
-        ) : filteredTeachers.length > 0 ? (
-          filteredTeachers.map((teacher) => (
-            <div
-              key={teacher.id}
-              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
-            >
-              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Teacher info */}
-                <div className="flex items-center gap-4 flex-1 w-full">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
-                      {teacher.user_name}
-                      {teacher.status && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${teacher.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                          teacher.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                            teacher.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                              teacher.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                'bg-red-100 text-red-700'
-                          }`}>
-                          {teacher.status}
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+        <div className="grid grid-cols-1 gap-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+            </div>
+          ) : filteredTeachers.length > 0 ? (
+            filteredTeachers.map((teacher) => (
+              <div
+                key={teacher.id}
+                className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              >
+                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                  {/* Teacher info */}
+                  <div className="flex items-center gap-4 flex-1 w-full">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
+                        {teacher.user_name}
+                        {teacher.status && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${teacher.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            teacher.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              teacher.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                teacher.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
+                            {teacher.status}
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5">
+                          <Mail size={11} /> {teacher.user_email}
                         </span>
-                      )}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
-                      <span className="flex items-center gap-1.5">
-                        <Mail size={11} /> {teacher.user_email}
-                      </span>
-                      <span
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium ${teacher.active
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-zinc-100 text-[#6b6b6b]'
-                          }`}
-                      >
-                        {teacher.active ? 'Active' : 'Restricted'}
-                      </span>
+                        <span
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium ${teacher.active
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-zinc-100 text-[#6b6b6b]'
+                            }`}
+                        >
+                          {teacher.active ? 'Active' : 'Restricted'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                  <button
-                    onClick={() => handleOpenModal(teacher)}
-                    className=" px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="Edit"
-                  >
-                    <MdOutlineModeEditOutline size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(teacher.id)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                    title="Delete"
-                  >
-                    <MdOutlineDeleteOutline size={15} />
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <button
+                      onClick={() => handleOpenModal(teacher)}
+                      className=" px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Edit"
+                    >
+                      <MdOutlineModeEditOutline size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(teacher.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <MdOutlineDeleteOutline size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            /* ── Empty state ── */
+            <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+              <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+                <GiTeacher size={28} className="text-[#6b6b6b]" />
+              </div>
+              <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No teachers yet</h3>
+              <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+                Start by adding your first faculty member to the workspace.
+              </p>
+              <button
+                onClick={() => handleOpenModal()}
+                className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
+              >
+                Add First Teacher
+              </button>
             </div>
-          ))
-        ) : (
-          /* ── Empty state ── */
-          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
-              <GiTeacher size={28} className="text-[#6b6b6b]" />
-            </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No teachers yet</h3>
-            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Start by adding your first faculty member to the workspace.
-            </p>
-            <button
-              onClick={() => handleOpenModal()}
-              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
-            >
-              Add First Teacher
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Modal ── */}

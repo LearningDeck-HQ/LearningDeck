@@ -360,94 +360,95 @@ export default function StudentsPage() {
       </div>
 
       {/* Student List */}
-      <div className="grid grid-cols-1 gap-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-          </div>
-        ) : filteredUsers.length > 0 ? (
-          filteredUsers.map((student) => (
-            <div
-              key={student.id}
-              className="group border-y border-zinc-400/20 bg-white  overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
-            >
-              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1 w-full">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
-                      {student.user_name}
-                      {student.status && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                          student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                            student.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                              student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                'bg-red-100 text-red-700'
-                          }`}>
-                          {student.status}
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+        <div className="grid grid-cols-1 gap-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+            </div>
+          ) : filteredUsers.length > 0 ? (
+            filteredUsers.map((student) => (
+              <div
+                key={student.id}
+                className="group border-y border-zinc-400/20 bg-white  overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              >
+                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 flex-1 w-full">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2">
+                        {student.user_name}
+                        {student.status && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${student.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                            student.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                              student.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                student.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                  'bg-red-100 text-red-700'
+                            }`}>
+                            {student.status}
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5">
+                          <Mail size={11} /> {student.user_email}
                         </span>
-                      )}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
-                      <span className="flex items-center gap-1.5">
-                        <Mail size={11} /> {student.user_email}
-                      </span>
-                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
-                        <GraduationCap size={11} />
-                        {classes.find((c) => c.id === student.classId)?.name || 'Unassigned'}
-                      </span>
-                      <span
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium ${student.active
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-zinc-100 text-[#6b6b6b]'
-                          }`}
-                      >
-                        {student.active ? 'Active' : 'Inactive'}
-                      </span>
+                        <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                          <GraduationCap size={11} />
+                          {classes.find((c) => c.id === student.classId)?.name || 'Unassigned'}
+                        </span>
+                        <span
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-medium ${student.active
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-zinc-100 text-[#6b6b6b]'
+                            }`}
+                        >
+                          {student.active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                  <button
-                    onClick={() => handleOpenModal(student)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="Edit"
-                  >
-                    <MdOutlineModeEditOutline size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(student.id)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                    title="Delete"
-                  >
-                    <MdOutlineDelete size={15} />
-                  </button>
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <button
+                      onClick={() => handleOpenModal(student)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Edit"
+                    >
+                      <MdOutlineModeEditOutline size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(student.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <MdOutlineDelete size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+              <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+                <UsersIcon size={28} className="text-[#6b6b6b]" />
+              </div>
+              <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No students enrolled</h3>
+              <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+                Start by enrolling your first student to organize their learning path.
+              </p>
+              <button
+                onClick={() => handleOpenModal()}
+                disabled={isStudentLimitReached}
+                className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isStudentLimitReached
+                  ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                  : "bg-blue-500 text-white hover:bg-zinc-700"
+                  }`}
+              >
+                {isStudentLimitReached ? "Limit Reached" : "Enroll First Student"}
+              </button>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
-              <UsersIcon size={28} className="text-[#6b6b6b]" />
-            </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No students enrolled</h3>
-            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Start by enrolling your first student to organize their learning path.
-            </p>
-            <button
-              onClick={() => handleOpenModal()}
-              disabled={isStudentLimitReached}
-              className={`px-4 py-1.5 text-xs font-medium rounded-sm transition-all ${isStudentLimitReached
-                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-                : "bg-blue-500 text-white hover:bg-zinc-700"
-                }`}
-            >
-              {isStudentLimitReached ? "Limit Reached" : "Enroll First Student"}
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div> </div>
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (

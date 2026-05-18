@@ -178,29 +178,29 @@ export default function ResultsPage() {
               .filter(([subId]) => activeFilters.length === 0 || activeFilters.includes(subId))
               .map(([subId, stats]: [string, SubjectScore]) => {
                 const subName = subjects.find((s) => s.id === subId)?.name || 'General';
-              const percentage = Math.round((stats.correct / stats.total) * 100);
-              return (
-                <div
-                  key={subId}
-                  className="bg-zinc-50 p-3 rounded-sm border border-zinc-400/20 space-y-2"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-medium text-[#0e0f10]">{subName}</span>
-                    <span className="text-xs text-[#6b6b6b]">{percentage}%</span>
+                const percentage = Math.round((stats.correct / stats.total) * 100);
+                return (
+                  <div
+                    key={subId}
+                    className="bg-zinc-50 p-3 rounded-sm border border-zinc-400/20 space-y-2"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-[#0e0f10]">{subName}</span>
+                      <span className="text-xs text-[#6b6b6b]">{percentage}%</span>
+                    </div>
+                    <div className="w-full h-1 bg-zinc-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${percentage >= 50 ? 'bg-emerald-500' : 'bg-red-500'
+                          }`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-[#6b6b6b]">
+                      {stats.correct} correct of {stats.total} questions
+                    </p>
                   </div>
-                  <div className="w-full h-1 bg-zinc-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${percentage >= 50 ? 'bg-emerald-500' : 'bg-red-500'
-                        }`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-[#6b6b6b]">
-                    {stats.correct} correct of {stats.total} questions
-                  </p>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         );
       }
@@ -324,85 +324,88 @@ export default function ResultsPage() {
       </div>
 
       {/* ── Result List ── */}
-      <div className="grid grid-cols-1 gap-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-          </div>
-        ) : filteredResults.length > 0 ? (
-          filteredResults.map((result) => (
-            <div
-              key={result.id}
-              className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
-            >
-              <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                {/* Result info */}
-                <div className="flex items-center gap-4 flex-1 w-full">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
-                      {result.user?.user_name || 'Unknown Student'}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
-                      <span className="flex items-center gap-1.5">
-                        <FileText size={11} /> {result.exam?.exam_name || 'Unknown Exam'}
-                      </span>
-                      <span
-                        className={`flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-medium ${result.overallScore >= 50
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-red-50 text-red-500'
-                          }`}
-                      >
-                        {result.overallScore >= 40 ? 'Passed' : 'Failed'}
-                      </span>
-                      <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
-                        Score: {result.overallScore}%
-                      </span>
-                    </div>
-                    <div className="mt-1.5">
-                      {renderSubjectScores(result)}
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+        <div className="grid grid-cols-1 gap-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+            </div>
+          ) : filteredResults.length > 0 ? (
+            filteredResults.map((result) => (
+              <div
+                key={result.id}
+                className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+              >
+                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                  {/* Result info */}
+                  <div className="flex items-center gap-4 flex-1 w-full">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight">
+                        {result.user?.user_name || 'Unknown Student'}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                        <span className="flex items-center gap-1.5">
+                          <FileText size={11} /> {result.exam?.exam_name || 'Unknown Exam'}
+                        </span>
+                        <span
+                          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-medium ${result.overallScore >= 50
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-red-50 text-red-500'
+                            }`}
+                        >
+                          {result.overallScore >= 40 ? 'Passed' : 'Failed'}
+                        </span>
+                        <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10]">
+                          Score: {result.overallScore}%
+                        </span>
+                      </div>
+                      <div className="mt-1.5">
+                        {renderSubjectScores(result)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                  <button
-                    onClick={() => fetchResultDetails(result)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                    title="View Details"
-                  >
-                    <Eye size={15} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(result.id)}
-                    className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                    title="Delete"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                    <button
+                      onClick={() => fetchResultDetails(result)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="View Details"
+                    >
+                      <Eye size={15} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(result.id)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            /* ── Empty state ── */
+            <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+              <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+                <BarChart3 size={28} className="text-[#6b6b6b]" />
+              </div>
+              <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No results yet</h3>
+              <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+                Results will appear here once students complete their assigned examinations.
+              </p>
+              <button
+                onClick={fetchData}
+                className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
+              >
+                Refresh Records
+              </button>
             </div>
-          ))
-        ) : (
-          /* ── Empty state ── */
-          <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
-            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
-              <BarChart3 size={28} className="text-[#6b6b6b]" />
-            </div>
-            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No results yet</h3>
-            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-              Results will appear here once students complete their assigned examinations.
-            </p>
-            <button
-              onClick={fetchData}
-              className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
-            >
-              Refresh Records
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (

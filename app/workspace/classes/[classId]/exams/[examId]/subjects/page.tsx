@@ -338,85 +338,88 @@ export default function ExamSubjectsPage({ params }: ExamSubjectsPageProps) {
                 </div>
             </div>
             {/* ── Subject List ── */}
-            <div className="grid grid-cols-1 gap-3">
-                {isLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
-                    </div>
-                ) : filteredSubjects.length > 0 ? (
-                    filteredSubjects.map((subject) => (
-                        <div
-                            key={subject.id}
-                            className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
-                        >
-                            <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
-                                {/* Subject info */}
-                                <div
-                                    className="flex items-center gap-4 flex-1 w-full cursor-pointer"
-                                    onClick={() => router.push(`/workspace/questions?examId=${examId}&subjectId=${subject.id}&classId=${classId}`)}
-                                >
-                                    <div className="space-y-1">
-                                        <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2 hover:text-blue-500 transition-colors">
-                                            {subject.name}
-                                            {subject.status && (
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${subject.status === 'saving' ? 'bg-amber-100 text-amber-700' :
-                                                    subject.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
-                                                        subject.status === 'deleting' ? 'bg-red-100 text-red-700' :
-                                                            subject.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
-                                                                'bg-red-100 text-red-700'
-                                                    }`}>
-                                                    {subject.status}
+
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 370px)' }}>
+                <div className="grid grid-cols-1 gap-3">
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <ScaleLoader barCount={3} color="#a7a7a7ff" height={18} width={4} />
+                        </div>
+                    ) : filteredSubjects.length > 0 ? (
+                        filteredSubjects.map((subject) => (
+                            <div
+                                key={subject.id}
+                                className="group border-y border-zinc-400/20 bg-white overflow-hidden hover:bg-zinc-300/10 transition-all duration-200"
+                            >
+                                <div className="px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    {/* Subject info */}
+                                    <div
+                                        className="flex items-center gap-4 flex-1 w-full cursor-pointer"
+                                        onClick={() => router.push(`/workspace/questions?examId=${examId}&subjectId=${subject.id}&classId=${classId}`)}
+                                    >
+                                        <div className="space-y-1">
+                                            <h3 className="text-sm font-medium text-[#0e0f10] tracking-tight flex items-center gap-2 hover:text-blue-500 transition-colors">
+                                                {subject.name}
+                                                {subject.status && (
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-sm uppercase font-bold animate-pulse ${subject.status === 'saving' ? 'bg-amber-100 text-amber-700' :
+                                                        subject.status === 'saved' ? 'bg-emerald-100 text-emerald-700' :
+                                                            subject.status === 'deleting' ? 'bg-red-100 text-red-700' :
+                                                                subject.status === 'done' ? 'bg-zinc-100 text-zinc-700' :
+                                                                    'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {subject.status}
+                                                    </span>
+                                                )}
+                                            </h3>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
+                                                <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10] font-mono text-[10px]">
+                                                    {subject.code || 'UNCODED'}
                                                 </span>
-                                            )}
-                                        </h3>
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-[#6b6b6b]">
-                                            <span className="flex items-center gap-1.5 bg-zinc-300/20 px-2 py-0.5 rounded-sm text-[#0e0f10] font-mono text-[10px]">
-                                                {subject.code || 'UNCODED'}
-                                            </span>
-                                            <span className="flex items-center gap-1.5">
-                                                <Layers size={11} /> Questions: {subject._count?.questions || 0}
-                                            </span>
+                                                <span className="flex items-center gap-1.5">
+                                                    <Layers size={11} /> Questions: {subject._count?.questions || 0}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                {/* Actions */}
-                                <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
-                                    <button
-                                        onClick={() => handleOpenModal(subject)}
-                                        className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
-                                        title="Edit"
-                                    >
-                                        <MdOutlineModeEditOutline size={15} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(subject.id)}
-                                        className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
-                                        title="Delete"
-                                    >
-                                        <MdOutlineDeleteOutline size={15} />
-                                    </button>
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
+                                        <button
+                                            onClick={() => handleOpenModal(subject)}
+                                            className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                                            title="Edit"
+                                        >
+                                            <MdOutlineModeEditOutline size={15} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(subject.id)}
+                                            className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
+                                            title="Delete"
+                                        >
+                                            <MdOutlineDeleteOutline size={15} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                        ))
+                    ) : (
+                        /* ── Empty state ── */
+                        <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
+                            <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
+                                <Layers size={28} className="text-[#6b6b6b]" />
+                            </div>
+                            <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No subjects under this exam yet</h3>
+                            <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
+                                Add subject units that are assessed under this exam's class unit.
+                            </p>
+                            <button
+                                onClick={() => handleOpenModal()}
+                                className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
+                            >
+                                Add First Subject
+                            </button>
                         </div>
-                    ))
-                ) : (
-                    /* ── Empty state ── */
-                    <div className="text-center py-20 bg-white rounded-sm border border-dashed border-zinc-400/30 flex flex-col items-center">
-                        <div className="w-16 h-16 bg-zinc-100 rounded-sm flex items-center justify-center mb-6">
-                            <Layers size={28} className="text-[#6b6b6b]" />
-                        </div>
-                        <h3 className="text-sm font-medium text-[#0e0f10] mb-2">No subjects under this exam yet</h3>
-                        <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-8 leading-relaxed">
-                            Add subject units that are assessed under this exam's class unit.
-                        </p>
-                        <button
-                            onClick={() => handleOpenModal()}
-                            className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all"
-                        >
-                            Add First Subject
-                        </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
             {/* ── Modal ── */}
             <Modal
