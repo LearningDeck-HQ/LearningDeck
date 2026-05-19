@@ -360,7 +360,7 @@ export default function StudentsPage() {
       </div>
 
       {/* Student List */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+      <div className="overflow-y-auto" style={{ maxHeight: `calc(100vh - ${totalPages > 1 ? '350' : '290'}px)` }}>
         <div className="grid grid-cols-1 gap-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
@@ -451,48 +451,50 @@ export default function StudentsPage() {
         </div> </div>
 
       {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="flex sticky items-center justify-between px-4 py-3 bg-white border border-zinc-400/20 rounded-sm">
-          <div className="text-xs text-[#6b6b6b]">
-            Showing <span className="font-medium text-[#0e0f10]">{(page - 1) * limit + 1}</span> to <span className="font-medium text-[#0e0f10]">{Math.min(page * limit, totalStudents)}</span> of <span className="font-medium text-[#0e0f10]">{totalStudents}</span> students
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              Previous
-            </button>
-            <div className="flex items-center gap-1">
-              {[...Array(totalPages)].map((_, i) => {
-                const p = i + 1;
-                if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
-                  return (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`w-7 h-7 flex items-center justify-center text-xs font-medium rounded-sm transition-all ${page === p ? 'bg-blue-500 text-white' : 'hover:bg-zinc-100 text-[#0e0f10]'}`}
-                    >
-                      {p}
-                    </button>
-                  );
-                } else if (p === page - 2 || p === page + 2) {
-                  return <span key={p} className="text-[#6b6b6b]">...</span>;
-                }
-                return null;
-              })}
+      {
+        totalPages > 1 && (
+          <div className="flex sticky items-center justify-between px-4 py-3 bg-white border border-zinc-400/20 rounded-sm">
+            <div className="text-xs text-[#6b6b6b]">
+              Showing <span className="font-medium text-[#0e0f10]">{(page - 1) * limit + 1}</span> to <span className="font-medium text-[#0e0f10]">{Math.min(page * limit, totalStudents)}</span> of <span className="font-medium text-[#0e0f10]">{totalStudents}</span> students
             </div>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              Next
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-1">
+                {[...Array(totalPages)].map((_, i) => {
+                  const p = i + 1;
+                  if (p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1)) {
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`w-7 h-7 flex items-center justify-center text-xs font-medium rounded-sm transition-all ${page === p ? 'bg-blue-500 text-white' : 'hover:bg-zinc-100 text-[#0e0f10]'}`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  } else if (p === page - 2 || p === page + 2) {
+                    return <span key={p} className="text-[#6b6b6b]">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1 text-xs font-medium bg-zinc-50 text-[#0e0f10] border border-zinc-400/20 rounded-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Modal */}
       <Modal
@@ -597,6 +599,6 @@ export default function StudentsPage() {
           </div>
         </form>
       </Modal>
-    </div>
+    </div >
   );
 }

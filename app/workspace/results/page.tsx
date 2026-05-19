@@ -324,7 +324,7 @@ export default function ResultsPage() {
       </div>
 
       {/* ── Result List ── */}
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+      <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
         <div className="grid grid-cols-1 gap-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
@@ -365,6 +365,16 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
+                  <p className='text-black'>
+                    {new Date(result.date).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </p>
                   {/* Actions */}
                   <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
                     <button
