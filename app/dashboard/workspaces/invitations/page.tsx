@@ -10,9 +10,6 @@ import {
   Copy,
   RefreshCcw,
   Trash2,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
   X
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -30,8 +27,11 @@ interface Invite {
   expiresAt: string;
 }
 
+const TABS = ['ALL', 'PENDING', 'COMPLETED', 'REVOKED'];
+
 const Invitations = () => {
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [tab, setTab] = useState('ALL');
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,131 +94,165 @@ const Invitations = () => {
     toast.success('Invite link copied to clipboard');
   };
 
+  const filteredInvites = invites.filter((invite) => {
+    if (tab === 'ALL') return true;
+    return invite.status === tab;
+  });
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'COMPLETED':
         return (
-          <div className="inline-flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            <span className="text-gray-600 uppercase tracking-wider text-xs">Accepted</span>
+          <div className="inline-flex items-center gap-1.5 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200">
+            <span className="w-1.5 h-1.5 bg-neutral-900 rounded-full" />
+            <span className="text-[#6b6b6b] uppercase tracking-wider text-[10px] font-medium">Accepted</span>
           </div>
         );
       case 'REVOKED':
         return (
-          <div className="inline-flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
-            <span className="w-1.5 h-1.5 bg-red-400 rounded-full" />
-            <span className="text-gray-600 uppercase tracking-wider text-xs">Revoked</span>
+          <div className="inline-flex items-center gap-1.5 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200">
+            <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+            <span className="text-red-600 uppercase tracking-wider text-[10px] font-medium">Revoked</span>
           </div>
         );
       default:
         return (
-          <div className="inline-flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-            <span className="text-gray-600 uppercase tracking-wider text-xs">Pending</span>
+          <div className="inline-flex items-center gap-1.5 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200">
+            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+            <span className="text-amber-700 uppercase tracking-wider text-[10px] font-medium">Pending</span>
           </div>
         );
     }
   };
 
   return (
-    <div className="flex flex-col gap-8 h-full">
+    <div className="flex flex-col gap-6 overflow-hidden h-full text-[#0e0f10] ">
       {isLoading ? (
         <div className="flex items-center justify-center h-64 w-full">
-          <ScaleLoader barCount={3} color="#a7a7a7" height={20} width={5} />
+          <ScaleLoader barCount={3} color="#0e0f10" height={20} width={5} />
         </div>
       ) : invites.length > 0 ? (
         <>
-          <div className="flex items-center justify-between">
-            <div />
+          {/* Header & Tabs Grid Container */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 ">
+            <div className="flex items-center gap-1">
+              {TABS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors -mb-[2px] ${tab === t
+                    ? "border-[#0e0f10] text-[#0e0f10]"
+                    : "border-transparent text-[#6b6b6b] hover:text-[#0e0f10]"
+                  }`}
+                >
+                  {t === 'COMPLETED' ? 'ACCEPTED' : t}
+                </button>
+              ))}
+            </div>
+            
             <Button
               onClick={() => setIsModalOpen(true)}
               disabled={isTeacherLimitReached}
-              className={`flex items-center gap-2 px-4 py-2 rounded transition-colors border-none ring-0 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border-none ring-0 self-end sm:self-auto text-xs font-medium tracking-wide ${
                 isTeacherLimitReached 
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed" 
+                  : "bg-[#0e0f10] text-white hover:bg-neutral-800"
               }`}
               title={isTeacherLimitReached ? "Teacher limit reached for your plan" : "Invite Member"}
             >
-              <UserPlus className="w-4 h-4" /> Invite Member
+              <UserPlus className="w-3.5 h-3.5" /> Invite Member
             </Button>
           </div>
 
-          <div className="divide-y divide-gray-100 border-t border-b border-gray-100 bg-[#f9f9f9]">
-            {/* Table header */}
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-y border-zinc-400/20">
-              {['Email', 'Role', 'Status', 'Sent', 'Actions'].map((h) => (
-                <span key={h} className="text-xs text-gray-500 uppercase tracking-wider font-medium">{h}</span>
-              ))}
-            </div>
-
-            {invites.map((invite) => (
-              <div
-                key={invite.id}
-                className="group grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center py-5 px-5 transition-colors hover:bg-gray-50/50 border-y border-zinc-400/20 rounded"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-50 rounded flex items-center justify-center border border-blue-100 shrink-0">
-                    <Mail className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <span className="text-gray-900">{invite.email}</span>
-                </div>
-
-                <span className="capitalize text-gray-600">{invite.role.toLowerCase()}</span>
-
-                {getStatusBadge(invite.status)}
-
-                <span className="text-gray-500 ">
-                  {formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}
-                </span>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => copyLink(invite.token)}
-                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
-                    title="Copy Link"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  {invite.status === 'PENDING' && (
-                    <>
-                      <button
-                        onClick={() => handleResend(invite.id)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
-                        title="Resend"
-                      >
-                        <RefreshCcw className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleRevoke(invite.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
-                        title="Revoke"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
+          {/* Cleaned Modern Table Section */}
+          {filteredInvites.length > 0 ? (
+            <div className="bg-white border border-neutral-200/80 rounded overflow-hidden divide-y divide-neutral-100">
+              {/* Table header */}
+              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 bg-neutral-50/70">
+                {['Email', 'Role', 'Status', 'Sent', 'Actions'].map((h) => (
+                  <span key={h} className="text-[10px] text-[#6b6b6b] uppercase tracking-wider font-semibold">{h}</span>
+                ))}
               </div>
-            ))}
-          </div>
+
+              {/* Table Rows */}
+                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 290px)' }}>
+                    {filteredInvites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="group grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-4 items-center py-4 px-5 transition-colors hover:bg-neutral-50/40 text-xs font-medium"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 bg-neutral-50 rounded-md flex items-center justify-center border border-neutral-200 shrink-0">
+                      <Mail className="w-3.5 h-3.5 text-[#6b6b6b] group-hover:text-[#0e0f10] transition-colors" />
+                    </div>
+                    <span className="text-[#0e0f10] font-normal">{invite.email}</span>
+                  </div>
+
+                  <span className="capitalize text-[#6b6b6b] font-normal">{invite.role.toLowerCase()}</span>
+
+                  <div>{getStatusBadge(invite.status)}</div>
+
+                  <span className="text-[#6b6b6b] font-normal">
+                    {formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}
+                  </span>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => copyLink(invite.token)}
+                      className="p-1.5 text-[#6b6b6b] hover:text-[#0e0f10] hover:bg-neutral-100 rounded-md transition-all"
+                      title="Copy Link"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    {invite.status === 'PENDING' && (
+                      <>
+                        <button
+                          onClick={() => handleResend(invite.id)}
+                          className="p-1.5 text-[#6b6b6b] hover:text-[#0e0f10] hover:bg-neutral-100 rounded-md transition-all"
+                          title="Resend"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleRevoke(invite.id)}
+                          className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
+                          title="Revoke"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+                </div>
+            
+            </div>
+          ) : (
+            <div className="text-center py-16 border border-dashed border-neutral-200 rounded-xl bg-neutral-50/20">
+              <p className="text-[#6b6b6b] text-xs">
+                No {tab.toLowerCase() === 'all' ? '' : tab.toLowerCase()} invitations found.
+              </p>
+            </div>
+          )}
         </>
       ) : (
-        <div className="text-center py-24 border border-dashed border-gray-200 rounded-xl">
-          <div className="w-12 h-12 bg-gray-50 rounded flex items-center justify-center mx-auto mb-4 border border-gray-100">
-            <Mail className="w-6 h-6 text-gray-400" />
+        /* Empty State */
+        <div className="text-center py-24 border border-dashed border-neutral-200 rounded-xl bg-white">
+          <div className="w-12 h-12 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-200">
+            <Mail className="w-5 h-5 text-[#6b6b6b]" />
           </div>
-          <h3 className="text-gray-900 mb-2">No invitations yet</h3>
-          <p className="text-gray-500 max-w-xs mx-auto mb-6">
+          <h3 className="text-[#0e0f10] font-medium mb-1 text-sm">No invitations yet</h3>
+          <p className="text-[#6b6b6b] text-xs max-w-xs mx-auto mb-6">
             Invite your team members to start collaborating on your workspace.
           </p>
           <Button
             onClick={() => setIsModalOpen(true)}
             disabled={isTeacherLimitReached}
-            className={`px-8 h-10 rounded transition-colors border-none ring-0 ${
+            className={`px-6 h-9 rounded-md transition-colors border-none ring-0 text-xs font-medium tracking-wide ${
               isTeacherLimitReached 
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-neutral-100 text-neutral-400 cursor-not-allowed" 
+                : "bg-[#0e0f10] text-white hover:bg-neutral-800"
             }`}
           >
             {isTeacherLimitReached ? "Limit Reached" : "Send Invite"}
@@ -226,15 +260,15 @@ const Invitations = () => {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Overhauled Modal Layout */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded border border-gray-200 w-full max-w-md shadow-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-[#f9f9f9]">
-              <h3 className="text-gray-900 font-medium">Invite Team Member</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-[2px]">
+          <div className="bg-white rounded-xl border border-neutral-200 w-full max-w-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+              <h3 className="text-[#0e0f10] text-sm font-medium">Invite Team Member</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all"
+                className="p-1.5 text-neutral-400 hover:text-[#0e0f10] hover:bg-neutral-100 rounded-md transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -247,19 +281,20 @@ const Invitations = () => {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="text-xs"
               />
               <div className="space-y-2">
-                <label className=" text-gray-600">Assign Role</label>
+                <label className="text-[#6b6b6b] text-xs font-medium">Assign Role</label>
                 <div className="grid grid-cols-2 gap-2">
                   {['TEACHER', 'ADMIN'].map((role) => (
                     <button
                       key={role}
                       type="button"
                       onClick={() => setFormData({ ...formData, role })}
-                      className={`py-2.5 px-4 rounded  border transition-all ${formData.role === role
-                        ? 'border-blue-400 bg-blue-50 text-blue-600'
-                        : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
-                        }`}
+                      className={`py-2 px-4 rounded-md border text-xs font-medium transition-all ${formData.role === role
+                        ? 'border-[#0e0f10] bg-neutral-50 text-[#0e0f10] shadow-sm'
+                        : 'border-neutral-200 bg-white text-[#6b6b6b] hover:border-neutral-300'
+                      }`}
                     >
                       {role.charAt(0) + role.slice(1).toLowerCase()}
                     </button>
@@ -268,7 +303,7 @@ const Invitations = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full h-10 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors border-none ring-0"
+                className="w-full h-9 rounded-md bg-[#0e0f10] text-white hover:bg-neutral-800 transition-colors border-none ring-0 text-xs font-medium tracking-wide shadow-sm"
                 isLoading={isSubmitting}
               >
                 Send Invitation

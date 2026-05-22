@@ -22,19 +22,21 @@ export const AshardTabs = ({ items, className = '' }: AshardTabsProps) => {
   const renderedItems = useMemo(
     () =>
       items.map((item) => {
-        // Checks if current path is exactly the href OR a sub-path of the href
-        // This ensures "Overview" stays active if you are at "workspaces/settings"
-        const isActive = pathname === item.href
+        // Checks if current path matches the link href
+        const isActive = pathname === item.href;
 
         return (
-          <Link key={item.id} href={item.href} className="group">
-            <span className={`flex items-center justify-center  gap-2 rounded px-4 py-2   transition-all duration-200 ${isActive
-              ? 'bg-zinc-400/20 text-black'
-              : ' text-slate-700 hover:bg-slate-50'
-              }`}>
-
-              <span>{item.label}</span>
-            </span>
+          <Link 
+            key={item.id} 
+            href={item.href} 
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-medium border-b-2  scale-100 hover:scale-105 transition-all duration-700 ${
+              isActive
+                ? "border-[#0e0f10] text-[#0e0f10]"
+                : "border-transparent text-[#6b6b6b] hover:text-[#0e0f10]"
+            }`}
+          >
+            {item.icon && <span className="flex items-center justify-center ">{item.icon}</span>}
+            <span>{item.label}</span>
           </Link>
         );
       }),
@@ -42,8 +44,7 @@ export const AshardTabs = ({ items, className = '' }: AshardTabsProps) => {
   );
 
   return (
-    <nav className={`grid grid-cols-4 gap-2  rounded p-1 bg-[#f9f9f9] border border-[#ededed] w-full ${className}`}>
-
+    <nav className={`flex items-center gap-2 w-full ${className}`}>
       {renderedItems}
     </nav>
   );

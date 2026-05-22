@@ -30,61 +30,60 @@ export default function WorkspacesPage() {
     <div className="flex flex-col gap-8 h-full">
       {isLoading ? (
         <div className="flex items-center justify-center h-64 w-full">
-          <ScaleLoader barCount={3} color="#a7a7a7" height={20} width={5} />
+          <ScaleLoader barCount={3} color="#6b6b6b" height={20} width={5} />
         </div>
       ) : workspaces.length > 0 ? (
-        <div className="divide-y divide-gray-100 border-t border-b border-gray-100 bg-[#f9f9f9]">
+        <div className="divide-y divide-[#ededed] border-t border-b border-[#ededed] bg-[#f9f9f9]">
           {workspaces.map((ws) => (
             <div
               key={ws.id}
-              className="group py-10 px-5 flex flex-col md:flex-row md:items-center justify-between gap-8 transition-colors hover:bg-gray-50/50 border-y border-zinc-400/20 rounded"
+              className="group py-10 px-5 flex flex-col md:flex-row md:items-center justify-between gap-8 transition-colors hover:bg-white/60 border-b border-[#ededed] last:border-b-0"
             >
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded flex items-center justify-center border border-blue-100">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-white rounded flex items-center justify-center border border-[#ededed]">
+                    <Briefcase className="w-4 h-4 text-[#0e0f10]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-3">
-                      <h3 className=" text-gray-900  tracking-tight">
+                      <h3 className="text-xs font-medium text-[#0e0f10] tracking-tight">
                         {ws.name}
                       </h3>
-                      <div className="inline-flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                      <div className="inline-flex items-center gap-1.5 bg-white px-2 py-0.5 rounded border border-[#ededed]">
                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                        <span className=" text-gray-600  uppercase tracking-wider">Active</span>
+                        <span className="text-[10px] font-medium text-[#6b6b6b] uppercase tracking-wider">Active</span>
                       </div>
                     </div>
-                    <p className="text-gray-500 mt-1  max-w-2xl leading-relaxed">
+                    <p className="text-xs text-[#6b6b6b] mt-1 max-w-2xl leading-relaxed">
                       {ws.description || "Integrated digital learning environment for streamlined education management."}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.users || 0}</span> Students
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <Users className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.users || 0}</span> Students
                   </div>
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <FileText className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.exams || 0}</span> Exams
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <FileText className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.exams || 0}</span> Exams
                   </div>
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <GraduationCap className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.teachers || 0}</span> Teachers
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <GraduationCap className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.teachers || 0}</span> Teachers
                   </div>
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <BookOpen className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.subjects || 0}</span> Subjects
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <BookOpen className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.subjects || 0}</span> Subjects
                   </div>
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <BookOpen className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.questions || 0}</span> Questions
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <BookOpen className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.questions || 0}</span> Questions
                   </div>
-
-                  <div className="flex items-center gap-2  text-gray-500">
-                    <BookOpen className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-700 ">{ws._count?.classes || 0}</span> Classes
+                  <div className="flex items-center gap-2 text-xs text-[#6b6b6b]">
+                    <BookOpen className="w-3.5 h-3.5 text-[#6b6b6b]/60" />
+                    <span className="text-[#0e0f10] font-medium">{ws._count?.classes || 0}</span> Classes
                   </div>
                 </div>
               </div>
@@ -92,26 +91,25 @@ export default function WorkspacesPage() {
               <div className="flex items-center gap-4">
                 <Link
                   href={`/workspace`}
-                  // target='_blank'
-                  className="h-11 px-6 bg-white text-gray-700 border border-gray-200   rounded hover:bg-white hover:border-blue-400 hover:text-blue-600 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="h-9 px-4 bg-white text-xs font-medium text-[#6b6b6b] border border-[#ededed] rounded hover:text-[#0e0f10] hover:border-[#0e0f10] transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   Open Workspace
-                  <ChevronRight className="w-4 h-4 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-24 border border-dashed border-gray-200 rounded-xl">
-          <div className="w-12 h-12 bg-gray-50 rounded flex items-center justify-center mx-auto mb-4 border border-gray-100">
-            <Briefcase className="w-6 h-6 text-gray-400" />
+        <div className="text-center py-24 border border-dashed border-[#ededed] rounded">
+          <div className="w-12 h-12 bg-white rounded flex items-center justify-center mx-auto mb-4 border border-[#ededed]">
+            <Briefcase className="w-5 h-5 text-[#6b6b6b]" />
           </div>
-          <h3 className="  text-gray-900 mb-2">No workspaces found</h3>
-          <p className=" text-gray-500 max-w-xs mx-auto mb-6">
+          <h3 className="text-xs font-medium text-[#0e0f10] mb-2">No workspaces found</h3>
+          <p className="text-xs text-[#6b6b6b] max-w-xs mx-auto mb-6">
             Get started by creating your first workspace for your school or organization.
           </p>
-          <Button className="bg-blue-600 text-white   px-8 h-10 rounded hover:bg-blue-700 transition-colors border-none ring-0">
+          <Button className="bg-[#0e0f10] text-white text-xs font-medium px-6 h-9 rounded hover:bg-[#0e0f10]/90 transition-colors border-none ring-0">
             Create Now
           </Button>
         </div>
