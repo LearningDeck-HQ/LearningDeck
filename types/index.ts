@@ -107,3 +107,17 @@ export interface ApiResponse<T> {
     limit: number;
   };
 }
+
+export interface AuditLog {
+  id: string;
+  workspaceId: string;
+  userId: string | null;
+  action: string;
+  description: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  user?: {
+    user_name: string | null;
+    role: string | null;
+  } | null;
+}

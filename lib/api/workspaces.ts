@@ -1,4 +1,4 @@
-import { ApiResponse, Workspace } from "@/types";
+import { ApiResponse, AuditLog, Workspace } from "@/types";
 import { apiFetch } from "./client";
 
 export const workspaceApi = {
@@ -70,6 +70,10 @@ export const workspaceApi = {
 
   async getUsage(workspaceId: string): Promise<ApiResponse<{ usage: any; limits: any }>> {
     return apiFetch<{ usage: any; limits: any }>(`/workspaces/${workspaceId}/usage`);
+  },
+
+  async getAuditLogs(): Promise<ApiResponse<AuditLog[]>> {
+    return apiFetch<AuditLog[]>('/workspaces/audit-logs');
   }
 };
 

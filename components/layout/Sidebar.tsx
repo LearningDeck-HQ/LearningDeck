@@ -20,11 +20,14 @@ import React, { useEffect, useState } from "react";
 import { billingApi } from "@/lib/api/billing";
 import { userApi } from '@/lib/api/users';
 import { BiBrain, BiCreditCard } from "react-icons/bi";
+import { TbReportSearch } from "react-icons/tb";
+
 
 export const dashboardNavItems = [
   { label: 'Home', href: '/dashboard', icon: TbHome },
   { label: 'Workspace', href: '/dashboard/workspaces', icon: MdWorkspaces, startsWith: true },
   { label: 'Plan', href: '/dashboard/plans', icon: BiCreditCard },
+    { label: 'Audit logs', href: '/dashboard/audit-logs', icon:  TbReportSearch  },
   { label: 'Settings', href: '/dashboard/settings', icon: MdSettings, startsWith: true },
   { label: 'Agentic mode', href: '/dashboard/agentic-mode', icon: BiBrain, badge: 'BETA' },
   { label: 'Plugins & Templates', href: '/dashboard/templates', icon: TbTemplate },

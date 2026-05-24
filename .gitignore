@@ -10,6 +10,7 @@
 !.yarn/releases
 !.yarn/versions
 
+/result-template-automation-plugin
 # testing
 /coverage
 
