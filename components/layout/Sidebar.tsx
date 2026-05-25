@@ -19,13 +19,14 @@ import { authApi } from '@/lib/api/auth';
 import React, { useEffect, useState } from "react";
 import { billingApi } from "@/lib/api/billing";
 import { userApi } from '@/lib/api/users';
-import { BiBrain, BiCreditCard } from "react-icons/bi";
+import { BiBrain, BiBroadcast, BiCreditCard } from "react-icons/bi";
 import { TbReportSearch } from "react-icons/tb";
 
 
 export const dashboardNavItems = [
   { label: 'Home', href: '/dashboard', icon: TbHome },
   { label: 'Workspace', href: '/dashboard/workspaces', icon: MdWorkspaces, startsWith: true },
+    { label: 'Broadcast', href: '/dashboard/deployments', icon: BiBroadcast, startsWith: true },
   { label: 'Plan', href: '/dashboard/plans', icon: BiCreditCard },
     { label: 'Audit logs', href: '/dashboard/audit-logs', icon:  TbReportSearch  },
   { label: 'Settings', href: '/dashboard/settings', icon: MdSettings, startsWith: true },

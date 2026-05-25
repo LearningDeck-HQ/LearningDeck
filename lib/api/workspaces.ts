@@ -1,6 +1,31 @@
 import { ApiResponse, AuditLog, Workspace } from "@/types";
 import { apiFetch } from "./client";
 
+export type AuditLogFilters = {
+  userRole?: 'ADMIN' | 'TEACHER' | 'ALL';
+  action?: string;
+  timeRange?: 'today' | 'this_week' | 'last_week' | 'all';
+};
+
+const buildAuditLogQuery = (filters?: AuditLogFilters) => {
+  const params = new URLSearchParams();
+
+  if (filters?.userRole && filters.userRole !== 'ALL') {
+    params.set('role', filters.userRole);
+  }
+
+  if (filters?.action && filters.action !== 'ALL') {
+    params.set('action', filters.action);
+  }
+
+  if (filters?.timeRange && filters.timeRange !== 'all') {
+    params.set('timeRange', filters.timeRange);
+  }
+
+  const queryString = params.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
 export const workspaceApi = {
   async list(): Promise<ApiResponse<Workspace[]>> {
     return apiFetch<Workspace[]>('/workspaces');
@@ -72,8 +97,8 @@ export const workspaceApi = {
     return apiFetch<{ usage: any; limits: any }>(`/workspaces/${workspaceId}/usage`);
   },
 
-  async getAuditLogs(): Promise<ApiResponse<AuditLog[]>> {
-    return apiFetch<AuditLog[]>('/workspaces/audit-logs');
+  async getAuditLogs(filters?: AuditLogFilters): Promise<ApiResponse<AuditLog[]>> {
+    return apiFetch<AuditLog[]>(`/workspaces/audit-logs${buildAuditLogQuery(filters)}`);
   }
 };
 
