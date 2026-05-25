@@ -96,24 +96,7 @@ const LandingPageContent = () => {
               </button>
             </div>
 
-            {/* Exam Manager Card */}
-            <div className="p-8 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group">
-              <div className="w-12 h-12 bg-[#F8F9FA] rounded-lg flex items-center justify-center mb-6 border border-gray-200">
-                <ShieldCheck className="w-6 h-6 text-gray-700" />
-              </div>
-              <h3 className="text-[20px] mb-3 text-gray-900">Exam Manager</h3>
-              <p className="text-gray-500 mb-6 leading-relaxed text-[15px]">
-                Secure, robust, and scalable examination infrastructure. From auto-grading to proctoring, manage it all from one dashboard.
-              </p>
-              <ul className="space-y-3 mb-8 text-[14px] text-gray-600">
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Easy exam creation and management</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> AI-Native Exam manager</li>
-                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-gray-400 rounded-full" /> Plugins & Templates Intergrations</li>
-              </ul>
-              <button className="text-blue-600 font-medium text-[14px] flex items-center gap-1 hover:gap-2 transition-all">
-                View Exam Manager <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+          
           </div>
         </div>
       </section>
@@ -130,7 +113,7 @@ const LandingPageContent = () => {
                 <div className="flex gap-4">
                   <div className="mt-1"><Activity className="w-5 h-5 text-blue-600" /></div>
                   <div>
-                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Real-time Analytics</h4>
+                    <h4 className="text-[16px] font-medium text-gray-900 mb-1">Real-time Audit</h4>
                     <p className="text-[14px] text-gray-500 leading-relaxed">Monitor student engagement and exam performance as it happens with live telemetry.</p>
                   </div>
                 </div>

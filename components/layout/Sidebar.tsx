@@ -26,7 +26,7 @@ import { TbReportSearch } from "react-icons/tb";
 export const dashboardNavItems = [
   { label: 'Home', href: '/dashboard', icon: TbHome },
   { label: 'Workspace', href: '/dashboard/workspaces', icon: MdWorkspaces, startsWith: true },
-    { label: 'Broadcast', href: '/dashboard/deployments', icon: BiBroadcast, startsWith: true },
+ //   { label: 'Broadcast', href: '/dashboard/deployments', icon: BiBroadcast, startsWith: true },
   { label: 'Plan', href: '/dashboard/plans', icon: BiCreditCard },
     { label: 'Audit logs', href: '/dashboard/audit-logs', icon:  TbReportSearch  },
   { label: 'Settings', href: '/dashboard/settings', icon: MdSettings, startsWith: true },
