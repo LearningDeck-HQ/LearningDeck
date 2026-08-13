@@ -20,7 +20,8 @@ import { MdArrowBack, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'r
 import { subjectApi } from '@/lib/api/subjects';
 import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
-import { Subject, Class, Exam } from '@/types';
+import { questionApi } from '@/lib/api/questions';
+import { Subject, Class, Exam, Question } from '@/types';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSidebar } from '@/context/SidebarContext';
@@ -68,7 +69,28 @@ export default function ExamSubjectsPage({ params }: ExamSubjectsPageProps) {
         enabled: !!workspaceId,
     });
 
-    const isLoading = isLoadingExam || isLoadingSubjects;
+    // Fetch all Questions for this exam
+    const { data: examQuestions = [], isLoading: isLoadingQuestions } = useQuery({
+        queryKey: ['questions', 'exam', examId],
+        queryFn: async () => {
+            if (!examId) return [];
+            const res = await questionApi.list({ examId, limit: 1000 });
+            return (res.data || []) as Question[];
+        },
+        enabled: !!examId,
+    });
+
+    const questionCountsBySubject = useMemo(() => {
+        const counts: Record<string, number> = {};
+        examQuestions.forEach(q => {
+            if (q.subjectId) {
+                counts[q.subjectId] = (counts[q.subjectId] || 0) + 1;
+            }
+        });
+        return counts;
+    }, [examQuestions]);
+
+    const isLoading = isLoadingExam || isLoadingSubjects || isLoadingQuestions;
 
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -376,7 +398,7 @@ export default function ExamSubjectsPage({ params }: ExamSubjectsPageProps) {
                                                     {subject.code || 'UNCODED'}
                                                 </span>
                                                 <span className="flex items-center gap-1.5">
-                                                    <Layers size={11} /> Questions: {subject._count?.questions || 0}
+                                                    <Layers size={11} /> Questions: {questionCountsBySubject[subject.id] || 0}
                                                 </span>
                                             </div>
                                         </div>
