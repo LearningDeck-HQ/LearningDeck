@@ -204,6 +204,9 @@ export default function QuestionBankPage() {
         </div>
       )}
 
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 500px)' }}>
+
+       
       <div className="grid grid-cols-1 gap-3">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -265,7 +268,7 @@ export default function QuestionBankPage() {
           </div>
         )}
       </div>
-
+ </div>
       <PaginationFooter page={page} limit={limit} total={total} onPageChange={setPage} itemLabel="archived questions" />
 
       {/* ── Bulk Import Modal ── */}
