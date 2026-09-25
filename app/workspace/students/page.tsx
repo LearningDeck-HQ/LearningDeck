@@ -18,8 +18,10 @@ import {
 import { userApi } from '@/lib/api/users';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { classApi } from '@/lib/api/classes';
+import { studentBankApi } from '@/lib/api/studentBank';
+import { ExportConfirmModal } from '@/components/ui/ExportConfirmModal';
 import { User, Class } from '@/types';
-import { MdOutlineDelete, MdOutlineModeEditOutline } from 'react-icons/md';
+import { MdOutlineDelete, MdOutlineModeEditOutline, MdOutlineCloudUpload } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWorkspaceUsage } from '@/hooks/useWorkspaceUsage';
@@ -90,6 +92,15 @@ export default function StudentsPage() {
 
 
   const filteredUsers = users;
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const exportStudentsMutation = useMutation({
+    mutationFn: (data: { userIds: string[]; deleteOriginal: boolean }) => studentBankApi.exportStudents(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      setIsExportModalOpen(false);
+    },
+    onError: (err: any) => alert(err.message || 'Failed to export students to the bank'),
+  });
 
   const handleOpenModal = (u: User | null = null) => {
     if (u) {
@@ -261,18 +272,29 @@ export default function StudentsPage() {
           title="Students"
           description="Manage student enrollments and account access."
         >
-          <button
-            onClick={() => handleOpenModal()}
-            disabled={isStudentLimitReached}
-            className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${isStudentLimitReached
-              ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-zinc-700"
-              }`}
-            title={isStudentLimitReached ? "Student limit reached for your plan" : "Enroll New Student"}
-          >
-            <Plus size={14} />
-            Enroll New Student
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              disabled={filteredUsers.length === 0}
+              className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export currently filtered students to the Student Bank"
+            >
+              <MdOutlineCloudUpload size={14} />
+              Export to Student Bank
+            </button>
+            <button
+              onClick={() => handleOpenModal()}
+              disabled={isStudentLimitReached}
+              className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-sm transition-all active:scale-[0.98] ${isStudentLimitReached
+                ? "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-zinc-700"
+                }`}
+              title={isStudentLimitReached ? "Student limit reached for your plan" : "Enroll New Student"}
+            >
+              <Plus size={14} />
+              Enroll New Student
+            </button>
+          </div>
         </DashboardHeader>
       </div>
 
@@ -599,6 +621,16 @@ export default function StudentsPage() {
           </div>
         </form>
       </Modal>
+      <ExportConfirmModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        title="Export to Student Bank"
+        itemCountLabel={`This will export ${filteredUsers.length} currently filtered student(s) to the Student Bank.`}
+        onConfirm={(deleteOriginal) =>
+          exportStudentsMutation.mutate({ userIds: filteredUsers.map((u) => u.id), deleteOriginal })
+        }
+        isLoading={exportStudentsMutation.isPending}
+      />
     </div >
   );
 }

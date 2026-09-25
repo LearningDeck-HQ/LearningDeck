@@ -16,13 +16,15 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react';
-import { MdArrowBack, MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
+import { MdArrowBack, MdOutlineControlPointDuplicate, MdOutlineDeleteOutline, MdOutlineModeEditOutline, MdOutlineCloudUpload } from 'react-icons/md';
 import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
 import { questionApi } from '@/lib/api/questions';
 import { subjectApi } from '@/lib/api/subjects';
 import { userApi } from '@/lib/api/users';
 import { resultApi } from '@/lib/api/results';
+import { questionBankApi } from '@/lib/api/questionBank';
+import { ExportConfirmModal } from '@/components/ui/ExportConfirmModal';
 import { Exam, Class, Subject } from '@/types';
 import { ScaleLoader } from 'react-spinners';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -217,6 +219,16 @@ export default function ClassExamsPage({ params }: ClassExamsPageProps) {
     if (!window.confirm('Are you sure you want to delete this exam?')) return;
     deleteExamMutation.mutate(id);
   };
+  const [exportingExam, setExportingExam] = useState<Exam | null>(null);
+  const exportQuestionsMutation = useMutation({
+    mutationFn: (data: { examId: string; deleteOriginal: boolean }) => questionBankApi.exportFromExam(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exams', workspaceId, classId] });
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      setExportingExam(null);
+    },
+    onError: (err: any) => alert(err.message || 'Failed to export questions to the bank'),
+  });
   const handleDuplicate = async (exam: Exam) => {
     const payload = {
       exam_name: `${exam.exam_name} (Copy)`,
@@ -382,6 +394,13 @@ export default function ClassExamsPage({ params }: ClassExamsPageProps) {
                       <MdOutlineControlPointDuplicate size={15} />
                     </button>
                     <button
+                      onClick={() => setExportingExam(exam)}
+                      className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
+                      title="Export questions to Question Bank"
+                    >
+                      <MdOutlineCloudUpload size={15} />
+                    </button>
+                    <button
                       onClick={() => handleDelete(exam.id)}
                       className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-red-50 hover:text-red-500 rounded-sm transition-all"
                       title="Delete"
@@ -486,6 +505,17 @@ export default function ClassExamsPage({ params }: ClassExamsPageProps) {
           </div>
         </form>
       </Modal>
+      <ExportConfirmModal
+        isOpen={!!exportingExam}
+        onClose={() => setExportingExam(null)}
+        title="Export to Question Bank"
+        itemCountLabel={`This will export all questions under "${exportingExam?.exam_name}" to the Question Bank.`}
+        onConfirm={(deleteOriginal) => {
+          if (!exportingExam) return;
+          exportQuestionsMutation.mutate({ examId: exportingExam.id, deleteOriginal });
+        }}
+        isLoading={exportQuestionsMutation.isPending}
+      />
     </div>
   );
 }

@@ -45,7 +45,9 @@ function QuestionsPageContent() {
   const paramExamId = searchParams.get('examId') || '';
   const paramSubjectId = searchParams.get('subjectId') || '';
   const paramClassId = searchParams.get('classId') || '';
-  const isLocked = !!(paramExamId && paramSubjectId && paramClassId);
+  // Full lock: exam+subject+class all pinned (exam authoring flow). Assignment lock: subject+class only (teacher's assignment flow).
+  const isLocked = !!(paramSubjectId && paramClassId);
+  const isFullyLocked = isLocked && !!paramExamId;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedExam, setSelectedExam] = useState<string>('all');
@@ -62,9 +64,9 @@ function QuestionsPageContent() {
   // Sync filter values with URL query parameters when locked
   useEffect(() => {
     if (isLocked) {
-      setSelectedExam(paramExamId);
       setSelectedSubject(paramSubjectId);
       setSelectedClass(paramClassId);
+      if (paramExamId) setSelectedExam(paramExamId);
     }
   }, [isLocked, paramExamId, paramSubjectId, paramClassId]);
 
@@ -136,6 +138,12 @@ function QuestionsPageContent() {
     return classes.filter((c: Class) => assignedClassIds.has(c.id));
   }, [classes, assignments, currentUser]);
 
+  // When locked to an assignment (subject+class, no fixed exam), only offer exams under that class
+  const examsForContext = useMemo(() => {
+    if (isLocked && !paramExamId) return exams.filter((e: Exam) => e.classId === paramClassId);
+    return exams;
+  }, [exams, isLocked, paramExamId, paramClassId]);
+
   const isLoading = isLoadingQuestions;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,7 +180,7 @@ function QuestionsPageContent() {
       });
     } else {
       setEditingQuestion(null);
-      const defaultExamId = isLocked ? paramExamId : (exams[0]?.id || '');
+      const defaultExamId = paramExamId ? paramExamId : (isLocked ? '' : (exams[0]?.id || ''));
       const defaultExam = exams.find((ex: any) => ex.id === defaultExamId);
       setFormData({
         type: 'MULTIPLE_CHOICE',
@@ -396,12 +404,20 @@ function QuestionsPageContent() {
       )}
 
       {/* Back to Classes hierarchy link */}
-      {isLocked && (
+      {isFullyLocked && (
         <button
           onClick={() => router.push(`/workspace/classes/${paramClassId}/exams/${paramExamId}/subjects`)}
           className="flex items-center gap-1.5 text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors mb-1 active:scale-95"
         >
           <MdArrowBack size={14} /> Back to Subjects
+        </button>
+      )}
+      {isLocked && !isFullyLocked && (
+        <button
+          onClick={() => router.push('/workspace/assignments')}
+          className="flex items-center gap-1.5 text-xs text-[#6b6b6b] hover:text-[#0e0f10] transition-colors mb-1 active:scale-95"
+        >
+          <MdArrowBack size={14} /> Back to Assignments
         </button>
       )}
 
@@ -421,7 +437,7 @@ function QuestionsPageContent() {
       </div>
 
       {/* ── Locked Context Banner ── */}
-      {isLocked && (
+      {isFullyLocked && (
         <div className="bg-blue-50/50 border border-blue-200 text-blue-700 px-4 py-2.5 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-300">
           <div className="flex items-center gap-2">
             <span className="font-semibold uppercase tracking-wider text-[9px] bg-blue-500 px-1.5 py-0.5 rounded text-white font-mono">Exam Flow Active</span>
@@ -436,6 +452,23 @@ function QuestionsPageContent() {
             className="flex items-center gap-1 hover:underline text-blue-800 font-semibold active:scale-95 text-[11px] shrink-0"
           >
             Change Assessment Context <ArrowRight size={12} />
+          </button>
+        </div>
+      )}
+      {isLocked && !isFullyLocked && (
+        <div className="bg-blue-50/50 border border-blue-200 text-blue-700 px-4 py-2.5 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-300">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold uppercase tracking-wider text-[9px] bg-blue-500 px-1.5 py-0.5 rounded text-white font-mono">Assignment Flow Active</span>
+            <span className="leading-relaxed">
+              Subject: <strong className="text-zinc-900">{subjects.find(s => s.id === paramSubjectId)?.name || '...'}</strong> •
+              Class: <strong className="text-zinc-900">{classes.find(c => c.id === paramClassId)?.name || '...'}</strong> — pick an exam below when adding a question.
+            </span>
+          </div>
+          <button
+            onClick={() => router.push('/workspace/assignments')}
+            className="flex items-center gap-1 hover:underline text-blue-800 font-semibold active:scale-95 text-[11px] shrink-0"
+          >
+            Back to Assignments <ArrowRight size={12} />
           </button>
         </div>
       )}
@@ -481,10 +514,10 @@ function QuestionsPageContent() {
               className="w-full px-3 py-1 text-xs rounded-sm bg-zinc-50 border border-zinc-400/20 focus:border-zinc-400/60 focus:bg-white text-[#0e0f10] outline-none appearance-none cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               value={selectedExam}
               onChange={e => setSelectedExam(e.target.value)}
-              disabled={isLocked}
+              disabled={isFullyLocked}
             >
               <option value="all">All Exams</option>
-              {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
+              {examsForContext.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
           </div>
@@ -836,6 +869,10 @@ function QuestionsPageContent() {
                   value={formData.examId}
                   onChange={e => {
                     const examId = e.target.value;
+                    if (isLocked) {
+                      setFormData({ ...formData, examId });
+                      return;
+                    }
                     const selectedExamObj = exams.find((ex: any) => ex.id === examId);
                     setFormData({
                       ...formData,
@@ -844,10 +881,10 @@ function QuestionsPageContent() {
                     });
                   }}
                   required
-                  disabled={isLocked}
+                  disabled={isFullyLocked}
                 >
                   <option value="">Select Exam</option>
-                  {exams.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
+                  {examsForContext.map(e => <option key={e.id} value={e.id}>{e.exam_name}</option>)}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={13} />
               </div>

@@ -52,7 +52,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           setAuthToken('cookie');
 
           // Determine redirect path
-          let redirectPath = user.role === 'TEACHER' ? '/workspace' : '/dashboard';
+          let redirectPath = user.role === 'TEACHER' ? '/workspace/assignments' : '/dashboard';
           if (user.role === 'ADMIN') {
             redirectPath = '/setup';
           }
@@ -61,7 +61,7 @@ export const AuthForm = ({ type, inviteToken, role = 'ADMIN' }: AuthFormProps) =
           }
 
           if (role === 'STUDENT' && user.role !== 'STUDENT') {
-            router.push(user.role === 'TEACHER' ? '/workspace' : '/dashboard');
+            router.push(user.role === 'TEACHER' ? '/workspace/assignments' : '/dashboard');
             return;
           }
           if (role !== 'STUDENT' && user.role === 'STUDENT') {

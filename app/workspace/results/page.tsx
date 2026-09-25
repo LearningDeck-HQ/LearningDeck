@@ -18,6 +18,9 @@ import { Result, Subject, Question, SubjectScore } from '@/types';
 import { resultApi } from '@/lib/api/results';
 import { questionApi } from '@/lib/api/questions';
 import { subjectApi } from '@/lib/api/subjects';
+import { resultBankApi } from '@/lib/api/resultBank';
+import { ExportConfirmModal } from '@/components/ui/ExportConfirmModal';
+import { MdOutlineCloudUpload } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { examApi } from '@/lib/api/exams';
@@ -119,6 +122,15 @@ export default function ResultsPage() {
   };
 
   const filteredResults = results;
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const exportResultsMutation = useMutation({
+    mutationFn: (data: { resultIds: string[]; deleteOriginal: boolean }) => resultBankApi.exportResults(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['results', workspaceId] });
+      setIsExportModalOpen(false);
+    },
+    onError: (err: any) => alert(err.message || 'Failed to export results to the bank'),
+  });
 
   const deleteResultMutation = useMutation({
     mutationFn: (id: string) => resultApi.delete(id),
@@ -218,13 +230,24 @@ export default function ResultsPage() {
           title="Results"
           description="Monitor student performance, scores, and examination outcomes."
         >
-          <button
-            onClick={fetchData}
-            className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
-          >
-            <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              disabled={filteredResults.length === 0}
+              className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export currently filtered results to the Result Bank"
+            >
+              <MdOutlineCloudUpload size={14} />
+              Export to Result Bank
+            </button>
+            <button
+              onClick={fetchData}
+              className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
+            >
+              <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
         </DashboardHeader>
 
 
@@ -520,6 +543,16 @@ export default function ResultsPage() {
           </div>
         )}
       </Modal>
+      <ExportConfirmModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        title="Export to Result Bank"
+        itemCountLabel={`This will export ${filteredResults.length} currently filtered result(s) to the Result Bank.`}
+        onConfirm={(deleteOriginal) =>
+          exportResultsMutation.mutate({ resultIds: filteredResults.map((r) => r.id), deleteOriginal })
+        }
+        isLoading={exportResultsMutation.isPending}
+      />
     </div>
   );
 }

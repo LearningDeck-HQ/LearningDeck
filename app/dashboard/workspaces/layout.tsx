@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Briefcase, Home, Settings2, Activity, LayoutDashboard, Settings, BarChart3 } from 'lucide-react';
+import { Briefcase, Home, Settings2, Activity, LayoutDashboard, Settings, BarChart3, Database } from 'lucide-react';
 import { AshardTabItem, AshardTabs } from '@/components/ui/AshardTabs';
 import { GrUserAdd } from 'react-icons/gr';
 import { GiChart, GiTeacher } from 'react-icons/gi';
@@ -40,6 +40,12 @@ const WorkspacesLayout = ({ children }: { children: React.ReactNode }) => {
       href: '/dashboard/workspaces/invitations',
       icon: <GrUserAdd size={15} />,
     },
+     {
+      id: 'database',
+      label: 'Database',
+      href: '/dashboard/workspaces/database',
+      icon: <Database size={15} />,
+    }
   ];
 
   return (

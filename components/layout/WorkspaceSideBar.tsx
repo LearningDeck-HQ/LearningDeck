@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BiBookOpen, BiSolidShapes, BiUser } from 'react-icons/bi';
 import { GiTeacher } from 'react-icons/gi';
-import { MdReport, MdQuiz, MdLogout, MdArrowBack } from 'react-icons/md';
+import { MdReport, MdQuiz, MdLogout, MdArrowBack, MdOutlineAssignment } from 'react-icons/md';
 import { SiGoogleclassroom } from 'react-icons/si';
 import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
@@ -19,7 +19,7 @@ export const navItems = [
 ];
 
 export const TeacherNavItems = [
-    { label: 'Classes', href: '/workspace', icon: BiBookOpen },
+    { label: 'Assignments', href: '/workspace/assignments', icon: MdOutlineAssignment },
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 

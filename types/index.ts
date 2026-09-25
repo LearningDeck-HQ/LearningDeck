@@ -121,3 +121,55 @@ export interface AuditLog {
     role: string | null;
   } | null;
 }
+
+export interface QuestionBankItem {
+  id: string;
+  type: QuestionType;
+  question: string;
+  correct_answer: string;
+  incorrect_answers: string[];
+  explanation: string | null;
+  img: string | null;
+  author: string | null;
+  examName: string | null;
+  subjectName: string | null;
+  className: string | null;
+  sourceExamId: string | null;
+  sourceSubjectId: string | null;
+  sourceClassId: string | null;
+  workspaceId: string;
+  exportedAt: string;
+}
+
+export interface StudentBankItem {
+  id: string;
+  user_name: string;
+  user_email: string;
+  img: string | null;
+  className: string | null;
+  sourceClassId: string | null;
+  workspaceId: string;
+  exportedAt: string;
+}
+
+export interface ResultBankItem {
+  id: string;
+  userName: string | null;
+  userEmail: string | null;
+  examName: string | null;
+  overallScore: number;
+  subjectScores: Record<string, SubjectScore>;
+  attempted_questions: number;
+  total_questions: number;
+  date: string;
+  sourceUserId: string | null;
+  sourceExamId: string | null;
+  workspaceId: string;
+  exportedAt: string;
+}
+
+export interface BankImportResult<T> {
+  imported: T[];
+  failed: { id: string; error: string }[];
+}
+
