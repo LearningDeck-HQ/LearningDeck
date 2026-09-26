@@ -617,7 +617,7 @@ export default function TeacherPage() {
           )}
 
           {/* Faculty status toggle */}
-          <div className="hidden flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
+          <div className="flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
             <div>
               <p className="text-xs font-medium text-[#0e0f10]">Faculty Status</p>
               <p className="text-[11px] text-[#6b6b6b] mt-0.5">Control workspace access permissions</p>

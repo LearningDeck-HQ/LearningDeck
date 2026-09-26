@@ -10,6 +10,7 @@ import { SiGoogleclassroom } from 'react-icons/si';
 import { authApi } from '@/lib/api/auth';
 import { workspaceApi } from '@/lib/api/workspaces';
 import { Workspace } from '@/types';
+import { useUser } from '@/hooks/useUser';
 
 export const navItems = [
     { label: 'Classes', href: '/workspace', icon: BiBookOpen },
@@ -31,6 +32,7 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     // This state prevents the "flash" of incorrect nav items
     const [isHydrated, setIsHydrated] = useState(false);
+    const { data: profile } = useUser();
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -45,6 +47,11 @@ const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
             setIsHydrated(true);
         }
     }, []);
+
+    // Prefer the authoritative profile from the API over stale/missing localStorage data
+    useEffect(() => {
+        if (profile) setUser(profile);
+    }, [profile]);
 
     useEffect(() => {
         const fetchData = async () => {

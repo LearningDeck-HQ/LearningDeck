@@ -23,8 +23,9 @@ import { GiTeacher } from 'react-icons/gi';
 import { userApi } from '@/lib/api/users';
 import { classApi } from '@/lib/api/classes';
 import { subjectApi } from '@/lib/api/subjects';
+import { examApi } from '@/lib/api/exams';
 import { workspaceApi } from '@/lib/api/workspaces';
-import { User, Class, Subject } from '@/types';
+import { User, Class, Subject, Exam } from '@/types';
 import { MdOutlineDeleteOutline, MdOutlineModeEditOutline } from 'react-icons/md';
 import { ScaleLoader } from 'react-spinners';
 import { BiCopy, BiPlus, BiUserPlus } from 'react-icons/bi';
@@ -72,6 +73,16 @@ export default function MembersPage() {
     enabled: !!workspaceId,
   });
 
+  const { data: exams = [] } = useQuery({
+    queryKey: ['exams', workspaceId],
+    queryFn: async () => {
+      if (!workspaceId) return [];
+      const res = await examApi.list({ workspaceId });
+      return res.data || [];
+    },
+    enabled: !!workspaceId,
+  });
+
   const isLoading = isLoadingTeachers;
 
   // Modal States
@@ -87,7 +98,7 @@ export default function MembersPage() {
 
   // Assignment states
   const [teacherAssignments, setTeacherAssignments] = useState<any[]>([]);
-  const [newAssignment, setNewAssignment] = useState({ subjectId: '', classId: '' });
+  const [newAssignment, setNewAssignment] = useState({ subjectId: '', classId: '', examId: '' });
 
   const fetchAssignments = async (teacherId: string) => {
     try {
@@ -125,6 +136,7 @@ export default function MembersPage() {
     setNewAssignment({
       subjectId: subjects[0]?.id || '',
       classId: classes[0]?.id || '',
+      examId: '',
     });
     setIsModalOpen(true);
   };
@@ -285,14 +297,17 @@ export default function MembersPage() {
     // Optimistic update
     const selectedSubject = subjects.find(s => s.id === newAssignment.subjectId);
     const selectedClass = classes.find(c => c.id === newAssignment.classId);
+    const selectedExam = exams.find(e => e.id === newAssignment.examId);
     const tempId = Math.random().toString(36).substring(7);
 
     const optimisticAssignment = {
       id: tempId,
       subjectId: newAssignment.subjectId,
       classId: newAssignment.classId,
+      examId: newAssignment.examId || null,
       subject: selectedSubject,
       class: selectedClass,
+      exam: selectedExam,
       isOptimistic: true
     };
 
@@ -302,6 +317,7 @@ export default function MembersPage() {
       const res = await workspaceApi.addAssignment(workspaceId, editingTeacher.id, {
         subjectId: newAssignment.subjectId,
         classId: newAssignment.classId,
+        examId: newAssignment.examId || undefined,
       });
       if (res.success) {
         // Replace optimistic with real data
@@ -487,7 +503,7 @@ export default function MembersPage() {
         onClose={() => setIsModalOpen(false)}
         title={editingTeacher ? 'Edit Teacher' : 'New Teacher'}
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5 max-h-[75vh] overflow-y-auto pr-1">
           {/* Full Name */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[#0e0f10] ml-0.5">Full Name</label>
@@ -544,6 +560,9 @@ export default function MembersPage() {
                         <BookOpen size={11} className="text-[#6b6b6b]" />
                         <span className="text-xs text-[#0e0f10]">{a.subject?.name}</span>
                         <span className="text-[10px] text-[#6b6b6b]">— {a.class?.name}</span>
+                        {a.exam?.exam_name && (
+                          <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-sm">{a.exam.exam_name}</span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -582,6 +601,19 @@ export default function MembersPage() {
                     <option value="" disabled>Class</option>
                     {classes.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={11} />
+                </div>
+                <div className="relative col-span-2">
+                  <select
+                    className="w-full px-3 py-1 text-xs rounded-sm bg-white border border-zinc-400/20 text-[#0e0f10] outline-none appearance-none cursor-pointer"
+                    value={newAssignment.examId}
+                    onChange={(e) => setNewAssignment({ ...newAssignment, examId: e.target.value })}
+                  >
+                    <option value="">Exam (optional)</option>
+                    {exams.map((ex) => (
+                      <option key={ex.id} value={ex.id}>{ex.exam_name}</option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-[#6b6b6b] pointer-events-none" size={11} />

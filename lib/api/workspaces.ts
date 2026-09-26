@@ -80,7 +80,7 @@ export const workspaceApi = {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`);
   },
 
-  async addAssignment(workspaceId: string, userId: string, data: { subjectId: string; classId: string }): Promise<ApiResponse<any>> {
+  async addAssignment(workspaceId: string, userId: string, data: { subjectId: string; classId: string; examId?: string }): Promise<ApiResponse<any>> {
     return apiFetch<any>(`/workspaces/${workspaceId}/users/${userId}/assignments`, {
       method: 'POST',
       body: JSON.stringify(data),

@@ -93,14 +93,37 @@ export default function StudentsPage() {
 
   const filteredUsers = users;
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportAllIds, setExportAllIds] = useState<string[] | null>(null);
+  const [isFetchingAllForExport, setIsFetchingAllForExport] = useState(false);
   const exportStudentsMutation = useMutation({
     mutationFn: (data: { userIds: string[]; deleteOriginal: boolean }) => studentBankApi.exportStudents(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
       setIsExportModalOpen(false);
+      setExportAllIds(null);
     },
     onError: (err: any) => alert(err.message || 'Failed to export students to the bank'),
   });
+
+  const handleExportAll = async () => {
+    if (!workspaceId) return;
+    setIsFetchingAllForExport(true);
+    try {
+      const res = await userApi.list({
+        role: 'STUDENT',
+        workspaceId,
+        searchTerm,
+        classId: selectedClass === 'all' ? undefined : selectedClass,
+        limit: totalStudents || 100000,
+      });
+      setExportAllIds((res.data || []).map((u) => u.id));
+      setIsExportModalOpen(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to load all students for export');
+    } finally {
+      setIsFetchingAllForExport(false);
+    }
+  };
 
   const handleOpenModal = (u: User | null = null) => {
     if (u) {
@@ -274,13 +297,22 @@ export default function StudentsPage() {
         >
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsExportModalOpen(true)}
+              onClick={() => { setExportAllIds(null); setIsExportModalOpen(true); }}
               disabled={filteredUsers.length === 0}
               className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               title="Export currently filtered students to the Student Bank"
             >
               <MdOutlineCloudUpload size={14} />
               Export to Student Bank
+            </button>
+            <button
+              onClick={handleExportAll}
+              disabled={totalStudents === 0 || isFetchingAllForExport}
+              className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export all students matching the current filters, across all pages"
+            >
+              <MdOutlineCloudUpload size={14} />
+              {isFetchingAllForExport ? 'Loading...' : 'Export All'}
             </button>
             <button
               onClick={() => handleOpenModal()}
@@ -583,7 +615,7 @@ export default function StudentsPage() {
             </div>
           </div>
 
-          <div className="hidden flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
+          <div className="flex items-center justify-between px-3 py-2.5 bg-zinc-50 rounded-sm border border-zinc-400/20">
             <div>
               <p className="text-xs font-medium text-[#0e0f10]">Active Enrollment</p>
               <p className="text-[11px] text-[#6b6b6b] mt-0.5">Allow student to access exams</p>
@@ -623,11 +655,15 @@ export default function StudentsPage() {
       </Modal>
       <ExportConfirmModal
         isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
+        onClose={() => { setIsExportModalOpen(false); setExportAllIds(null); }}
         title="Export to Student Bank"
-        itemCountLabel={`This will export ${filteredUsers.length} currently filtered student(s) to the Student Bank.`}
+        itemCountLabel={
+          exportAllIds
+            ? `This will export all ${exportAllIds.length} matching student(s) to the Student Bank.`
+            : `This will export ${filteredUsers.length} currently filtered student(s) to the Student Bank.`
+        }
         onConfirm={(deleteOriginal) =>
-          exportStudentsMutation.mutate({ userIds: filteredUsers.map((u) => u.id), deleteOriginal })
+          exportStudentsMutation.mutate({ userIds: exportAllIds ?? filteredUsers.map((u) => u.id), deleteOriginal })
         }
         isLoading={exportStudentsMutation.isPending}
       />

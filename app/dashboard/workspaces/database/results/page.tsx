@@ -87,12 +87,37 @@ export default function ResultBankPage() {
     bulkImportMutation.mutate(selectedIds);
   };
 
+  const [isImportingAll, setIsImportingAll] = useState(false);
+  const handleImportAll = async () => {
+    if (!workspaceId || total === 0) return;
+    if (!window.confirm(`Import all ${total} archived result(s) back into the results log?`)) return;
+    setIsImportingAll(true);
+    try {
+      const res = await resultBankApi.list({ workspaceId, searchTerm, limit: total });
+      const ids = (res.data || []).map((i) => i.id);
+      bulkImportMutation.mutate(ids);
+    } catch (err: any) {
+      alert(err.message || 'Failed to load all bank items');
+    } finally {
+      setIsImportingAll(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
         title="Result Bank"
         description="Archived exam results exported from the results log. Import them back or delete them permanently."
-      />
+      >
+        <button
+          onClick={handleImportAll}
+          disabled={total === 0 || isImportingAll || bulkImportMutation.isPending}
+          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download size={14} />
+          {isImportingAll ? 'Loading...' : 'Import All'}
+        </button>
+      </DashboardHeader>
 
       <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">

@@ -27,6 +27,8 @@ import { examApi } from '@/lib/api/exams';
 import { classApi } from '@/lib/api/classes';
 import { ChevronDown } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
+import { useUser } from '@/hooks/useUser';
+import { workspaceApi } from '@/lib/api/workspaces';
 
 export default function ResultsPage() {
   const queryClient = useQueryClient();
@@ -38,6 +40,19 @@ export default function ResultsPage() {
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedExam, setSelectedExam] = useState<string>('all');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+
+  const { data: currentUser } = useUser();
+  const isTeacher = currentUser?.role === 'TEACHER';
+
+  const { data: myAssignments = [] } = useQuery({
+    queryKey: ['my-assignments', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.workspaceId || !currentUser?.id) return [];
+      const res = await workspaceApi.getAssignments(currentUser.workspaceId, currentUser.id);
+      return (res.data || []) as { subjectId: string; classId: string; examId?: string | null }[];
+    },
+    enabled: !!isTeacher && !!currentUser?.workspaceId && !!currentUser?.id,
+  });
 
   useEffect(() => {
     const loadActiveFilters = async () => {
@@ -121,16 +136,48 @@ export default function ResultsPage() {
     queryClient.invalidateQueries({ queryKey: ['questions', workspaceId] });
   };
 
-  const filteredResults = results;
+  const filteredResults = useMemo(() => {
+    if (!isTeacher) return results;
+    if (myAssignments.length === 0) return [];
+    return results.filter((r) => {
+      const examClassId = r.exam?.classId;
+      return myAssignments.some((a) => {
+        if (a.examId) return a.examId === r.examId;
+        return a.classId === examClassId && (a.subjectId ? Object.keys(r.subjectScores || {}).includes(a.subjectId) : true);
+      });
+    });
+  }, [results, isTeacher, myAssignments]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportAllIds, setExportAllIds] = useState<string[] | null>(null);
+  const [isFetchingAllForExport, setIsFetchingAllForExport] = useState(false);
   const exportResultsMutation = useMutation({
     mutationFn: (data: { resultIds: string[]; deleteOriginal: boolean }) => resultBankApi.exportResults(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['results', workspaceId] });
       setIsExportModalOpen(false);
+      setExportAllIds(null);
     },
     onError: (err: any) => alert(err.message || 'Failed to export results to the bank'),
   });
+
+  const handleExportAll = async () => {
+    setIsFetchingAllForExport(true);
+    try {
+      const res = await resultApi.list({
+        workspaceId,
+        searchTerm,
+        classId: selectedClass === 'all' ? undefined : selectedClass,
+        examId: selectedExam === 'all' ? undefined : selectedExam,
+        limit: totalResults || 100000,
+      });
+      setExportAllIds((res.data || []).map((r) => r.id));
+      setIsExportModalOpen(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to load all results for export');
+    } finally {
+      setIsFetchingAllForExport(false);
+    }
+  };
 
   const deleteResultMutation = useMutation({
     mutationFn: (id: string) => resultApi.delete(id),
@@ -231,15 +278,28 @@ export default function ResultsPage() {
           description="Monitor student performance, scores, and examination outcomes."
         >
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              disabled={filteredResults.length === 0}
-              className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Export currently filtered results to the Result Bank"
-            >
-              <MdOutlineCloudUpload size={14} />
-              Export to Result Bank
-            </button>
+            {!isTeacher && (
+              <>
+                <button
+                  onClick={() => { setExportAllIds(null); setIsExportModalOpen(true); }}
+                  disabled={filteredResults.length === 0}
+                  className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export currently filtered results to the Result Bank"
+                >
+                  <MdOutlineCloudUpload size={14} />
+                  Export to Result Bank
+                </button>
+                <button
+                  onClick={handleExportAll}
+                  disabled={totalResults === 0 || isFetchingAllForExport}
+                  className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export all results matching the current filters, across all pages"
+                >
+                  <MdOutlineCloudUpload size={14} />
+                  {isFetchingAllForExport ? 'Loading...' : 'Export All'}
+                </button>
+              </>
+            )}
             <button
               onClick={fetchData}
               className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98]"
@@ -545,11 +605,15 @@ export default function ResultsPage() {
       </Modal>
       <ExportConfirmModal
         isOpen={isExportModalOpen}
-        onClose={() => setIsExportModalOpen(false)}
+        onClose={() => { setIsExportModalOpen(false); setExportAllIds(null); }}
         title="Export to Result Bank"
-        itemCountLabel={`This will export ${filteredResults.length} currently filtered result(s) to the Result Bank.`}
+        itemCountLabel={
+          exportAllIds
+            ? `This will export all ${exportAllIds.length} matching result(s) to the Result Bank.`
+            : `This will export ${filteredResults.length} currently filtered result(s) to the Result Bank.`
+        }
         onConfirm={(deleteOriginal) =>
-          exportResultsMutation.mutate({ resultIds: filteredResults.map((r) => r.id), deleteOriginal })
+          exportResultsMutation.mutate({ resultIds: exportAllIds ?? filteredResults.map((r) => r.id), deleteOriginal })
         }
         isLoading={exportResultsMutation.isPending}
       />

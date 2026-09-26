@@ -126,12 +126,36 @@ export default function QuestionBankPage() {
     setIsBulkImportOpen(true);
   };
 
+  const [isImportingAll, setIsImportingAll] = useState(false);
+  const handleImportAll = async () => {
+    if (!workspaceId || total === 0) return;
+    setIsImportingAll(true);
+    try {
+      const res = await questionBankApi.list({ workspaceId, searchTerm, limit: total });
+      setSelectedIds((res.data || []).map((i) => i.id));
+      openBulkImport();
+    } catch (err: any) {
+      alert(err.message || 'Failed to load all bank items');
+    } finally {
+      setIsImportingAll(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <DashboardHeader
         title="Question Bank"
         description="Archived questions exported from exams. Import them back or delete them permanently."
-      />
+      >
+        <button
+          onClick={handleImportAll}
+          disabled={total === 0 || isImportingAll}
+          className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-blue-500 text-white rounded-sm hover:bg-zinc-700 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download size={14} />
+          {isImportingAll ? 'Loading...' : 'Import All'}
+        </button>
+      </DashboardHeader>
 
       <div className="bg-white p-4 border-y border-zinc-400/20 space-y-4">
         <div className="flex items-center justify-between px-1">

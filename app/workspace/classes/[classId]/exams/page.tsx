@@ -376,6 +376,16 @@ export default function ClassExamsPage({ params }: ClassExamsPageProps) {
                   {/* Actions */}
                   <div className="flex items-center gap-1 w-full md:w-auto border-t md:border-t-0 md:border-l border-zinc-400/20 pt-3 md:pt-0 md:pl-6">
                     <button
+                      type="button"
+                      onClick={() => updateExamMutation.mutate({ id: exam.id, payload: { visible: !exam.visible } })}
+                      className={`w-9 h-5 rounded-full relative transition-colors duration-200 focus:outline-none mr-1 ${exam.visible ? 'bg-blue-500' : 'bg-zinc-300'}`}
+                      title={exam.visible ? 'Visible to students' : 'Hidden from students'}
+                    >
+                      <div
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${exam.visible ? 'translate-x-4' : 'translate-x-0'}`}
+                      />
+                    </button>
+                    <button
                       onClick={() => handleOpenModal(exam)}
                       className="px-2 py-1 text-xs text-[#6b6b6b] hover:bg-zinc-300/20 hover:text-[#0e0f10] rounded-sm transition-all"
                       title="Edit"
