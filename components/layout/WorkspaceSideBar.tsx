@@ -21,7 +21,7 @@ export const navItems = [
 
 export const TeacherNavItems = [
     { label: 'Assignments', href: '/workspace/assignments', icon: MdOutlineAssignment },
-    { label: 'Results', href: '/workspace/results', icon: MdReport },
+  //  { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 
 const WorkspaceSideBar = ({ onClose }: { onClose?: () => void }) => {
