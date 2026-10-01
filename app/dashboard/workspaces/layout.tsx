@@ -45,6 +45,12 @@ const WorkspacesLayout = ({ children }: { children: React.ReactNode }) => {
       label: 'Database',
       href: '/dashboard/workspaces/database',
       icon: <Database size={15} />,
+    },
+     {
+      id: 'manager',
+      label: 'Manager',
+      href: '/dashboard/workspaces/manager',
+      icon: <Briefcase size={15} />,
     }
   ];
 

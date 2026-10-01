@@ -13,6 +13,7 @@ import {
   FileText,
   BarChart3,
   Filter,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Result, Subject, Question, SubjectScore } from '@/types';
 import { resultApi } from '@/lib/api/results';
@@ -29,6 +30,7 @@ import { ChevronDown } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useUser } from '@/hooks/useUser';
 import { workspaceApi } from '@/lib/api/workspaces';
+import JSZip from 'jszip';
 
 export default function ResultsPage() {
   const queryClient = useQueryClient();
@@ -150,6 +152,7 @@ export default function ResultsPage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportAllIds, setExportAllIds] = useState<string[] | null>(null);
   const [isFetchingAllForExport, setIsFetchingAllForExport] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const exportResultsMutation = useMutation({
     mutationFn: (data: { resultIds: string[]; deleteOriginal: boolean }) => resultBankApi.exportResults(data),
     onSuccess: () => {
@@ -176,6 +179,107 @@ export default function ResultsPage() {
       alert(err.message || 'Failed to load all results for export');
     } finally {
       setIsFetchingAllForExport(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true);
+    try {
+      const res = await resultApi.list({
+        workspaceId,
+        searchTerm,
+        classId: selectedClass === 'all' ? undefined : selectedClass,
+        examId: selectedExam === 'all' ? undefined : selectedExam,
+        limit: totalResults || 100000,
+      });
+      const allResults = res.data || [];
+      const getScores = (result: Result): Record<string, SubjectScore> => {
+        if (typeof result.subjectScores === 'string') {
+          try {
+            return JSON.parse(result.subjectScores) as Record<string, SubjectScore>;
+          } catch {
+            return {};
+          }
+        }
+        return result.subjectScores || {};
+      };
+      const subjectIds = Array.from(new Set(allResults.flatMap((result) => Object.keys(getScores(result)))));
+      const headers = [
+        'Student',
+        'Email',
+        'Class',
+        'Exam',
+        'Overall Score (%)',
+        'Status',
+        'Attempted Questions',
+        'Total Questions',
+        'Date',
+        ...subjectIds.map((subjectId) => subjects.find((subject) => subject.id === subjectId)?.name || 'General'),
+      ];
+      const rows = [headers, ...allResults.map((result) => {
+        const scores = getScores(result);
+        return [
+          result.user?.user_name || 'Unknown Student',
+          result.user?.user_email || '',
+          classes.find((classItem) => classItem.id === result.user?.classId)?.name || '',
+          result.exam?.exam_name || 'Unknown Exam',
+          result.overallScore,
+          result.overallScore >= 50 ? 'Passed' : 'Failed',
+          result.attempted_questions,
+          result.total_questions,
+          new Date(result.date).toLocaleString(),
+          ...subjectIds.map((subjectId) => {
+            const score = scores[subjectId];
+            return score ? `${score.correct}/${score.total}` : '';
+          }),
+        ];
+      })];
+      const escapeXml = (value: string) => value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+      const columnName = (column: number) => {
+        let name = '';
+        while (column > 0) {
+          const remainder = (column - 1) % 26;
+          name = String.fromCharCode(65 + remainder) + name;
+          column = Math.floor((column - 1) / 26);
+        }
+        return name;
+      };
+      const sheetRows = rows.map((row, rowIndex) => {
+        const cells = row.map((value, columnIndex) => {
+          const reference = `${columnName(columnIndex + 1)}${rowIndex + 1}`;
+          if (typeof value === 'number' && Number.isFinite(value)) {
+            return `<c r="${reference}"><v>${value}</v></c>`;
+          }
+          return `<c r="${reference}" t="inlineStr"><is><t xml:space="preserve">${escapeXml(String(value ?? ''))}</t></is></c>`;
+        }).join('');
+        return `<row r="${rowIndex + 1}">${cells}</row>`;
+      }).join('');
+      const lastColumn = columnName(headers.length);
+      const zip = new JSZip();
+      zip.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>');
+      zip.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+      zip.file('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Results" sheetId="1" r:id="rId1"/></sheets></workbook>');
+      zip.file('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>');
+      zip.file('xl/worksheets/sheet1.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>${sheetRows}</sheetData><autoFilter ref="A1:${lastColumn}1"/></worksheet>`);
+      const blob = await zip.generateAsync({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `results-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || 'Failed to export results to Excel');
+    } finally {
+      setIsExportingExcel(false);
     }
   };
 
@@ -280,6 +384,17 @@ export default function ResultsPage() {
           <div className="flex items-center gap-2">
             {!isTeacher && (
               <>
+                {currentUser && (
+                  <button
+                    onClick={handleExportExcel}
+                    disabled={totalResults === 0 || isExportingExcel}
+                    className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-[#0e0f10] rounded-sm hover:bg-zinc-200 transition-all border border-zinc-400/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Download all results matching the current filters as an Excel spreadsheet"
+                  >
+                    <FileSpreadsheet size={14} />
+                    {isExportingExcel ? 'Preparing Excel...' : 'Export All to Excel'}
+                  </button>
+                )}
                 <button
                   onClick={() => { setExportAllIds(null); setIsExportModalOpen(true); }}
                   disabled={filteredResults.length === 0}
