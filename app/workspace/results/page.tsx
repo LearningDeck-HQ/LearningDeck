@@ -230,7 +230,7 @@ export default function ResultsPage() {
           new Date(result.date).toLocaleString(),
           ...subjectIds.map((subjectId) => {
             const score = scores[subjectId];
-            return score ? `${score.correct}/${score.total}` : '';
+            return score ? score.correct * 2 : '';
           }),
         ];
       })];

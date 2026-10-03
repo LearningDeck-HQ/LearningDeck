@@ -16,6 +16,7 @@ export const navItems = [
     { label: 'Classes', href: '/workspace', icon: BiBookOpen },
     { label: 'Teachers', href: '/workspace/teachers', icon: GiTeacher },
     { label: 'Students', href: '/workspace/students', icon: BiUser },
+    { label: 'Combinations', href: '/workspace/combinations', icon: BiSolidShapes },
     { label: 'Results', href: '/workspace/results', icon: MdReport },
 ];
 
